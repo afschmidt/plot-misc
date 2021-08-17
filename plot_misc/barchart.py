@@ -89,7 +89,7 @@ def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     # actual plotting
     left = len(df) * [0]
     for idx, name in enumerate(fields):
-        ax.barh(labels, width=df[name], left = left, edgecolor=edgecolor,
+        ax.barh(labels, width=df[name], left=left, edgecolor=edgecolour,
                 height=wd, color=colours[idx], alpha=transparancy,
                 **kwargs)
         left = left + df[name]
@@ -197,3 +197,4 @@ def bar(df, label, column, ax, colours=['tab:blue', 'tab:pink'],
     ax.spines['right'].set_visible(False)
     
     return ax
+
