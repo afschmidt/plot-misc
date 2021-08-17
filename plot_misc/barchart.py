@@ -4,7 +4,7 @@ Various bar chart functions.
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolor='black', **kwargs):
+              transparancy=0.7, wd=1, edgecolour='black', **kwargs):
     '''
     Function for a bar chart, remove top and left spines.
     
@@ -22,7 +22,7 @@ def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
         Degree of transparancy, between 0 and 1 (solid).
     wd : float
         Bar width.
-    edgecolor : str of colours, default `black`
+    edgecolour : str of colours, default `black`.
     kwargs : dict
         Dictionary of kwargs
     
@@ -39,7 +39,7 @@ def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     # actual plotting
     left = len(df) * [0]
     for idx, name in enumerate(fields):
-        ax.bar(labels, height=df[name], bottom = left, edgecolor=edgecolor,
+        ax.bar(labels, height=df[name], bottom = left, edgecolor=edgecolour,
                 width=wd, color=colours[idx], alpha=transparancy,
                 **kwargs)
         left = left + df[name]
@@ -54,7 +54,7 @@ def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolor='black', **kwargs):
+              transparancy=0.7, wd=1, edgecolour='black', **kwargs):
     '''
     Function for a horizontal bar chart, remove top and left spines.
     
@@ -106,7 +106,7 @@ def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
 def total_bar(df, label, subtotal_col, ax,
               total_col=None, colours=['grey', 'tab:blue'],
               transparancy=[0.7, 0.9], wd=[1, 0.6],
-              edgecolor=['black', 'black'], **kwargs):
+              edgecolour=['black', 'black'], **kwargs):
     '''
     A bar chart with a total column and overplotted subtotal columns.
     The first entry of each argument refers to the total chart, the second to
@@ -118,6 +118,12 @@ def total_bar(df, label, subtotal_col, ax,
     label, total_col, subtotal_col : str
         a string referring to a column in `df`. Skip total_col by setting it
         to None (default).
+    colours : list
+        A list of colours.
+    transparancy, wd : float
+        A float to specify the colour alpha and bar width, respectivly.
+    edgecolour : str
+        The bar edgecolour.
     ax : plt.ax
     kwargs : dict
         Provide a dict of dictionaries with two keys `total_kwargs` and
@@ -141,12 +147,12 @@ def total_bar(df, label, subtotal_col, ax,
     
     # plot total
     if not total_col is None:
-        ax.bar(labels,height=total, edgecolor=edgecolor[0], width=wd[0],
+        ax.bar(labels,height=total, edgecolor=edgecolour[0], width=wd[0],
                color=colours[0], alpha=transparancy[0],
                **total_kwargs)
     
     # plot subtotal
-    ax.bar(labels,height=subtotal, edgecolor=edgecolor[1],
+    ax.bar(labels,height=subtotal, edgecolor=edgecolour[1],
            width=wd[1], color=colours[1], alpha=transparancy[1],
            **subtotal_kwargs)
     
@@ -158,15 +164,32 @@ def total_bar(df, label, subtotal_col, ax,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def bar(df, label, column, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolor='black', **kwargs):
+              transparancy=0.7, wd=1, edgecolour='black', **kwargs):
     '''
-    Write a better doc-string!
+    Plot a barchart with sequentially coloured bars.
+    
+    Arguments
+    ---------
+    df : pd.DF
+    label, columns : str
+        a string referring to a column in `df` representing the x-axis labels
+        and the y-axis values, respectivly.
+    colours : list
+        A list of colours.
+    transparancy, wd : float
+        A float to specify the colour alpha and bar width, respectivly.
+    edgecolour : str
+        The bar edgecolour.
+    ax : plt.ax
+    kwargs : dict
+        Provide a dict of dictionaries with two keys `total_kwargs` and
+        `subtotal_kwargs` to supply kwargs for the individual calls to ax.bar.
     '''
     # get labels
     labels = df[label]
     
     # actual plotting
-    ax.bar(labels,height=df[column], edgecolor=edgecolor,
+    ax.bar(labels,height=df[column], edgecolor=edgecolour,
            width=wd, color=colours, alpha=transparancy, **kwargs)
     
     # removing spines
