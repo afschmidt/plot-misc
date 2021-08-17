@@ -1,0 +1,35 @@
+# hidden files
+.*
+!.gitignore
+# vim files
+*~
+# outputs
+*.csv
+*.p
+*.ods
+*.pdf
+*.png
+*.svg
+*.xlsx
+*.html
+# python
+venv/
+*.egg-info/*
+__pycache__
+# tag files
+tags
+# ignore tex and [R|r]nw file
+# all latex files
+*.aux
+*.bbl
+*.bib
+*.fdb_latexmk
+*.fls
+*.log
+*.run.xml
+*.toc
+*.blg
+*.out
+*.xdv
+!.tex
+!.[R|r]nw
