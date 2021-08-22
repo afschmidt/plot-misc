@@ -11,7 +11,8 @@ import pandas as pd
 def sel_groups(data, metric = 'euclidean', method ='complete',
                nmax = 10, m = None, col='Set2'):
     '''
-    Function to select the optimum cut-point for a hc cluster algorithm
+    Function to select the optimum cut-point for a hc cluster algorithm and,
+    generate groups and colours.
     '''
     # optimum no of clusters
     silhoutte = {}
@@ -51,29 +52,56 @@ def sel_groups(data, metric = 'euclidean', method ='complete',
 # rc2 = sel_groups(sd2, method='average', metric='euclidean', nmax=20, col='Set3')
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def clustermap(data, annot, col, fsize=(20, 25), fscale=0.393700787, linewidths=1.0,
-            cpos=(0.09, 0.02, 0.03, 0.10), fmt=".3",
-            annotsize=6, clab=r"dir $\times -\log_{10}$(p)",
-            clabfs=7, clabpos='left', clabtsize=5, xticklabsize=8,
-            yticklabsize=6, **kwargs):
+def clustermap(data, annot, col, fsize=(20, 25), fscale=0.393700787,
+               linewidths=1.0, cpos=(0.09, 0.02, 0.03, 0.10), fmt=".3",
+               annotsize=6, clab=r"dir $\times -\log_{10}$(p)",
+               clabfs=7, clabpos='left', clabtsize=5, xticklabsize=8,
+               yticklabsize=6, **kwargs):
     '''
-    Wrapper over seaborn.clustermap
+    Wrapper over seaborn.clustermap.
+    
+    Arguments
+    ---------
+    data         : pd.DF
+    annot        : pd.DF
+    fsize        : tuple of floats
+    fscale       : float
+    linewidths   : float
+    cpos         : tuple of floats
+    annotsize    : float
+    clab         : str
+    clabsf       : float
+    clabpos      : str
+    clabsize     : float
+    xticklabsize : float
+    yticklabsize : float
+    **kwargs     : dict
+    
+    Returns
+    -------
+    seaborn.clustermap figure
+    
     '''
             
-    cm = sns.clustermap(data, fmt=fmt, linewidths=1.0,
+    cm = sns.clustermap(data, fmt=fmt, linewidths=linewidths,
                     figsize=(fsize[0] * fscale, fsize[1] * fscale),
                     cmap=col,
                     annot=annot, cbar_pos=cpos,
                     annot_kws={"size": annotsize},
                     **kwargs
                    )
+    # cbar labels
     cm.ax_cbar.axes.yaxis.set_label_text(clab, fontsize=clabfs)
     cm.ax_cbar.axes.yaxis.set_label_position(clabpos)
     cm.ax_cbar.tick_params(labelsize=clabtsize)
+    # heatmap tick labels
     cm.ax_heatmap.set_xticklabels(cm.ax_heatmap.get_xmajorticklabels(),
                                    fontsize = xticklabsize)
     cm.ax_heatmap.set_yticklabels(cm.ax_heatmap.get_ymajorticklabels(),
                                    fontsize = yticklabsize)
+    # removing axis labels
+    cm.ax_heatmap.set_ylabel("")
+    cm.ax_heatmap.set_xlabel("")
     return cm
 
 
