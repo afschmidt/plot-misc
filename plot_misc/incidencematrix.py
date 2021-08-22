@@ -90,8 +90,7 @@ def draw_incidencematrix(
     
     # the x and y coordinates
     M, N = data.shape
-    x, y = np.meshgrid(np.arange(M),
-                       np.arange(N))
+    x, y = np.meshgrid(np.arange(M), np.arange(N))
     
     ################
     # plot dots
