@@ -232,13 +232,19 @@ the line plotting will be skipped.', RuntimeWarning)
     # add the starting and endpoints
     y_mid.insert(0, y_locations.iloc[0]['min'])
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
-    # TODO
-    # check if y_mid is an integer
-    # if not round to an integer and supply a warning
-    # then do the segments
-    # add the segments
     # ################### Add horizontal segments
     if span ==True:
+        # NOTE: not sure this part is required
+        # # ensure y_mid is a whole number
+        # whole_bool = [float(y).is_integer() for y in y_mid]
+        # if all(whole_bool) == False:
+        #     # round
+        #     y_mid = [y if b==True else round(y,0) for y,b in zip(y_mid, whole_bool)]
+        #     # warn
+        #     warnings.warn('The axis mid-points are not a whole number, will use \
+# approximate coordinates for the horizontal segments', RuntimeWarning)
+        # NOTE: end
+        # add segments
         for t in range(len(y_mid)):
             ymin = y_mid[t]
             # stop if t is too large
