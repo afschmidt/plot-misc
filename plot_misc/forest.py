@@ -157,8 +157,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
             kwargs_span_dict             --> ax.axhspan
     
     Returns
-    Unpacks a matplotlib figure, axes
     -------
+    Unpacks a matplotlib figure, axes
     """
     # ################### do check and set defaults
     if not isinstance(df, pd.DataFrame):
