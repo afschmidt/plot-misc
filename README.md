@@ -1,6 +1,6 @@
 # A collection of plotting functions
 
-This repository collects plotting modules, written on top of `matplotlib` or
+This repository collects plotting modules written on top of `matplotlib` or
 `seaborn`. 
 
 
