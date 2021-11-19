@@ -77,6 +77,7 @@ The dataset can then be used as follows:
 """
 import os
 import re
+import pandas as pd
 
 # The name of the example datasets directory
 _EXAMPLE_DATASETS = "example_datasets"
@@ -96,13 +97,13 @@ _DATASETS = dict()
 def dataset(func):
     """Register a dataset generating function. This function should be used as
     a decorator.
-
+    
     Parameters
     ----------
     func : `function`
         The function to register as a dataset. It is registered as under the
         function name.
-
+    
     Returns
     -------
     func : `function`
@@ -242,7 +243,6 @@ def dummy_data(*args, **kwargs):
     """
     return ['A', 'B', 'C']
 
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
 def dummy_load_data(*args, **kwargs):
@@ -264,3 +264,23 @@ def dummy_load_data(*args, **kwargs):
     load_path = os.path.join(_ROOT_DATASETS_DIR, "string_data.txt")
     with open(load_path) as data_file:
         return data_file.read().strip()
+
+@dataset
+def load_forest_data(*args, **kwargs):
+    """
+    Loads data on the test performance of a number of polygenics scores.
+    Estimates represent c-statistics with confidence intervals.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'forest_data.tsv'),
+        sep='\t', index_col=0
+    )
+    # return
+    return df
+
+
