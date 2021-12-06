@@ -102,6 +102,8 @@ def clustermap(data, annot, col, fsize=(20, 25), fscale=0.393700787,
     # removing axis labels
     cm.ax_heatmap.set_ylabel("")
     cm.ax_heatmap.set_xlabel("")
+    # add both xy ticks (should add this as arguments)
+    cg.ax_heatmap.tick_params('both', reset=False, bottom=True, right=True)
     return cm
 
 
