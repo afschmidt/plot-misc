@@ -243,7 +243,7 @@ def dummy_data(*args, **kwargs):
     """
     return ['A', 'B', 'C']
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
 def dummy_load_data(*args, **kwargs):
     """A dummy dataset function that loads a string from a file.
@@ -265,6 +265,7 @@ def dummy_load_data(*args, **kwargs):
     with open(load_path) as data_file:
         return data_file.read().strip()
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
 def load_forest_data(*args, **kwargs):
     """
@@ -278,6 +279,25 @@ def load_forest_data(*args, **kwargs):
     # files
     df = pd.read_csv(
         os.path.join(_ROOT_DATASETS_DIR, 'forest_data.tsv'),
+        sep='\t', index_col=0
+    )
+    # return
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_table_data(*args, **kwargs):
+    """
+    Loads MR data for a SAP against many outcomes. Can be used as testing
+    data for table manipulations.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'table_data.tsv.gz'),
         sep='\t', index_col=0
     )
     # return
