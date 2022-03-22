@@ -112,7 +112,8 @@ def _apply_and_rename(data:pd.DataFrame, original_columns:list,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
                log10_columns:list=None, rename_columns:dict=None,
-               order_columns:list=None, drop_original:bool=True):
+               drop_original:bool=True, rename_column_values:dict=None,
+               order_columns:list=None, ):
     '''
     Formats a table using the following optionals:
         - Stripping white space from string columns
@@ -126,19 +127,19 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
     Parameters
     ----------
     data : pd.DataFrame,
-    strip_columns : list, default Nonetype
+    strip_columns : list of strings, default Nonetype
         The column names which should be stripped.
     replace_string_columns : dict, default Nonetype
         A dictionary wit the column names as keys and a two element list
         for the original string and replacement string (in that order!).
-    log10_columns : list, default Nonetype
+    log10_columns : list of strings, default Nonetype
         Applies a -1 * log10 transformation.
     rename_columns : dict, default Nonetype
         A dictionary with the original names as keys, and the new names as
         values.
     drop_original : bool, default True,
         Removes the original names in `rename_columns`.
-    order_columns : list, default Nonetype,
+    order_columns : list of string, default Nonetype,
         Columns moved to the front of the dataframe.
     
     Returns
@@ -146,7 +147,14 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
     pd.DataFrame
     '''
     # ### check input
-    # TODO
+    is_df(data)
+    is_type(strip_columns, (list, type(None)))
+    is_type(log10_columns, (list, type(None)))
+    is_type(order_columns, (list, type(None)))
+    is_type(replace_string_columns, (dict, type(None)))
+    is_type(rename_columns, (dict, type(None)))
+    is_type(rename_column_values, (dict, type(None)))
+    is_type(drop_original, bool)
     # ### copy()
     frame = data.copy()
     # ### renaming
@@ -157,6 +165,10 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
             new_columns=list(rename_columns.values()),
             drop_original=drop_original,
         )
+    # ### renaming column values
+    if not rename_column_values is None:
+        for key, value in rename_column_values.items():
+            frame[key] = frame[key].map(value)
     # ### strip strings
     if not strip_columns is None:
         # do we need to strip the index

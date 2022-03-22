@@ -3,6 +3,7 @@ testing extract_compressed
 """
 import pytest
 import pandas as pd
+import numpy as np
 import warnings
 from plot_misc.example_data import examples
 from plot_misc.table import layout
@@ -100,4 +101,10 @@ class Test_formatting(object):
         test1 = ['ld', 'qpvalue', 'se']
         res = layout.formatting(table, order_columns=test1)
         assert (res.columns[0:3] == test1).all()
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_rename_column_values(self):
+        table = examples.load_table_data()
+        map = {'outcome': {'ldl_glgc': 'LDL-C', 'hdl_glgc': 'HDL-C'}}
+        res = layout.formatting(table, rename_column_values=map)
+        assert list(res['outcome'].unique()) == ['LDL-C', 'HDL-C', np.nan]
 
