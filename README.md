@@ -4,6 +4,8 @@ This repository collects plotting modules written on top of `matplotlib` or
 `seaborn`. 
 
 
+
+
 ## Installation 
 
 plot-misc can be installed pip installed to a specific conda environment by 
