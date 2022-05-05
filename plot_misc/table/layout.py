@@ -137,6 +137,9 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
     rename_columns : dict, default Nonetype
         A dictionary with the original names as keys, and the new names as
         values.
+    rename_column_values : dict of dicts, default Nonetype
+        A diactionary with the column as key, and a dictionary{old:new} as
+        value.
     drop_original : bool, default True,
         Removes the original names in `rename_columns`.
     order_columns : list of string, default Nonetype,
