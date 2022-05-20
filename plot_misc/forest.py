@@ -26,13 +26,17 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     strat : str, default None
         An optional df column which nests the `group` values.
     within_pad : float,
+        The distance between point estimates nested within a group.
     between_pad : float,
-    start : float, default 1,
+        The distance between groups of point estimates. This is the y-axis
+        distance that will be skipped between the last y-axis coordinate in the
+        previous group and the starting y-axis coordinate of the current group.
+    start : float, default 0,
         The starting position of the sequence.
-    new_col : str, default y_axis
+    new_col : str, default `y_axis`
         The name of the column that will be added to `df`.
     sort_dict : dict, default None
-        Supply a key:float combination dictionary to sort the rows on.
+        Supply a key:value-float combination dictionary to sort the rows on.
     
     Returns
     -------
@@ -83,10 +87,9 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
-                y_col:str='y_axis',  s_col:str=None, c_col:str=None,
-                g_col:str=None,
-                shape_size:float=40, ci_lwd:float=2, ci_colour:str='indianred',
-                connect_shape:bool = False,
+                y_col:str='y_axis',  s_col:str='o', c_col:str='black',
+                g_col:str=None, shape_size:float=40, ci_lwd:float=2,
+                ci_colour:str='indianred', connect_shape:bool = False,
                 connect_shape_colour='black', connect_shape_lwd=1,
                 span:bool = True, span_colour:list = ['white', 'lightgrey'],
                 ax:plt.axis=None, figsize:tuple=(10, 10),
@@ -114,12 +117,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
     y_col : str, default 'y_axis',
         The column name of the y-axis values used to differentiate
         estimates/studies.
-    s_col : str, default None,
-        The column name of the shape indicators. If None, a column
-        with `o` will be added.
-    c_col : str, default None,
-        The column name of the shape colour indicators. If None, a column
-        with `black` will be added.
+    s_col : str, default 'o',
+        The column name of the shape indicators. If string is not found in `df`
+        the string value will be added to an `s_col` column.
+    c_col : str, default 'black',
+        The column name of the shape colour indicators. If string is not found
+        in `df` the string value will be added to an `s_col` column.
     g_col : str, default None,
         The column name of the group indicator; often the outcome or study
         indicators. If None, a column with a unique value for each row will be
@@ -164,12 +167,20 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
     if not isinstance(df, pd.DataFrame):
         raise TypeError('df should be a pd.DataFrame')
     # set default shape and colour
-    if s_col is None:
-        s_col = 's_col'
-        df[s_col] = 'o'
-    if c_col is None:
-        c_col = 'c_col'
-        df[c_col] = 'black'
+    s_col_name = s_col
+    c_col_name = c_col
+    if s_col_name not in df.columns:
+        s_col_name = 's_col'
+        df[s_col_name] = s_col
+        warnings.warn('`s_col` not found in `df`, creating `s_col` column '
+                      'with value {}.'.format(s_col), RuntimeWarning)
+        del s_col
+    if c_col not in df.columns:
+        c_col_name = 'c_col'
+        df[c_col_name] = c_col
+        warnings.warn('`c_col` not found in `df`, creating `c_col` column '
+                      'with value {}.'.format(c_col), RuntimeWarning)
+        del c_col
     if g_col is None:
         g_col = 'g_col'
         df[g_col] = range(df.shape[0])
@@ -184,8 +195,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
         xs = row[x_col]
         ys = row[y_col]
         # add points
-        ax.scatter(x=xs, y=ys, s=shape_size, marker=row[s_col],
-                   c=row[c_col], **kwargs_scatter_dict)
+        ax.scatter(x=xs, y=ys, s=shape_size, marker=row[s_col_name],
+                   c=row[c_col_name], **kwargs_scatter_dict)
         # add confidene intervals
         # if none replace with the point estimate
         if lb_col is None:
@@ -216,8 +227,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
                         linewidth=connect_shape_lwd, zorder=0,
                         **kwargs_connect_segments_dict)
             else:
-                warnings.warn('The line segments have the same x-axis value, \
-the line plotting will be skipped.', RuntimeWarning)
+                warnings.warn('The line segments have the same x-axis value, '
+                              'the line plotting will be skipped.', RuntimeWarning)
     # ################### calculate y-axis mid points
     y_locations = y_locations[y_col].sort_values('min')
     y_mid = []
