@@ -186,7 +186,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
         df[g_col] = range(df.shape[0])
     # ################## should we create a figure and axis
     if ax is None:
-        f, ax = plt.subplots(figsize=fsize)
+        f, ax = plt.subplots(figsize=figsize)
     else:
         f = None
     # ################## plot points and errors
