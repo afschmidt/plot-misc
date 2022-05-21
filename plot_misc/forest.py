@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+from typing import Any, List, Type, Union, Tuple, Dict
 
 # #############################################################################
 # functions
@@ -10,7 +11,9 @@ import warnings
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=0, new_col:str='y_axis',
-                     sort_dict:dict=None, strata:str=None ):
+                     sort_dict:Union[Dict[str,int], None]=None,
+                     strata:Union[str, None]=None,
+                     ):
     """
     A helper function that adds a `y-axis` column (useful for Cartesian graphs)
     to a dataframe based on group membership. The within_pad arguments
@@ -86,13 +89,14 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     return df
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
-                y_col:str='y_axis',  s_col:str='o', c_col:str='black',
-                g_col:str=None, shape_size:float=40, ci_lwd:float=2,
+def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
+                ub_col:Union[str, None]=None, y_col:str='y_axis',
+                s_col:str='o', c_col:str='black', g_col:Union[str, None]=None,
+                shape_size:float=40, ci_lwd:float=2,
                 ci_colour:str='indianred', connect_shape:bool = False,
-                connect_shape_colour='black', connect_shape_lwd=1,
-                span:bool = True, span_colour:list = ['white', 'lightgrey'],
-                ax:plt.axis=None, figsize:tuple=(10, 10),
+                connect_shape_colour:str='black', connect_shape_lwd:float=1,
+                span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
+                ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
                 kwargs_scatter_dict:dict={},
                 kwargs_plot_ci_dict:dict={},
@@ -283,4 +287,5 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:str=None, ub_col:str=None,
         plt.gca().invert_yaxis()
     # ################### return the figure and axis
     return f, ax
+
 
