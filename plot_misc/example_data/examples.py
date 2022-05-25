@@ -278,12 +278,31 @@ def load_forest_data(*args, **kwargs):
     """
     # files
     df = pd.read_csv(
-        os.path.join(_ROOT_DATASETS_DIR, 'forest_data.tsv'),
+        os.path.join(_ROOT_DATASETS_DIR, 'forest_data.tsv.gz'),
         sep='\t', index_col=0
     )
     # return
     return df
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_barchart_data(*args, **kwargs):
+    """
+    Loads data counting the number of associations between cardiac chambers
+    (`LV`, `RV`, `LA`) and cardiac outcomes.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'barchart.tsv.gz'),
+        sep='\t', index_col=0,
+        **kwargs
+    )
+    # return
+    return df
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
 def load_table_data(*args, **kwargs):

@@ -1,28 +1,34 @@
 """
 Various bar chart functions.
 """
+import matplotlib.pyplot as plt
+import pandas as pd
+from typing import Any, List, Type, Union, Tuple, Optional, Dict
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolour='black', **kwargs):
+def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
+              colours:List[str]=['tab:blue', 'tab:pink'],
+              transparancy:float=0.7, wd:float=1, edgecolor:str='black',
+              **kwargs:Optional[Any]) -> plt.Axes:
     '''
     Function for a bar chart, remove top and left spines.
     
     Arguments
     ---------
-    df : pd.DataFrame
-    label : str
+    df : pd.DataFrame,
+    label : str,
         Column name in `df`.
-    columns : list of strings
+    columns : list of strings,
         List of column names in `df`.
     ax : plt.ax
-    colours : list
+    colours : list of strings,
         List with the number of colours equal to len(columns).
     transparancy : float, 0.7
         Degree of transparancy, between 0 and 1 (solid).
     wd : float
         Bar width.
-    edgecolour : str of colours, default `black`.
+    edgecolor : str of colours, default `black`.
     kwargs : dict
         Dictionary of kwargs
     
@@ -31,15 +37,19 @@ def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     plt.ax
     '''
     
+    # make sure we have sufficient colours
+    if len(columns) != len(colours):
+        raise AttributeError('The number of columns ({0}) does not match the '
+                             'number of columns ({1}).'.format(
+                                 len(columns), len(colours)))
     # get labels
     labels = df[label]
     # get columns
     fields=columns
-    
     # actual plotting
     left = len(df) * [0]
     for idx, name in enumerate(fields):
-        ax.bar(labels, height=df[name], bottom = left, edgecolor=edgecolour,
+        ax.bar(labels, height=df[name], bottom = left, edgecolor=edgecolor,
                 width=wd, color=colours[idx], alpha=transparancy,
                 **kwargs)
         left = left + df[name]
@@ -54,7 +64,7 @@ def stack_bar(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolour='black', **kwargs):
+              transparancy=0.7, wd=1, edgecolor='black', **kwargs):
     '''
     Function for a horizontal bar chart, remove top and left spines.
     
@@ -89,7 +99,7 @@ def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     # actual plotting
     left = len(df) * [0]
     for idx, name in enumerate(fields):
-        ax.barh(labels, width=df[name], left=left, edgecolor=edgecolour,
+        ax.barh(labels, width=df[name], left=left, edgecolor=edgecolor,
                 height=wd, color=colours[idx], alpha=transparancy,
                 **kwargs)
         left = left + df[name]

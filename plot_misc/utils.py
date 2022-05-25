@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Any, List, Type, Union, Tuple
+import pandas as pd
+from scipy import stats as ss
+from typing import Any, List, Type, Union, Tuple, Dict, ClassVar
 from plot_misc.constants import is_type
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def change_ticks(ax:plt.Axes, ticks:List[str], lables:Union[List[str],None]=None,
+def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None,
                  axis:str='x', log:bool=False):
     '''
     Takes an axis and changes the ticks labels and location
@@ -60,4 +62,38 @@ def change_ticks(ax:plt.Axes, ticks:List[str], lables:Union[List[str],None]=None
         except AttributeError as e:
             raise e
     # done
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def ks_test(data:pd.DataFrame, group:str, values:str,
+            nulldistribution:str='uniform') -> Dict[str, str]:
+    '''
+    Will loop over the unique `group` values to perform overall null-hypothesis
+    tests comparing sets of values against a null-distribution using the
+    Kolmogorov-Smirnoff test.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame
+    group : str,
+        A column name in `data` which will be used to group the `values`.
+    values : str,
+        A column name in `data` to which you want to apply the
+        Kolmogorov-Smirnoff test to.
+    nulldistribution : str, default `uniform`
+        The null-distribution the `values` should be compared against. This
+        maps to the `Scipy.stats` avalable distributions.
+    
+    
+    Returns
+    -------
+    A dictionary with `group` values and a `KstestResults` class a items.
+    '''
+    ks_res = {}
+    for c in data[group].unique():
+        temp = data[data[group] == c][values]
+        ks_res[c] = ss.kstest(temp[np.isnan(temp) == False], 'uniform')
+        # print(c + ' KS p-value: ' + str(ks_res[c][1]))
+    # return
+    return ks_res
+
 

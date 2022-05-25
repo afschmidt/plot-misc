@@ -1,20 +1,20 @@
 from scipy.cluster.hierarchy import dendrogram, linkage
-from scipy.cluster.hierarchy import ward, fcluster
 from scipy.cluster import hierarchy as hc
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_samples, silhouette_score
+from typing import Any, List, Type, Union, Tuple, Optional
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def sel_groups(data, metric = 'euclidean', method ='complete',
-               nmax = 10, m = None, col='Set2'):
+def pick_clusters(data:pd.DataFrame, metric:str='euclidean', method:str='complete',
+               nmax:int=10, m:Union[int,None]=None, col:str='Set2') -> pd.DataFrame:
     '''
     Function to select the optimum cut-point for a hc cluster algorithm and,
     generate groups and colours.
     '''
-    # optimum no of clusters
+    # optimum no. of clusters
     silhoutte = {}
     for n in range(2,nmax+1):
         groups = hc.fclusterdata(data, metric=metric, method=method,
@@ -52,11 +52,14 @@ def sel_groups(data, metric = 'euclidean', method ='complete',
 # rc2 = sel_groups(sd2, method='average', metric='euclidean', nmax=20, col='Set3')
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def clustermap(data, annot, col, fsize=(20, 25), fscale=0.393700787,
-               linewidths=1.0, cpos=(0.09, 0.02, 0.03, 0.10), fmt=".3",
-               annotsize=6, clab=r"dir $\times -\log_{10}$(p)",
-               clabfs=7, clabpos='left', clabtsize=5, xticklabsize=8,
-               yticklabsize=6, **kwargs):
+def clustermap(data:pd.DataFrame, annot:pd.DataFrame, col:List[float],
+               fsize:Tuple[float]=(20, 25), fscale:float=0.393700787,
+               linewidths:float=1.0,
+               cpos:Tuple[float]=(0.09, 0.02, 0.03, 0.10), fmt:str=".3",
+               annotsize:float=6, clab:str=r"dir $\times -\log_{10}$(p)",
+               clabfs:float=7, clabpos:str='left', clabtsize:float=5,
+               xticklabsize:float=8, yticklabsize:float=6,
+               **kwargs:Optional[Any]) -> plt.Figure:
     '''
     Wrapper over seaborn.clustermap.
     
