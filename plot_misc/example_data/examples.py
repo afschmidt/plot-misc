@@ -303,6 +303,27 @@ def load_barchart_data(*args, **kwargs):
     )
     # return
     return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_heatmap_data(*args, **kwargs):
+    """
+    Loads data representing pvalue times direction of exposures (columns)
+    effects on outcomes (rows).
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'heatmap_data.tsv.gz'),
+        sep='\t', index_col=0,
+        **kwargs
+    )
+    # return
+    return df
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
 def load_table_data(*args, **kwargs):

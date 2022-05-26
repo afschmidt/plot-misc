@@ -98,10 +98,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
                 ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
-                kwargs_scatter_dict:dict={},
-                kwargs_plot_ci_dict:dict={},
-                kwargs_connect_segments_dict:dict={},
-                kwargs_span_dict:dict={}
+                kwargs_scatter_dict:Dict[Any, Any]={},
+                kwargs_plot_ci_dict:Dict[Any, Any]={},
+                kwargs_connect_segments_dict:Dict[Any, Any]={},
+                kwargs_span_dict:Dict[Any, Any]={}
                 ):
                     
     """

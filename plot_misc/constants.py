@@ -3,7 +3,10 @@ Constants used throughout the package
 '''
 
 import pandas as pd
+import numpy.typing as npt
+import numpy as np
 from typing import Any, List, Type, Union, Tuple
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # NAMES
 
@@ -26,6 +29,12 @@ class TableNames(object):
     
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# numpy typing
+def as_array(a: npt.ArrayLike) -> np.ndarray:
+    return np.array(a)
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class InputValidationError(Exception):
     pass
