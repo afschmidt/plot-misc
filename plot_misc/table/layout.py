@@ -115,12 +115,13 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
                drop_original:bool=True, rename_column_values:dict=None,
                order_columns:list=None, ):
     '''
-    Formats a table using the following optionals:
+    Formats a table using the following `orderred` opperations:
+        - Renames column (either retaining or dropping the original columns)
+        - Renames column values using a `map` call
         - Stripping white space from string columns
         - Substituting strings
         - -1*log10 transformations on numerical columns
         - Moves columns towards the front,
-        - Renames column (either retaining or dropping the original columns)
     
     Returns the same input data if none of the optional arguments are supplied!
     
@@ -130,8 +131,10 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
     strip_columns : list of strings, default Nonetype
         The column names which should be stripped.
     replace_string_columns : dict, default Nonetype
-        A dictionary wit the column names as keys and a two element list
+        A dictionary with the column names as keys and a two element list
         for the original string and replacement string (in that order!).
+        Provide multiple repalcement calls to the same column as a nested list
+        of multiple two element internal lists.
     log10_columns : list of strings, default Nonetype
         Applies a -1 * log10 transformation.
     rename_columns : dict, default Nonetype
@@ -190,13 +193,26 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
         for key, value in replace_string_columns.items():
             # check if list
             is_type(value, list)
-            if len(value) != 2:
-                # check if it has two elements
-                raise ValueError('All of the `replace_string_columns` '
-                                 'dictionary values should be a list with two '
-                                 'entries')
-            # replace
-            frame[key] = frame[key].str.replace(value[0], value[1])
+            # do we want to visit the same column multiple times?
+            # check if nested list, and run over each list
+            if any(isinstance(i, list) for i in value):
+                for val in value:
+                    if len(val) != 2:
+                        # check if it has two elements
+                        raise ValueError('`replace_string_columns` '
+                                         'expectes a list with two entries '
+                                         'specifying the match and its '
+                                         'replacement.')
+                    frame[key] = frame[key].str.replace(val[0], val[1])
+            else:
+            # otherwise sinlge replacement
+                if len(value) != 2:
+                    # check if it has two elements
+                    raise ValueError('`replace_string_columns` '
+                                     'expectes a list with two entries '
+                                     'specifying the match and its '
+                                     'replacement.')
+                frame[key] = frame[key].str.replace(value[0], value[1])
     # ### which columns should be log10 transformed
     if not log10_columns is None:
         frame=_apply_and_rename(

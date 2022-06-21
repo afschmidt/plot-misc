@@ -25,7 +25,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     df : pd.DataFrame,
         The dataframe that contains the `group` of interrest.
     group : str,
-        A string that map to a column in df.
+        A string that maps to a column in df.
     strat : str, default None
         An optional df column which nests the `group` values.
     within_pad : float,
@@ -39,7 +39,8 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     new_col : str, default `y_axis`
         The name of the column that will be added to `df`.
     sort_dict : dict, default None
-        Supply a key:value-float combination dictionary to sort the rows on.
+        Supply a key:value-float combination dictionary to sort the rows on
+        `group` membership.
     
     Returns
     -------
@@ -284,7 +285,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     ax.set_yticklabels(y_locations.index)
     # ################### invert y-axis
     if reverse_y == True:
-        plt.gca().invert_yaxis()
+        ax.invert_yaxis()
+        # plt.gca().invert_yaxis()
     # ################### return the figure and axis
     return f, ax
 
