@@ -9,6 +9,62 @@ from typing import Any, List, Type, Union, Tuple, Dict
 # functions
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO write test
+def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
+              order_inner:Union[Dict[str, List[str]], None]=None
+              ) -> pd.DataFrame:
+    '''
+    Order a data frame by and outer and inner order, say by study and within
+    study by outcome.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame,
+    oder_outer : dict,
+        The dictionary key will be used to select the `data` column, and the
+        dictionary value should contain a list of string to order the column.
+    order_inner : dict, default `NoneType`
+        The dictionary key will be used to select the `data` column, and the
+        dictionary value should contain a list of string to order the column.
+        Set to `NoneType` to skip and only order by `oder_outer`.
+    
+    Returns
+    -------
+    order_data : pd.DataFrame.
+    '''
+    # check input
+    if len(order_outer) > 1:
+        raise AttributeError('Please supply a `dict` of length one.')
+    if len(order_inner) > 1:
+        raise AttributeError('Please supply a `dict` of length one.')
+    # ### algorithm
+    size_in = data.shape
+    outer_col = list(order_outer.keys())[0]
+    outer_lst = list(order_outer.values())[0]
+    order_data = pd.DataFrame()
+    # loop over outer order
+    for sel_outer in outer_lst:
+        slice_outer = data.loc[data[outer_col] == sel_outer]
+        # do we have an inner order
+        if not order_inner is None:
+            inner_col = list(order_inner.keys())[0]
+            inner_lst = list(order_inner.values())[0]
+            inner_data = pd.DataFrame()
+            for sel_inner in inner_lst:
+                slice_inner = slice_outer.loc[
+                    slice_outer[inner_col] == sel_inner]
+                inner_data = pd.concat([inner_data, slice_inner])
+                #end loop
+            slice_outer = inner_data
+            # end inner
+        order_data = pd.concat([order_data, slice_outer])
+    # ### check output
+    if order_data.shape != size_in:
+        IndexError('Input and output shape are distinct!')
+    # return
+    return order_data
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=0, new_col:str='y_axis',
                      sort_dict:Union[Dict[str,int], None]=None,
@@ -286,7 +342,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     # ################### invert y-axis
     if reverse_y == True:
         ax.invert_yaxis()
-        # plt.gca().invert_yaxis()
     # ################### return the figure and axis
     return f, ax
 

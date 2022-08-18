@@ -56,9 +56,9 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     
     # removing spines
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    # ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
+    # ax.spines['bottom'].set_visible(False)
     
     return ax
 
@@ -106,9 +106,9 @@ def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     
     # removing spines
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    # ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
+    # ax.spines['bottom'].set_visible(False)
     
     return ax
 
