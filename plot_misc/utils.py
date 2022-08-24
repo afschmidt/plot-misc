@@ -35,7 +35,7 @@ def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None
     is_type(axis, str)
     is_type(log, bool)
     # set labels
-    if isinstance(labels, str):
+    if isinstance(labels, list):
         if not len(labels) == len(ticks):
             raise ValueError('`labels` and `ticks` have distinct number of '
                              'entries.')
