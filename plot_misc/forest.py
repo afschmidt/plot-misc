@@ -67,7 +67,7 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=0, new_col:str='y_axis',
-                     sort_dict:Union[Dict[str,int], None]=None,
+                     sort_dict:Union[Dict[str,int], None, str]=None,
                      strata:Union[str, None]=None,
                      ):
     """
@@ -79,7 +79,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     Arguments
     ---------
     df : pd.DataFrame,
-        The dataframe that contains the `group` of interrest.
+        The dataframe that contains the `group` of interest.
     group : str,
         A string that maps to a column in df.
     strat : str, default None
@@ -96,7 +96,8 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
         The name of the column that will be added to `df`.
     sort_dict : dict, default None
         Supply a key:value-float combination dictionary to sort the rows on
-        `group` membership.
+        `group` membership. Set to `NoneType` to order rows by
+        `[order, strata]`. Set to `skip` to do nothing.
     
     Returns
     -------
@@ -113,8 +114,11 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     if sort_dict is None:
         # sort by group value
         df.sort_values(by=[group, strata], inplace=True)
+    elif sort_dict == 'skip':
+        # do nothing
+        pass
     else:
-        # sort by costom order
+        # sort by custom order
         order='order'
         df[order] = df[group].map(sort_dict)
         df.sort_values(by=[order, strata], inplace=True)

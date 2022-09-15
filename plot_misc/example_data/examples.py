@@ -344,3 +344,22 @@ def load_table_data(*args, **kwargs):
     return df
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_lollipop_data(*args, **kwargs):
+    """
+    Loads a feature importance table. Can be used to test the
+    `machine_learning` module.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'lollipop_data.tsv.gz'),
+        sep='\t', index_col=0
+    )
+    # return
+    return df
+
