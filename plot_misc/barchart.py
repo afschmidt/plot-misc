@@ -42,7 +42,7 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     plt.ax
     '''
     # ### check input
-    if any(df.isna()) == True:
+    if any(df.isna().any()):
         raise ValueError(MSG_MISSING_DF.format('df'))
     
     # make sure we have sufficient colours
@@ -99,7 +99,7 @@ def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     plt.ax
     '''
     # ### check input
-    if any(df.isna()) == True:
+    if any(df.isna().any()):
         raise ValueError(MSG_MISSING_DF.format('df'))
     # get labels
     labels = df[label]
@@ -150,7 +150,7 @@ def total_bar(df, label, subtotal_col, ax,
         `subtotal_kwargs` to supply kwargs for the individual calls to ax.bar.
     '''
     # ### check input
-    if any(df.isna()) == True:
+    if any(df.isna().any()):
         raise ValueError(MSG_MISSING_DF.format('df'))
     
     # get labels
@@ -209,7 +209,7 @@ def bar(df, label, column, ax, colours=['tab:blue', 'tab:pink'],
         `subtotal_kwargs` to supply kwargs for the individual calls to ax.bar.
     '''
     # ### check input
-    if any(df.isna()) == True:
+    if any(df.isna().any()):
         raise ValueError(MSG_MISSING_DF.format('df'))
     # get labels
     labels = df[label]
