@@ -115,7 +115,7 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
                drop_original:bool=True, rename_column_values:dict=None,
                order_columns:list=None, ):
     '''
-    Formats a table using the following `orderred` opperations:
+    Formats a table using the following `ordered` operations:
         - Renames column (either retaining or dropping the original columns)
         - Renames column values using a `map` call
         - Stripping white space from string columns
@@ -133,7 +133,7 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
     replace_string_columns : dict, default Nonetype
         A dictionary with the column names as keys and a two element list
         for the original string and replacement string (in that order!).
-        Provide multiple repalcement calls to the same column as a nested list
+        Provide multiple replacement calls to the same column as a nested list
         of multiple two element internal lists.
     log10_columns : list of strings, default Nonetype
         Applies a -1 * log10 transformation.
