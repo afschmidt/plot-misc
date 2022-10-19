@@ -114,3 +114,12 @@ def are_columns_in_df(
             )
             res = False
     return res
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# error messages
+class Error_MSG(object):
+    '''
+    A collection of error messages.
+    '''
+    MISSING_DF = '`{}` contains missing values.'
+

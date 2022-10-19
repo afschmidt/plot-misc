@@ -3,15 +3,10 @@ Various bar chart functions.
 """
 import matplotlib.pyplot as plt
 import pandas as pd
+from plot_misc.constants import Error_MSG
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# constants
-MSG_MISSING_DF = '`{}` contains missing values.'
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-import numpy as np
-data=pd.DataFrame([0, np.nan], [1, 1])
 def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
               colours:List[str]=['tab:blue', 'tab:pink'],
               transparancy:float=0.7, wd:float=1, edgecolor:str='black',
@@ -43,7 +38,7 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     '''
     # ### check input
     if any(df.isna().any()):
-        raise ValueError(MSG_MISSING_DF.format('df'))
+        raise ValueError(Error_MSG.MISSING_DF.format('df'))
     
     # make sure we have sufficient colours
     if len(columns) != len(colours):
@@ -71,8 +66,10 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     return ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolor='black', **kwargs):
+def stack_barh(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
+               colours:List[str]=['tab:blue', 'tab:pink'],
+               transparancy:float=0.7, wd:float=1, edgecolor:str='black',
+               **kwargs:Optional[Any]) -> plt.Axes:
     '''
     Function for a horizontal bar chart, remove top and left spines.
     
@@ -100,7 +97,7 @@ def stack_barh(df, label, columns, ax, colours=['tab:blue', 'tab:pink'],
     '''
     # ### check input
     if any(df.isna().any()):
-        raise ValueError(MSG_MISSING_DF.format('df'))
+        raise ValueError(Error_MSG.MISSING_DF.format('df'))
     # get labels
     labels = df[label]
     # get columns
@@ -151,7 +148,7 @@ def total_bar(df, label, subtotal_col, ax,
     '''
     # ### check input
     if any(df.isna().any()):
-        raise ValueError(MSG_MISSING_DF.format('df'))
+        raise ValueError(Error_MSG.MISSING_DF.format('df'))
     
     # get labels
     labels = df[label]
@@ -210,7 +207,7 @@ def bar(df, label, column, ax, colours=['tab:blue', 'tab:pink'],
     '''
     # ### check input
     if any(df.isna().any()):
-        raise ValueError(MSG_MISSING_DF.format('df'))
+        raise ValueError(Error_MSG.MISSING_DF.format('df'))
     # get labels
     labels = df[label]
     
