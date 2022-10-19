@@ -128,7 +128,8 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     n_group = len(df[group].unique())
     l_group = df[group].value_counts().unique()/n_strat
     if l_group.shape[0] != 1:
-        raise ValueError('The number of group elements is not unique')
+        raise ValueError('The number of group elements is not unique: {}.'.\
+                         format(l_group.shape[0]))
     else:
         l_group = l_group[0]
     # getting spacing
@@ -310,18 +311,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
     # ################### Add horizontal segments
     if span ==True:
-        # NOTE: not sure this part is required
-        # # ensure y_mid is a whole number
-        # whole_bool = [float(y).is_integer() for y in y_mid]
-        # if all(whole_bool) == False:
-        #     # round
-        #     y_mid = [y if b==True else round(y,0) for y,b in zip(y_mid, whole_bool)]
-        #     # warn
-        #     warnings.warn('The axis mid-points are not a whole number, will use \
-# approximate coordinates for the horizontal segments', RuntimeWarning)
-        # NOTE: end
         # add segments
-        for t in range(len(y_mid)):
+        for t in range(len(y_mid)-1):
             ymin = y_mid[t]
             # stop if t is too large
             try:
