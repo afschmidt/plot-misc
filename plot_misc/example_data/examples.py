@@ -363,3 +363,21 @@ def load_lollipop_data(*args, **kwargs):
     # return
     return df
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_volcano_data(**kwargs):
+    """
+    Loads a table with effect estimates and p-values. Can be used to test the
+    `volcano` module.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'volcano.tsv.gz'),
+        sep='\t', index_col=0, **kwargs
+    )
+    # return
+    return df
