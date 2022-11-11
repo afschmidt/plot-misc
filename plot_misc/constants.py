@@ -27,6 +27,18 @@ class TableNames(object):
     analysis        = 'analysis'
     index           = 'index'
     
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# make_heatmap
+class MakeHeatmapNames(object):
+    value_input    = 'curated_matrix_value'
+    annot_input    = 'curated_matrix_annotation'
+    annot_star     = 'matrix_star'
+    annot_pval     = 'matrix_pvalue'
+    annot_effect   = 'matrix_point_estimate'
+    value_point    = 'curated_matrix_point_estimate_value'
+    value_original = 'crude_point_estimate'
+    source_data    = 'source_data'
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS
 
