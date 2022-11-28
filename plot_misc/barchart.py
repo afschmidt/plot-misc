@@ -43,7 +43,7 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     # make sure we have sufficient colours
     if len(columns) != len(colours):
         raise AttributeError('The number of columns ({0}) does not match the '
-                             'number of columns ({1}).'.format(
+                             'number of colours ({1}).'.format(
                                  len(columns), len(colours)))
     # get labels
     labels = df[label]
@@ -123,7 +123,7 @@ def stack_barh(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
 def total_bar(df, label, subtotal_col, ax,
               total_col=None, colours=['grey', 'tab:blue'],
               transparancy=[0.7, 0.9], wd=[1, 0.6],
-              edgecolour=['black', 'black'], **kwargs):
+              edgecolor=['black', 'black'], **kwargs):
     '''
     A bar chart with a total column and overplotted subtotal columns.
     The first entry of each argument refers to the total chart, the second to
@@ -139,8 +139,8 @@ def total_bar(df, label, subtotal_col, ax,
         A list of colours.
     transparancy, wd : float
         A float to specify the colour alpha and bar width, respectivly.
-    edgecolour : str
-        The bar edgecolour.
+    edgecolor : str
+        The bar edgecolor.
     ax : plt.ax
     kwargs : dict
         Provide a dict of dictionaries with two keys `total_kwargs` and
@@ -167,12 +167,12 @@ def total_bar(df, label, subtotal_col, ax,
     
     # plot total
     if not total_col is None:
-        ax.bar(labels,height=total, edgecolor=edgecolour[0], width=wd[0],
+        ax.bar(labels,height=total, edgecolor=edgecolor[0], width=wd[0],
                color=colours[0], alpha=transparancy[0],
                **total_kwargs)
     
     # plot subtotal
-    ax.bar(labels,height=subtotal, edgecolor=edgecolour[1],
+    ax.bar(labels,height=subtotal, edgecolor=edgecolor[1],
            width=wd[1], color=colours[1], alpha=transparancy[1],
            **subtotal_kwargs)
     
@@ -184,22 +184,22 @@ def total_bar(df, label, subtotal_col, ax,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def bar(df, label, column, ax, colours=['tab:blue', 'tab:pink'],
-              transparancy=0.7, wd=1, edgecolour='black', **kwargs):
+              transparancy=0.7, wd=1, edgecolor='black', **kwargs):
     '''
     Plot a barchart with sequentially coloured bars.
     
     Arguments
     ---------
     df : pd.DF
-    label, columns : str
+    label, column : str
         a string referring to a column in `df` representing the x-axis labels
         and the y-axis values, respectivly.
     colours : list
         A list of colours.
     transparancy, wd : float
         A float to specify the colour alpha and bar width, respectivly.
-    edgecolour : str
-        The bar edgecolour.
+    edgecolor : str
+        The bar edgecolor.
     ax : plt.ax
     kwargs : dict
         Provide a dict of dictionaries with two keys `total_kwargs` and
@@ -212,7 +212,7 @@ def bar(df, label, column, ax, colours=['tab:blue', 'tab:pink'],
     labels = df[label]
     
     # actual plotting
-    ax.bar(labels,height=df[column], edgecolor=edgecolour,
+    ax.bar(labels,height=df[column], edgecolor=edgecolor,
            width=wd, color=colours, alpha=transparancy, **kwargs)
     
     # removing spines
