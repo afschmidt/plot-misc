@@ -78,6 +78,8 @@ The dataset can then be used as follows:
 import os
 import re
 import pandas as pd
+import numpy as np
+from plot_misc.constants import UtilsNames
 
 # The name of the example datasets directory
 _EXAMPLE_DATASETS = "example_datasets"
@@ -381,3 +383,84 @@ def load_volcano_data(**kwargs):
     )
     # return
     return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def heatmap_data(**kwargs):
+    """
+    Creates a dummy results pd.DF object to test the `make_heatmap` program.
+    """
+    data = pd.DataFrame({
+        UtilsNames.mat_index: [
+            'ldlc_glgc', 'hdlc_glgc', 'ldlc_glgc', 'hdlc_glgc', 'ldlc_glgc',
+            'hdlc_glgc', 'ldlc_glgc', 'hdlc_glgc'
+        ],
+        UtilsNames.mat_exposure: [
+            'SCF', 'SCF', 'TRAIL', 'TRAIL', 'IP10', 'IP10', 'IL2ra', 'IL2ra'
+        ],
+        UtilsNames.mat_outcome: [
+            'LDL-C', 'HDL-C', 'LDL-C', 'HDL-C', 'LDL-C', 'HDL-C', 'LDL-C',
+            'HDL-C'
+        ],
+        UtilsNames.mat_point: [
+            np.nan, np.nan, 0.0278005, -0.15723944, 0.0321544, -0.02524,
+            -0.2353, 0.023522
+        ],
+        UtilsNames.mat_pvalue: [
+            np.nan, np.nan, 0.000534346, 0.20464, 0.0001, 0.95426, 0.0052353,
+            0.25353
+        ]
+    }, **kwargs)
+    data.index = data[UtilsNames.mat_index]; data.index.name = 'index'
+    return data
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def heatmap_point_matrix(**kwargs):
+    """
+    Creates a dummy results pd.DF object to test the `make_heatmap` program.
+    Includes point estimates.
+    """
+    data = pd.DataFrame({
+        UtilsNames.mat_exposure_list[0]: [
+            0.023522, -0.233500,
+        ],
+        UtilsNames.mat_exposure_list[1]: [
+            -0.025240, 0.032154,
+        ],
+        UtilsNames.mat_exposure_list[2]: [
+            np.nan, np.nan,
+        ],
+        UtilsNames.mat_exposure_list[3]: [
+            -0.0157239, 0.027800
+        ],
+    }, **kwargs)
+    data.index = UtilsNames.mat_outcome_list
+    data.index.name = UtilsNames.mat_outcome
+    return data
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def heatmap_pvalue_matrix(**kwargs):
+    """
+    Creates a dummy results pd.DF object to test the `make_heatmap` program.
+    Includes p-values.
+    """
+    data = pd.DataFrame({
+        UtilsNames.mat_exposure_list[0]: [
+            0.253530, 0.005235,
+        ],
+        UtilsNames.mat_exposure_list[1]: [
+            0.95426, 0.00010,
+        ],
+        UtilsNames.mat_exposure_list[2]: [
+            np.nan, np.nan,
+        ],
+        UtilsNames.mat_exposure_list[3]: [
+            0.204640, 0.000534,
+        ],
+    }, **kwargs)
+    data.index = UtilsNames.mat_outcome_list
+    data.index.name = UtilsNames.mat_outcome
+    return data
+

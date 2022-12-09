@@ -1,32 +1,35 @@
 #!/usr/bin/env python3
+from ssl import Options
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy import stats as ss
-from typing import Any, List, Type, Union, Tuple, Dict, ClassVar
+from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
     is_type,
-    MakeHeatmapNames as MHnames
+    UtilsNames,
 )
 from plot_misc.table.layout import _nlog10_func
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Class
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 class MatrixHeatmapResults(object):
     '''
     The `calc_matrices` results objects
     '''
-    SET_ARGS = [MHnames.value_input,
-                MHnames.annot_input,
-                MHnames.annot_star,
-                MHnames.annot_pval,
-                MHnames.annot_effect,
-                MHnames.value_original,
-                MHnames.value_point,
-                MHnames.source_data,
-                ]
+    SET_ARGS = [
+        UtilsNames.value_input,
+        UtilsNames.annot_input,
+        UtilsNames.annot_star,
+        UtilsNames.annot_pval,
+        UtilsNames.annot_effect,
+        UtilsNames.value_original,
+        UtilsNames.value_point,
+        UtilsNames.source_data,
+    ]
     # Initiation the class
     def __init__(self, **kwargs):
         """
@@ -157,108 +160,78 @@ class MidpointNormalize(mpl.colors.Normalize):
         return np.interp(value, x, y, left=-np.inf, right=np.inf)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE transition this function over from merit_helper, integrate the Names
-# class into constants, change the defaults and add tests (for this entire
-# module).
-def extract(data:pd.DataFrame, exposures:list, phenotypes:list,
-            exposures_col:str, phenotypes_col:str,
-            point_col:str=Names.point_estimate,
-            pvalue_col:str=Names.pvalue):
+def extract(data:pd.DataFrame,
+            exposure_col:str,
+            outcome_col:str,
+            point_col:str,
+            pvalue_col:str,
+            **kwargs:Optional[Any],
+            ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Will extract p-values, and point-estimates from the `--file`, and subset
-    it on the subplied exposures and outcomes.
+    Will extract p-values, and point-estimates from a `data` pd.DataFrame.
     
     Parameters
     ----------
-    data:       ;pd.DataFrame
-        a pd.DataFrame with columns names[uniq_id], Names.phenotype,
-        Names.pvalue, Names.point_estimate.
-    exposures:  :list
-        a list of uniqily defined row indices that map to `data` exposure_col.
-    phenotypes:   :list
-        a list of uniquely defined phenotypes that map to `data` phenotypes_col.
+    data: pd.DataFrame
+        with columns that map to the `.*_col`.
     *_col: str,
-        The column names for `data`. Here the exposures_col, phenotypes_col,
-        are used as labels for the pd.DataFrame
+        The column names for `data`.
         
     Returns
     -------
     point_mat : pd.DataFrame, with point estimates
     pvalue_mat : pd.DataFrame, with p-values,
-    source_data : pd.DataFrame, source data
-    
     """
     ### subsetting
     # making sure we do not change the original `data`
     data = data.copy()
-    # checking if index should be added to the data
-    if phenotypes_col == MHnames.index:
-        data.reset_index()
-        data[MHnames.index] = data.index
-        data.index.name = ''
-    if exposures_col == MHnames.index:
-        data.reset_index()
-        data[MHnames.index] = data.index
-        data.index.name = ''
-    # cheking phenotypes are all available
-    missing_p = set(phenotypes).difference(data[phenotypes_col].tolist())
-    if not len(list(missing_p)) == 0:
-        raise KeyError("Some of the phenotypes are not present in the"
-                       "supplied data. The following names were not found: "
-                       "\n".join(map(str ,missing_p)))
-    else:
-        slice1 = data[data[phenotypes_col].isin(phenotypes)]
-    # cheking the exposures are present
-    missing = set(exposures).difference(slice1[exposures_col].tolist())
-    if not len(list(missing)) == 0:
-        raise KeyError("Some of the exposures are not present in the"
-                       "supplied data. The following names were not found: "
-                       "\n".join(map(str ,missing)))
-    else:
-        slice2 = slice1[slice1[exposures_col].isin(exposures)]
     ### getting estimates
-    point = slice2[[point_col, exposures_col, phenotypes_col]].copy()
-    pvalue = slice2[[pvalue_col, exposures_col, phenotypes_col]].copy()
-    ### ordering Rows
-    sorterRows = dict(zip(phenotypes, range(len(phenotypes))))
-    point['sort_rows'] = point.index.map(sorterRows)
-    point.sort_values(by = 'sort_rows', ascending = True, inplace=True)
-    order_rows = point[phenotypes_col].unique().tolist()
-    ### ordering cols
-    sorterCols = dict(zip(exposures, range(len(exposures))))
-    point['sort_cols'] = point.index.map(sorterCols)
-    point.sort_values(by = 'sort_cols', ascending = True, inplace=True)
-    order_cols = point[exposures_col].unique().tolist()
+    point = data[[point_col, exposure_col, outcome_col]].copy()
+    pvalue = data[[pvalue_col, exposure_col, outcome_col]].copy()
     ### matrix
-    point_mat = point.pivot_table(index=[phenotypes_col],
-                      columns = exposures_col,
-                      values = point_col
-                      ).reindex(index = order_rows, columns = order_cols)
-    pvalue_mat = pvalue.pivot_table(index=[phenotypes_col],
-                      columns = exposures_col,
-                      values = pvalue_col
-                      ).reindex(index = order_rows, columns = order_cols)
+    point_mat = point.pivot_table(index=[outcome_col],
+                      columns = exposure_col,
+                      values = point_col,
+                      **kwargs,
+                      )
+    pvalue_mat = pvalue.pivot_table(index=[outcome_col],
+                      columns = exposure_col,
+                      values = pvalue_col,
+                      **kwargs,
+                      )
     ### check the shape are correct
     if not point_mat.shape == pvalue_mat.shape:
         raise ValueError('P-value and point estimate matrices have different'
                          'shapes')
     else:
-        return point_mat, pvalue_mat, slice2
+        return point_mat, pvalue_mat
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def format_matrices(effect, pval, sig, log=True, ptrun=16, digits='3',
-                    symbol='★'):
+def format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
+                    log:bool=True, ptrun:float=16, digits:str='3',
+                    symbol:str='★') -> Tuple[  pd.DataFrame,
+                                               pd.DataFrame,
+                                               pd.DataFrame,
+                                               pd.DataFrame,
+                                               pd.DataFrame,
+                                               ]:
     """
-    Simple function that
+    Takes two matrices of point-estimates and p-values to:
         - log10s the p-values
-        - rounds to 4 dp
+        - rounds to `digits` dp
         - scales p-values times direction
         - masks non-significant point estimates
+    
+    The function will return multiple matrices either as floats or as strings.
+    The float matrices can be used to colour matplotlib figures for example.
+    The string matrices can be used to annotate figures, for example to
+    indicate significances.
+    
     Parameters
     ----------
     effect, p-value: pd.DataFrame
         Matrices of the same size with the effect estimates and p-values as
-        numerical/float entries.
+        floats.
     sig: float
         The significance p-value cut-off either bounded between 0 and 1,
         or -log10 transformed.
@@ -274,7 +247,7 @@ def format_matrices(effect, pval, sig, log=True, ptrun=16, digits='3',
     
     Returns
     -------
-    four pd.dataframes:
+    five pd.dataframes:
         1. direction times pvalue matrix; floats
         2. an effect estimate matrix masking non-significant results; str
         3. an star matrix masking non-significant results; str
@@ -329,14 +302,14 @@ def format_matrices(effect, pval, sig, log=True, ptrun=16, digits='3',
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def calc_matrices(data:pd.DataFrame,
-                  exposures_col:str,
-                  phenotypes_col:str,
+                  exposure_col:str,
+                  outcome_col:str,
                   point_col:str='point',
                   pvalue_col:str='pvalue',
                   alpha:float=-1*np.log10(0.05),
                   sig_numbers:int=2,
                   ptrun:float=16,
-                  annotate:str='stars',
+                  annotate:Union[str,None]='star',
                   without_log:bool=False,
                   mask_na:bool=True,
                   mapper:pd.DataFrame=pd.DataFrame(),
@@ -352,64 +325,68 @@ def calc_matrices(data:pd.DataFrame,
     
     Arguments
     ---------
-    data : pd.DataFrame
-    *_col : str,
+    data: pd.DataFrame
+    *_col: str,
         Column names in `data`
-    alpha  : float, default 0.05
+    alpha: float, default 0.05
         The significance cut-off.
-    sig_numbers : int, default 2
+    sig_numbers: int, default 2
         The number of significant numbers the cell annotations should have.
-    ptrun : float, default=16,
+    ptrun: float, default=16,
         P-values above this value will be truncated.
-    annotate : str, default `starts`
-        The cell annotation: 'stars', 'pvalues', 'pointestimates', 'None'
-    without_log : boolean, default False,
+    annotate: str, default 'star'
+        The cell annotation: 'star', 'pvalues', 'pointestimates',
+        'None'. Set to `NoneType` to simply return the
+        -log10(p-values) times effect direction
+    without_log: boolean, default False,
         If the p-value should _NOT_ be -log10 converted.
-    mask_na : boolean, default True,
+    mask_na: boolean, default True,
         If you want to mask missing results (e.g., replacing NAs by 0 or 1)
-    mapper : pd.DataFrame, default = an empty pd.DataFrame,
+    mapper: pd.DataFrame, default = an empty pd.DataFrame,
     
     Returns
     -------
-    res : :obj:`MatrixHeatmapResults`
-        Includes two curated matrix ready to use in a plotting function
-        as well as matrices useful for custom jobs or checking output.
+    res: `MatrixHeatmapResults`
+        Includes two `curated` matrix ready to use in a plotting function
+        with exact content dependent on the `annotate` argument.
+        
+        Additionally, returns matrices useful for custom jobs or checking
+        output.
+        
         The objects are pd.DataFrame with values as `floats` for plotting
         or, as `strings` for annotations.
     """
     #### check input
     # TODO
-    ### Decide which data to extract
-    exposures, phenotypes = _mapper_format(mapper, data,
-                                           phenotypes_col=phenotypes_col,
-                                           exposures_col=exposures_col)
     ### subsetting data
-    point_mat, pvalue_mat, source_data = extract(data, exposures=exposures,
-                                                 phenotypes=phenotypes,
-                                                 exposures_col=exposures_col,
-                                                 phenotypes_col=phenotypes_col,
+    point_mat, pvalue_mat, source_data = extract(data,
+                                                 exposure_col=exposure_col,
+                                                 outcome_col=outcome_col,
                                                  point_col=point_col,
-                                                 pvalue_col=pvalue_col)
+                                                 pvalue_col=pvalue_col,
+                                                 )
     ### formatting data
     values, annot_effect, annot_star, annot_pval, values_point =\
-    format_matrices(point_mat, pvalue_mat, sig=alpha,
-                    ptrun=ptrun, digits=str(sig_numbers),
-                    log=without_log == False)
+    format_matrices(
+        point_mat, pvalue_mat, sig=alpha,
+        ptrun=ptrun, digits=str(sig_numbers),
+        log=without_log == False,
+    )
     
     ### selecting the annotation to use
-    if annotate == 'stars':
+    if annotate == 'star':
         annot = annot_star
     elif annotate == 'pvalues':
         annot = annot_pval
     elif annotate == 'pointestimates':
         annot = annot_effect
-    elif annotate == 'None':
+    elif annotate is None:
         annot = pd.DataFrame().reindex_like(values)
         annot.fillna('', inplace=True)
     else:
         raise ValueError('Incorrect `annotate` value supplied '
                          'Please use: {}'.\
-                         format(['stars','pvalues', 'pointestimates', 'None']))
+                         format(['star','pvalues', 'pointestimates', 'None']))
     
     ### drop or mask NAs
     if mask_na == False:
@@ -429,14 +406,14 @@ def calc_matrices(data:pd.DataFrame,
         annot_input[annot_input == 'nan'] = '.'
     
     ### Return
-    res = {MHnames.value_input: values_input,
-           MHnames.annot_input: annot_input,
-           MHnames.annot_star: annot_star,
-           MHnames.annot_pval: annot_pval,
-           MHnames.annot_effect: annot_effect,
-           MHnames.value_original: values,
-           MHnames.value_point: values_point,
-           MHnames.source_data: source_data,
+    res = {UtilsNames.value_input: values_input,
+           UtilsNames.annot_input: annot_input,
+           UtilsNames.annot_star: annot_star,
+           UtilsNames.annot_pval: annot_pval,
+           UtilsNames.annot_effect: annot_effect,
+           UtilsNames.value_original: values,
+           UtilsNames.value_point: values_point,
+           UtilsNames.source_data: source_data,
            }
     return MatrixHeatmapResults(**res)
 
