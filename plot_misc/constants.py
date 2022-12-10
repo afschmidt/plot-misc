@@ -46,6 +46,10 @@ class UtilsNames(object):
     mat_outcome       = 'outcome'
     mat_exposure_list = ['IL2ra', 'IP10', 'SCF', 'TRAIL']
     mat_outcome_list  = ['HDL-C', 'LDL-C']
+    mat_annot_star    = 'star'
+    mat_annot_pval    = 'pvalues'
+    mat_annot_point   = 'point_estimates'
+    mat_annot_none    = '`NoneType`'
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS

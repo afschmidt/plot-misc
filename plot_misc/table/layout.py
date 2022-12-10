@@ -212,7 +212,8 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
                                      'expectes a list with two entries '
                                      'specifying the match and its '
                                      'replacement.')
-                frame[key] = frame[key].str.replace(value[0], value[1])
+                frame[key] = frame[key].str.replace(value[0], value[1],
+                                                    regex=True)
     # ### which columns should be log10 transformed
     if not log10_columns is None:
         frame=_apply_and_rename(

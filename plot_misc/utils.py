@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from ssl import Options
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -14,8 +13,8 @@ from plot_misc.table.layout import _nlog10_func
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Class
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MatrixHeatmapResults(object):
     '''
     The `calc_matrices` results objects
@@ -46,6 +45,26 @@ class MatrixHeatmapResults(object):
                 warnings.warn("argument '{0}' is set to 'None'".format(s))
                 setattr(self, s, None)
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class MidpointNormalize(mpl.colors.Normalize):
+    '''
+    Class to help renomralize the color scale.
+    '''
+    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+        self.vcenter = vcenter
+        super().__init__(vmin, vmax, clip)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        # Note also that we must extrapolate beyond vmin/vmax
+        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.]
+        return np.ma.masked_array(np.interp(value, x, y,
+                                            left=-np.inf, right=np.inf))
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def inverse(self, value):
+        y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+        return np.interp(value, x, y, left=-np.inf, right=np.inf)
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Functions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -139,36 +158,17 @@ def ks_test(data:pd.DataFrame, group:str, values:str,
     return ks_res
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class MidpointNormalize(mpl.colors.Normalize):
-    '''
-    Class to help renomralize the color scale.
-    '''
-    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
-        self.vcenter = vcenter
-        super().__init__(vmin, vmax, clip)
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __call__(self, value, clip=None):
-        # I'm ignoring masked values and all kinds of edge cases to make a
-        # simple example...
-        # Note also that we must extrapolate beyond vmin/vmax
-        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.]
-        return np.ma.masked_array(np.interp(value, x, y,
-                                            left=-np.inf, right=np.inf))
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def inverse(self, value):
-        y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
-        return np.interp(value, x, y, left=-np.inf, right=np.inf)
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def extract(data:pd.DataFrame,
+def _extract(data:pd.DataFrame,
             exposure_col:str,
             outcome_col:str,
             point_col:str,
             pvalue_col:str,
+            dropna:bool=False,
             **kwargs:Optional[Any],
             ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Will extract p-values, and point-estimates from a `data` pd.DataFrame.
+    Will extract p-values, and point-estimates from a `data` pd.DataFrame, and
+    create matrices with the exposure and outcome value on the margings.
     
     Parameters
     ----------
@@ -176,6 +176,10 @@ def extract(data:pd.DataFrame,
         with columns that map to the `.*_col`.
     *_col: str,
         The column names for `data`.
+    dropna: bool, default `False`
+        Set to `True` to remove columns with any missing data.
+    **kwargs
+        All other arguments are forwarded to `pivot_table`.
         
     Returns
     -------
@@ -192,11 +196,13 @@ def extract(data:pd.DataFrame,
     point_mat = point.pivot_table(index=[outcome_col],
                       columns = exposure_col,
                       values = point_col,
+                      dropna=dropna,
                       **kwargs,
                       )
     pvalue_mat = pvalue.pivot_table(index=[outcome_col],
                       columns = exposure_col,
                       values = pvalue_col,
+                      dropna=dropna,
                       **kwargs,
                       )
     ### check the shape are correct
@@ -207,7 +213,7 @@ def extract(data:pd.DataFrame,
         return point_mat, pvalue_mat
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
+def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
                     log:bool=True, ptrun:float=16, digits:str='3',
                     symbol:str='★') -> Tuple[  pd.DataFrame,
                                                pd.DataFrame,
@@ -301,6 +307,7 @@ def format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
     return pval, effect, star, pvalstring, effect_float
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE Add kwargs to doctstring for all functions
 def calc_matrices(data:pd.DataFrame,
                   exposure_col:str,
                   outcome_col:str,
@@ -312,12 +319,12 @@ def calc_matrices(data:pd.DataFrame,
                   annotate:Union[str,None]='star',
                   without_log:bool=False,
                   mask_na:bool=True,
-                  mapper:pd.DataFrame=pd.DataFrame(),
+                  **kwargs:Optional[Any],
                   ) -> MatrixHeatmapResults:
     """
     Getting matrices for the cluster heatmap. Note the p-values are expected
     to range between 0 and 1.
-
+    
     Will return two matrices: a value matrix with the -log_10(p-values) multiplied
     by the effect direction (e.g. based on the sign of `point`), and an
     annotation matrix, where significant finding are annotated as by
@@ -338,11 +345,12 @@ def calc_matrices(data:pd.DataFrame,
         The cell annotation: 'star', 'pvalues', 'pointestimates',
         'None'. Set to `NoneType` to simply return the
         -log10(p-values) times effect direction
-    without_log: boolean, default False,
+    without_log: boolean, default `False`,
         If the p-value should _NOT_ be -log10 converted.
-    mask_na: boolean, default True,
+    mask_na: boolean, default `True`,
         If you want to mask missing results (e.g., replacing NAs by 0 or 1)
-    mapper: pd.DataFrame, default = an empty pd.DataFrame,
+    **kwargs
+        All other arguments are forwarded to `_extract`.
     
     Returns
     -------
@@ -357,28 +365,36 @@ def calc_matrices(data:pd.DataFrame,
         or, as `strings` for annotations.
     """
     #### check input
-    # TODO
+    is_type(data, pd.DataFrame)
+    is_type(exposure_col, str)
+    is_type(outcome_col, str)
+    is_type(point_col, str)
+    is_type(pvalue_col, str)
+    is_type(alpha, float)
+    is_type(sig_numbers, (float, int))
+    is_type(without_log, bool)
+    is_type(mask_na, bool)
     ### subsetting data
-    point_mat, pvalue_mat, source_data = extract(data,
-                                                 exposure_col=exposure_col,
-                                                 outcome_col=outcome_col,
-                                                 point_col=point_col,
-                                                 pvalue_col=pvalue_col,
-                                                 )
+    point_mat, pvalue_mat = _extract(data,
+                                     exposure_col=exposure_col,
+                                     outcome_col=outcome_col,
+                                     point_col=point_col,
+                                     pvalue_col=pvalue_col,
+                                     **kwargs,
+                                     )
     ### formatting data
     values, annot_effect, annot_star, annot_pval, values_point =\
-    format_matrices(
-        point_mat, pvalue_mat, sig=alpha,
-        ptrun=ptrun, digits=str(sig_numbers),
-        log=without_log == False,
-    )
-    
+        _format_matrices(
+            point_mat, pvalue_mat, sig=alpha,
+            ptrun=ptrun, digits=str(sig_numbers),
+            log=without_log == False,
+        )
     ### selecting the annotation to use
-    if annotate == 'star':
+    if annotate == UtilsNames.mat_annot_star:
         annot = annot_star
-    elif annotate == 'pvalues':
+    elif annotate == UtilsNames.mat_annot_pval:
         annot = annot_pval
-    elif annotate == 'pointestimates':
+    elif annotate == UtilsNames.mat_annot_point:
         annot = annot_effect
     elif annotate is None:
         annot = pd.DataFrame().reindex_like(values)
@@ -386,8 +402,12 @@ def calc_matrices(data:pd.DataFrame,
     else:
         raise ValueError('Incorrect `annotate` value supplied '
                          'Please use: {}'.\
-                         format(['star','pvalues', 'pointestimates', 'None']))
-    
+                         format([UtilsNames.mat_annot_star,
+                                 UtilsNames.mat_annot_pval,
+                                 UtilsNames.mat_annot_point,
+                                 UtilsNames.mat_annot_none,
+                                 ]
+                                ))
     ### drop or mask NAs
     if mask_na == False:
         drop_c = values.isna().any(axis = 0) == False
@@ -404,7 +424,6 @@ def calc_matrices(data:pd.DataFrame,
         values_input = values.fillna(1, inplace=False)
         annot_input = annot.fillna('.', inplace=False)
         annot_input[annot_input == 'nan'] = '.'
-    
     ### Return
     res = {UtilsNames.value_input: values_input,
            UtilsNames.annot_input: annot_input,
@@ -413,7 +432,7 @@ def calc_matrices(data:pd.DataFrame,
            UtilsNames.annot_effect: annot_effect,
            UtilsNames.value_original: values,
            UtilsNames.value_point: values_point,
-           UtilsNames.source_data: source_data,
+           UtilsNames.source_data: data,
            }
     return MatrixHeatmapResults(**res)
 
