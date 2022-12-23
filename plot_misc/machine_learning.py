@@ -110,9 +110,8 @@ def lollipop(values:as_array, labels:as_array,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# data = examples.load_calibration_bins()
-# data = {'entry 1': data}
-# , 'lightgreen'
+# NOTE add LOESS functionality
+# NOTE add strings to constants.py
 def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
                 observed:str, predicted:str,
                 lower_observed:Union[None, str]=None,
@@ -290,12 +289,12 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         ax.scatter(x_bin, y_bin, c=dot_colour[idx], marker=dot_marker[idx],
                    **kwargs_dot_dict,
                    )
-        # NOTE can expand this to include an optional lowes curve
+        # NOTE can expand this to include an optional loess curve
         # NOTE need to add an entry point for individual level data
     # ################### set the plot params
     # making sure the axis is square
     # axes_min = min(ax.get_xlim()[0], ax.get_ylim()[0])
-    # NOTE this is slightly opionionated thinking that the lower limit should
+    # NOTE this is slightly opinionated thinking that the lower limit should
     # always start at zero.
     axes_max = max(ax.get_xlim()[1], ax.get_ylim()[1])
     ax.set_xlim(0, axes_max)
