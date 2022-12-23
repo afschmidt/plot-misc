@@ -464,3 +464,42 @@ def heatmap_pvalue_matrix(**kwargs):
     data.index.name = UtilsNames.mat_outcome
     return data
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_calibration_data(**kwargs):
+    """
+    Loads a table with binary outcomes and predicted risk. Can be used to test
+    the `machine_learning.calibration` function.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'calibration_data.tsv.gz'),
+        sep='\t', index_col=0, **kwargs,
+    )
+    # return
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_calibration_bins(**kwargs):
+    """
+    Loads a table with observed and predicted risk in 6 equally sized bins,
+    with lower and upper 95% confidence intervals for the observed risk. Can
+    be used to test the `machine_learning.calibration` function.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'calibration_bins.tsv.gz'),
+        sep='\t', index_col=0, **kwargs,
+    )
+    # return
+    return df
+

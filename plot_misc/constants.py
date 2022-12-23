@@ -98,6 +98,41 @@ def is_df(df: Any) -> bool:
     return is_type(df, pd.DataFrame)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def same_len(object1: Any, object2: Any,
+             object_names:Union[List[str], None]=None,
+             ) -> bool:
+    """
+    Check if two object's have the same length, and otherwise raise
+    `ValueError`.
+    
+    Arguments
+    ---------
+    object1, object2 : Any
+        Any type of object.
+    objects_names : list of strings
+        The two objects the series our sourced from. Will be returned in any
+        potential `IndexError` message.
+        
+    Returns
+    -------
+    True if all OK. Raises a ValueError otherwise.
+    """
+    n1 = len(object1)
+    n2 = len(object2)
+    if object_names is None:
+        object_names = ['object1', 'object2']
+    elif len(object_names) !=2:
+        raise ValueError('`object_names` should be `NoneType` or contain '
+                         'two strings')
+    # the actual test
+    if n1 != n2:
+        raise ValueError("The length of `{0}`: {1}, does not match the length "
+                         "of `{2}`: {3}.".format(object_names[0], n1,
+                                               object_names[1], n2)
+                         )
+    return True
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def are_columns_in_df(
     df: pd.DataFrame, expected_columns: Union[List[str], str],
     warning: bool=False
@@ -138,6 +173,26 @@ def are_columns_in_df(
             )
             res = False
     return res
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def string_to_list(object:Any) -> Union[Any, List[str]]:
+    '''
+    Checks if `object` is a string and wraps this in a list, returns the
+    original object if it is not a string.
+    
+    Parameters
+    ----------
+    object : Any
+        Any object that might be a string.
+    
+    Returns
+    -------
+    string wrapped in a list or the original object type.
+    '''
+    if isinstance(object, str):
+        return list(object)
+    else:
+        return object
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # error messages
