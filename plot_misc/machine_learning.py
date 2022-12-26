@@ -1,4 +1,5 @@
 # imports
+from matplotlib.colorbar import colorbar_factory
 import matplotlib.pyplot as plt
 import pandas as pd
 from plot_misc.constants import (
@@ -10,10 +11,12 @@ from plot_misc.constants import (
     InputValidationError,
     string_to_list,
 )
-from plot_misc.utils import change_ticks
-from typing import Any, List, Type, Union, Tuple, Dict
+from plot_misc.utils import (
+    change_ticks,
+    _update_kwargs,
+)
+from typing import Any, List, Type, Union, Tuple, Dict, Optional
 
-from plot_misc.example_data import examples
 # #############################################################################
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,13 +83,20 @@ def lollipop(values:as_array, labels:as_array,
         f = None
     # get index index to numeric
     index = range(values.shape[0])
-    # ################### plot lines and dots
-    ax.hlines(y=index, xmin=0, xmax=values, color=line_color,
-              linewidth=linewidth, **kwargs_lines_dict,
+    # ################### plot lines and dots, first updating the kwargs
+    new_lines_dict = _update_kwargs(kwargs_lines_dict, color=line_color,
+                                    linewidth=linewidth)
+    ax.hlines(y=index, xmin=0, xmax=values, **new_lines_dict,
               )
-    ax.plot(values, index, "o", c=dot_color, markeredgecolor=dot_edge_color,
-            markersize=dot_size, markeredgewidth=dot_edge_size,
-            **kwargs_plot_dict,
+    new_plot_dict = _update_kwargs(kwargs_plot_dict,
+                                   marker='o',
+                                   linestyle='None',
+                                   c=dot_color,
+                                   markeredgecolor=dot_edge_color,
+                                   markersize=dot_size,
+                                   markeredgewidth=dot_edge_size,
+                                   )
+    ax.plot(values, index, **new_plot_dict,
             )
     # ################### tick labels
     change_ticks(ax=ax, ticks=list(index), labels=list(labels), axis='y')
@@ -193,7 +203,6 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
             kwargs_dot_dict   --> ax.scatter
             kwargs_line_dict     --> ax.plot
             kwargs_diagonal_dict --> ax.axline
-    
     '''
     # ################### check input
     is_type(data, (dict, pd.DataFrame))
@@ -270,24 +279,33 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         # set confidence intervals
         y_ci = [y_bin_lb, y_bin_ub]
         x_ci = [x_bin, x_bin]
-        # Add the diagonal line
-        ax.axline(xy1=(0, 0), slope=1, lw=diagonal_linewdith,
-                  ls=diagonal_linestyle, c=diagonal_colour,
-                  **kwargs_diagonal_dict,
+        # Add the diagonal line, first updating the kwargs
+        new_diagonal_dict =\
+            _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewdith,
+                           ls=diagonal_linestyle, c=diagonal_colour)
+        ax.axline(xy1=(0, 0), slope=1, **new_diagonal_dict,
                   )
-        # add line connecting the dots
-        ax.plot(x_bin, y_bin, c=line_colour[idx],
-                linewidth=line_linewidth[idx], linestyle=line_linestyle[idx],
-                **kwargs_line_dict,
+        # add line connecting the dots, first updating the kwargs
+        new_line_dict =\
+            _update_kwargs(kwargs_line_dict, c=line_colour[idx],
+                           linewidth=line_linewidth[idx],
+                           linestyle=line_linestyle[idx],
+                           )
+        ax.plot(x_bin, y_bin, **new_line_dict,
                 )
-        # plot confidence interval
-        # TODO test this when no-confidence interval data is provided
-        ax.plot(x_ci, y_ci, c=ci_colour[idx], linewidth=ci_linewidth[idx],
-                **kwargs_ci_dict,
+        # plot confidence interval, first updating the kwargs
+        new_ci_dict =\
+            _update_kwargs(kwargs_ci_dict, c=ci_colour[idx],
+                           linewidth=ci_linewidth[idx],
+                           )
+        ax.plot(x_ci, y_ci, **new_ci_dict,
                 )
-        # plot dots
-        ax.scatter(x_bin, y_bin, c=dot_colour[idx], marker=dot_marker[idx],
-                   **kwargs_dot_dict,
+        # plot dots, first updating the kwargs
+        new_dot_dict =\
+            _update_kwargs(kwargs_dot_dict, c=dot_colour[idx],
+                           marker=dot_marker[idx],
+                           )
+        ax.scatter(x_bin, y_bin, **new_dot_dict,
                    )
         # NOTE can expand this to include an optional loess curve
         # NOTE need to add an entry point for individual level data

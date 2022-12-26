@@ -1,5 +1,5 @@
 """
-testing commandline_scripts.make_heatmap
+testing the `utils` module
 """
 import pandas as pd
 from plot_misc.constants import UtilsNames as UNames
@@ -8,8 +8,19 @@ from plot_misc.utils import (
     _extract,
     _format_matrices,
     calc_matrices,
+    _update_kwargs,
 )
 
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class TestUpdate_Kwargs(object):
+    '''
+    Testing the `_update_kwargs` function
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_update_kwargs(self):
+        res = _update_kwargs(update_dict={'c': 'black'}, c='red', alpha = 0.5,)
+        assert res == {'c': 'black', 'alpha': 0.5}
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing extraction and formating

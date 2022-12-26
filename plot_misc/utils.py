@@ -67,6 +67,43 @@ class MidpointNormalize(mpl.colors.Normalize):
         return np.interp(value, x, y, left=-np.inf, right=np.inf)
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Functions
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
+            ) -> Dict[Any, Any]:
+    '''
+    This function will take any number of `kwargs` and add them to an
+    `update_dict`. If there are any duplicate values in the `kwargs` and the
+    `update_dict`, the entries in the `update_dict` will take precedence.
+    
+    Parameters
+    ----------
+    update_dict : dict,
+        A dictionary with key - value pairs that should be combined with any
+        of the supplied kwargs.
+    kwargs :
+        Arbitrary keyword arguments.
+    
+    Returns
+    -------
+    dict
+        A dictionary with the update_dict and kwargs combined, where duplicate
+        entries from update_dict overwrite those in kwargs.
+    
+    Examples
+    --------
+        The function is particularly useful to overwrite `kwargs` that are
+        supplied to a nested function say
+        
+        >>> _update_kwargs(update_dict={'c': 'black'}, c='red',
+                         alpha = 0.5)
+        {'c': 'black', 'alpha': 0.5}
+    '''
+    old_dict = kwargs
+    new_dict = {**old_dict, **update_dict}
+    # returns
+    return new_dict
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None,
                  axis:str='x', log:bool=False):
