@@ -99,8 +99,7 @@ def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
                          alpha = 0.5)
         {'c': 'black', 'alpha': 0.5}
     '''
-    old_dict = kwargs
-    new_dict = {**old_dict, **update_dict}
+    new_dict = {**kwargs, **update_dict}
     # returns
     return new_dict
 

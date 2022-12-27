@@ -7,13 +7,13 @@ import plot_misc.machine_learning as ml
 from plot_misc.constants import UtilsNames as UNames
 from plot_misc.example_data import examples
 
-
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # CONSTANT
 VALUES='importance'
 LABELS='name'
 PRED = 'average_predict_risk'
 OBS = 'average_observed_risk'
+
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing the lollipop function
 class TestLollipop(object):
@@ -82,17 +82,20 @@ class TestLollipop(object):
         # running the function
         _, ax = ml.lollipop(
             values=data[VALUES].to_numpy(), labels=data[LABELS].to_numpy(),
-            kwargs_lines_dict={'linestyles': '--'},
+            kwargs_lines_dict={'linewidth': 22},
         )
         _, ax2 = ml.lollipop(
             values=data[VALUES].to_numpy(), labels=data[LABELS].to_numpy(),
-            kwargs_lines_dict={'alpha': 0.2},
+            kwargs_plot_dict={'marker': 's'},
         )
         # asserting
         line=ax.lines[0]
+        collect = ax.collections[0]
         line2=ax2.lines[0]
         assert all(line.get_xdata() == data[VALUES].to_numpy())
+        assert collect.get_linewidth() == 22
         assert all(line2.get_xdata() == data[VALUES].to_numpy())
+        assert line2.get_marker() == 's'
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing the calibration function
@@ -146,7 +149,7 @@ class TestClibration(object):
         LINE_LW = [1.5, 1.5]
         LINE_LS = ['--', '--']
         DOT_COL = ['lightcoral', 'lightgreen']
-        DOT_MARK = ['o', 'o']
+        DOT_MARK = ['s', 'o']
         # make plot
         _, ax = ml.calibration(data_dict, predicted=PRED, observed=OBS,
                                ci_colour=None, ci_linewidth=None,
@@ -158,6 +161,9 @@ class TestClibration(object):
         lines=ax.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
         assert all(lines[1].get_ydata() == data[OBS].to_numpy())
+        assert lines[9].get_c() == 'lightgreen'
+        assert lines[9].get_markerfacecolor() == 'lightgreen'
+        assert lines[1].get_markerfacecolor() == 'lightcoral'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_lollipop_multiple_datasets(self):
         # data
@@ -182,13 +188,19 @@ class TestClibration(object):
                                )
         # asserting
         lines=ax.lines
+        collect=ax.collections
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
+        assert collect[0].get_sizes() == 100
         lines=ax2.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
+        assert lines[1].get_alpha() == 0.2
         lines=ax3.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
+        assert lines[1].get_alpha() is None # the non-ci lines are not affected.
+        assert lines[2].get_alpha() == 0.2
         lines=ax4.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
+        assert lines[0].get_c() == 'red'
 
 
 
