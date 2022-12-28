@@ -145,7 +145,7 @@ def stack_barh(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     return ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def total_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
+def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
               total_col:Union[str,None]=None,
               colours:List[str]=['grey', 'tab:blue'],
               transparancy:List[float]=[0.7, 0.9], wd:List[float]=[1, 0.6],
@@ -155,22 +155,29 @@ def total_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
               ) -> plt.Axes:
     '''
     A bar chart with a total column and overplotted subtotal columns.
-    The first entry of each argument refers to the total chart, the second to
-    the subtotal chart.
+    The first entry of each argument refers to the subtotal chart, the second
+    to the total chart.
     
     Arguments
     ---------
-    df : pd.DF
-    label, total_col, subtotal_col : str
-        a string referring to a column in `df`. Skip total_col by setting it
-        to None (default).
-    colours : list
-        A list of colours.
-    transparancy, wd : float
-        A float to specify the colour alpha and bar width, respectivly.
-    edgecolor : str
+    df : pd.DataFrame,
+    label : str,
+        The column name with the axes labels you want to use.
+    subtotal_col : str,
+        The column name with the (y-axis) values (floats/int) that need to be
+        plotted.
+    total_col : str, default `NoneType`
+        The column name with the (y-axis) values (floats/int) that need to be
+        plotted. Skip total_col by setting it to None (default).
+    colours : List of strings,
+        A list of colours of the bars.
+    transparancy : List of floats,
+        For the alpha of the bars.
+    wd : List of floats,
+        A float to specify bar widths.
+    edgecolor : List of strings
         The bar edgecolor.
-    ax : plt.ax
+    ax : plt.Axes
     kwargs_*_dict : dict, default empty dict,
         Optional arguments supplied to the various plotting functions:
             total_kwargs_dict    --> ax.bar
@@ -186,27 +193,26 @@ def total_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
     # get labels
     labels = df[label]
     # counts
-    total = df[total_col]
     subtotal = df[subtotal_col]
-    # plot total
-    if not total_col is None:
-        # updating kwargs
-        new_total_kwargs = _update_kwargs(
-            update_dict=total_kwargs_dict,
-            edgecolor=edgecolor[0], width=wd[0], color=colours[0],
-            alpha=transparancy[0],
-        )
-        # running ax.bar
-        ax.bar(labels,height=total, **new_total_kwargs,
-               color=colours[0], alpha=transparancy[0],
-               **new_total_kwargs)
     # plot subtotal
     new_subtotal_kwargs = _update_kwargs(
-        update_dict=subtotal_kwargs_dict, edgecolor=edgecolor[1], width=wd[1],
-        color=colours[1], alpha=transparancy[1],
+        update_dict=subtotal_kwargs_dict, edgecolor=edgecolor[0], width=wd[0],
+        color=colours[0], alpha=transparancy[0],
     )
     ax.bar(labels,height=subtotal, **new_subtotal_kwargs,
            )
+    # plot total
+    if not total_col is None:
+        total = df[total_col]
+        # updating kwargs
+        new_total_kwargs = _update_kwargs(
+            update_dict=total_kwargs_dict,
+            edgecolor=edgecolor[1], width=wd[1], color=colours[1],
+            alpha=transparancy[1],
+        )
+        # running ax.bar
+        ax.bar(labels,height=total, **new_total_kwargs,
+               )
     # removing spines
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -232,13 +238,21 @@ def bar(df:pd.DataFrame, label:str, column:str, ax:plt.Axes,
     colours : list
         A list of colours, can be a single or multiple values (will get
         recycled).
-    transparancy, wd : float
-        A float to specify the colour alpha and bar width, respectively.
+    colours : str,
+        A list of colours of the bars.
+    transparancy : str,
+        For the alpha of the bars.
+    wd : str,
+        A float to specify bar widths.
     edgecolor : str
         The bar edgecolor.
-    ax : plt.ax
+    ax : plt.Axes
     kwargs
         Arbitrary keyword arguments for `ax.bar`.
+    
+    Returns
+    -------
+    plt.Axes
     '''
     # ### check input
     if any(df.isna().any()):

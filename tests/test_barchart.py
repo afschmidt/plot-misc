@@ -66,6 +66,41 @@ class TestStackBarH(object):
             TABLE_T.iloc[:,:-1].shape[0] * TABLE_T.iloc[:,:-1].shape[1]
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# total_bar
+class TestTotalBar(object):
+    """
+    Testing functions for the `total_bar` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_stack_barh(self):
+        # supplying external axes
+        fig, ax = plt.subplots(1, figsize=(1, 1))
+        fig, ax2 = plt.subplots(1, figsize=(1, 1))
+        # running the function
+        ax = barchart.subtotal_bar(TABLE_T, label=LABELS,
+                                total_col=TABLE_T.columns.to_list()[1],
+                                subtotal_col=TABLE_T.columns.to_list()[2],
+                                wd=[0.6, 0.4],
+                                ax=ax, total_kwargs_dict={'linewidth':2},
+                                )
+        ax2 = barchart.subtotal_bar(TABLE_T, label=LABELS, total_col=None,
+                                subtotal_col=TABLE_T.columns.to_list()[2],
+                                wd=[0.1],
+                                ax=ax2, subtotal_kwargs_dict={'linewidth':0.8},
+                                )
+        # asserting - getting the raw data is more difficult here will confirm
+        # the length instead
+        patch=ax.patches
+        patch2=ax2.patches
+        assert patch[0].get_width() == 0.6
+        assert patch[5].get_width() == 0.4
+        assert patch[5].get_linewidth() == 2.0
+        assert patch2[0].get_width() == 0.1
+        assert patch2[0].get_linewidth() == 0.8
+        assert len([p.get_y() for p in patch2]) ==\
+            TABLE_T.iloc[:,:-1].shape[0]
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # bar
 class TestBar(object):
     """
