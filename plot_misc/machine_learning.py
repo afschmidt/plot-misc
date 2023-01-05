@@ -11,7 +11,7 @@ from plot_misc.constants import (
     InputValidationError,
     string_to_list,
 )
-from plot_misc.utils import (
+from plot_misc.utils.utils import (
     change_ticks,
     _update_kwargs,
 )

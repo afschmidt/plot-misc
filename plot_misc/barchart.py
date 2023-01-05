@@ -4,7 +4,7 @@ Various bar chart functions.
 import matplotlib.pyplot as plt
 import pandas as pd
 from plot_misc.constants import Error_MSG
-from plot_misc.utils import _update_kwargs
+from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import (
     is_type,
     is_df,

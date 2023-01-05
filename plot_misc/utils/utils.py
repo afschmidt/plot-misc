@@ -65,6 +65,7 @@ class MidpointNormalize(mpl.colors.Normalize):
     def inverse(self, value):
         y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
         return np.interp(value, x, y, left=-np.inf, right=np.inf)
+
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Functions
 
@@ -188,8 +189,7 @@ def ks_test(data:pd.DataFrame, group:str, values:str,
     ks_res = {}
     for c in data[group].unique():
         temp = data[data[group] == c][values]
-        ks_res[c] = ss.kstest(temp[np.isnan(temp) == False], 'uniform')
-        # print(c + ' KS p-value: ' + str(ks_res[c][1]))
+        ks_res[c] = ss.kstest(temp[np.isnan(temp) == False], nulldistribution)
     # return
     return ks_res
 
@@ -343,7 +343,6 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
     return pval, effect, star, pvalstring, effect_float
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE Add kwargs to doctstring for all functions
 def calc_matrices(data:pd.DataFrame,
                   exposure_col:str,
                   outcome_col:str,

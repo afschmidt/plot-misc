@@ -4,7 +4,7 @@ testing the `utils` module
 import pandas as pd
 from plot_misc.constants import UtilsNames as UNames
 from plot_misc.example_data import examples
-from plot_misc.utils import (
+from plot_misc.utils.utils import (
     _extract,
     _format_matrices,
     calc_matrices,
