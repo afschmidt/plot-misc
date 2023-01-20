@@ -199,7 +199,7 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
         update_dict=subtotal_kwargs_dict, edgecolor=edgecolor[0], width=wd[0],
         color=colours[0], alpha=transparancy[0],
     )
-    ax.bar(labels,height=subtotal, **new_subtotal_kwargs,
+    ax.bar(labels, height=subtotal, **new_subtotal_kwargs,
            )
     # plot total
     if not total_col is None:

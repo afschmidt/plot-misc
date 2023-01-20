@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from typing import Any, List, Type, Union, Tuple, Dict
+from plot_misc.utils.utils import _update_kwargs
 
 # #############################################################################
 # functions
@@ -261,8 +262,13 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         xs = row[x_col]
         ys = row[y_col]
         # add points
-        ax.scatter(x=xs, y=ys, s=shape_size, marker=row[s_col_name],
-                   c=row[c_col_name], **kwargs_scatter_dict)
+        new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
+                                            s=shape_size,
+                                            marker=row[s_col_name],
+                                            c=row[c_col_name]
+        )
+        ax.scatter(x=xs, y=ys, **new_scatter_kwargs,
+                   )
         # add confidene intervals
         # if none replace with the point estimate
         if lb_col is None:
@@ -276,8 +282,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # plot
         x_values = [lb, ub]
         y_values = [ys, ys]
-        ax.plot(x_values, y_values, c=ci_colour, linewidth=ci_lwd,
-                **kwargs_plot_ci_dict)
+        new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
+                                            c=ci_colour, linewidth=ci_lwd,
+        )
+        ax.plot(x_values, y_values, **new_plot_ci_kwargs,
+                )
     # ################## aggregate coordinates
     # NOTE define min, max, mean as constants at the start
     group_y = df.groupby(y_col).agg({x_col: {'min', 'max'}})
@@ -289,9 +298,13 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         for xg, yg in zip(xg_value, yg_value):
             # only add segments if there are two distinct x-values
             if np.unique(xg).shape[0] == 2:
-                ax.plot(xg, yg, c=connect_shape_colour,
-                        linewidth=connect_shape_lwd, zorder=0,
-                        **kwargs_connect_segments_dict)
+                new_connect_segments_kwargs = _update_kwargs(
+                    update_dict=kwargs_connect_segments_dict,
+                    c=connect_shape, linewidth=connect_shape_lwd,
+                    zorder=0
+                )
+                ax.plot(xg, yg, **new_connect_segments_kwargs,
+                        )
             else:
                 warnings.warn('The line segments have the same x-axis value, '
                               'the line plotting will be skipped.', RuntimeWarning)
@@ -326,7 +339,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             else:
                 col = span_colour[1]
             # plot
-            ax.axhspan(ymin, ymax, color=col,zorder=0, **kwargs_span_dict)
+            new_span_kwargs = _update_kwargs(
+                update_dict=kwargs_span_dict,
+                color=col, zorder=0
+            )
+            ax.axhspan(ymin, ymax, **new_span_kwargs,
+                       )
     # ################### adjust y margins
     new_margins = [ax.get_ylim()[0], ax.get_ylim()[1]]
     new_margins[1] = y_mid[-1]
