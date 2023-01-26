@@ -13,8 +13,8 @@ from plot_misc.example_data import examples
 COLOURS = ['red', 'green', 'orange']
 EDGECOLOUR = 'black'
 LABELS = 'labels'
-TABLE_T = TABLE.T.copy()
 TABLE = examples.load_barchart_data()
+TABLE_T = TABLE.T.copy()
 TABLE_T[LABELS] = TABLE.T.index
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
