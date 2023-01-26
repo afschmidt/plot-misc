@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import warnings
 from typing import Any, List, Type, Union, Tuple, Dict
 from plot_misc.utils.utils import _update_kwargs
+from plot_misc.constants import ForestNames as FNames
 
 # #############################################################################
 # functions
@@ -34,10 +35,11 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     order_data : pd.DataFrame.
     '''
     # check input
+    AE_MSG = 'Please supply a `dict` of length one.'
     if len(order_outer) > 1:
-        raise AttributeError('Please supply a `dict` of length one.')
+        raise AttributeError(AE_MSG)
     if len(order_inner) > 1:
-        raise AttributeError('Please supply a `dict` of length one.')
+        raise AttributeError(AE_MSG)
     # ### algorithm
     size_in = data.shape
     outer_col = list(order_outer.keys())[0]
@@ -106,10 +108,10 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     """
     # check input
     if not group in df.columns:
-        raise KeyError('df does not contain column {0}'.format(group))
+        raise KeyError('`df` does not contain column {0}'.format(group))
     if strata is None:
         # use a place-holder strata
-        strata='strata_del'
+        strata=FNames.strata_del
         df[strata]=1
     # sort index to group column values together
     if sort_dict is None:
@@ -120,7 +122,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
         pass
     else:
         # sort by custom order
-        order='order'
+        order=FNames.order_col
         df[order] = df[group].map(sort_dict)
         df.sort_values(by=[order, strata], inplace=True)
         del df[order]
@@ -232,24 +234,24 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     """
     # ################### do check and set defaults
     if not isinstance(df, pd.DataFrame):
-        raise TypeError('df should be a pd.DataFrame')
+        raise TypeError('`df` should be a pd.DataFrame.')
     # set default shape and colour
     s_col_name = s_col
     c_col_name = c_col
     if s_col_name not in df.columns:
-        s_col_name = 's_col'
+        s_col_name = FNames.s_col
         df[s_col_name] = s_col
-        warnings.warn('`s_col` not found in `df`, creating `s_col` column '
-                      'with value {}.'.format(s_col), RuntimeWarning)
+        warnings.warn('`{0}` not found in `df`, creating `s_col` column '
+                      'with value {1}.'.format(s_col_name, s_col), RuntimeWarning)
         del s_col
     if c_col not in df.columns:
-        c_col_name = 'c_col'
+        c_col_name = FNames.c_col
         df[c_col_name] = c_col
-        warnings.warn('`c_col` not found in `df`, creating `c_col` column '
-                      'with value {}.'.format(c_col), RuntimeWarning)
+        warnings.warn('`{0}` not found in `df`, creating `c_col` column '
+                      'with value {1}.'.format(c_col_name, c_col), RuntimeWarning)
         del c_col
     if g_col is None:
-        g_col = 'g_col'
+        g_col = FNames.g_col
         df[g_col] = range(df.shape[0])
     # ################## should we create a figure and axis
     if ax is None:
@@ -265,7 +267,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
                                             s=shape_size,
                                             marker=row[s_col_name],
-                                            c=row[c_col_name]
+                                            c=row[c_col_name],
+                                            zorder=2,
         )
         ax.scatter(x=xs, y=ys, **new_scatter_kwargs,
                    )
@@ -289,19 +292,22 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 )
     # ################## aggregate coordinates
     # NOTE define min, max, mean as constants at the start
-    group_y = df.groupby(y_col).agg({x_col: {'min', 'max'}})
-    y_locations = df.groupby(g_col).agg({y_col: {'mean', 'min', 'max'}})
+    group_y = df.groupby(y_col).agg({x_col: {FNames.min,FNames.max}})
+    y_locations = df.groupby(g_col).agg({y_col: {
+        FNames.mean,FNames.min, FNames.max
+    }})
     # ################## segments between points
     if connect_shape ==True:
-        xg_value = [ [min, max] for min, max in zip(group_y[x_col,'min'], group_y[x_col,'max'])]
+        xg_value = [ [min, max] for min, max in zip(group_y[x_col,FNames.min],
+                                                    group_y[x_col,FNames.max])]
         yg_value = [ [yval, yval] for yval in  group_y.index]
         for xg, yg in zip(xg_value, yg_value):
             # only add segments if there are two distinct x-values
             if np.unique(xg).shape[0] == 2:
                 new_connect_segments_kwargs = _update_kwargs(
                     update_dict=kwargs_connect_segments_dict,
-                    c=connect_shape, linewidth=connect_shape_lwd,
-                    zorder=0
+                    c=connect_shape_colour, linewidth=connect_shape_lwd,
+                    zorder=1
                 )
                 ax.plot(xg, yg, **new_connect_segments_kwargs,
                         )
@@ -309,18 +315,18 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 warnings.warn('The line segments have the same x-axis value, '
                               'the line plotting will be skipped.', RuntimeWarning)
     # ################### calculate y-axis mid points
-    y_locations = y_locations[y_col].sort_values('min')
+    y_locations = y_locations[y_col].sort_values(FNames.min)
     y_mid = []
     for r in range(y_locations.shape[0]):
-        maxy = y_locations.iloc[r]['max']
+        maxy = y_locations.iloc[r][FNames.max]
         try:
-            miny = y_locations.iloc[r+1]['min']
+            miny = y_locations.iloc[r+1][FNames.min]
         except IndexError:
             miny = np.nan
         # get mid
         y_mid.append(np.nanmean([maxy, miny]))
     # add the starting and endpoints
-    y_mid.insert(0, y_locations.iloc[0]['min'])
+    y_mid.insert(0, y_locations.iloc[0][FNames.min])
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
     # ################### Add horizontal segments
     if span ==True:
@@ -350,7 +356,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     new_margins[1] = y_mid[-1]
     ax.set_ylim(new_margins)
     # ################### add y-axis labels
-    ax.set_yticks(y_locations['mean'])
+    ax.set_yticks(y_locations[FNames.mean])
     ax.set_yticklabels(y_locations.index)
     # ################### invert y-axis
     if reverse_y == True:
