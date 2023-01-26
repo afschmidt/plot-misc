@@ -29,6 +29,18 @@ class TableNames(object):
     
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Forest plot
+class ForestNames(object):
+    s_col      = 's_col'
+    c_col      = 'c_col'
+    g_col      = 'g_col'
+    strata_del = 'strata_del'
+    order_col  = 'order'
+    min        = 'min'
+    max        = 'max'
+    mean       = 'mean'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names
 class UtilsNames(object):
     value_input       = 'curated_matrix_value'
