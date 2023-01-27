@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plot_misc.forest as forest
 import plot_misc.example_data.examples as examples
+from plot_misc.constants import ForestNames as FNames
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # CONSTANT
@@ -13,32 +14,96 @@ CMTOINCH = 1/2.54
 SHAPE_DICT = {'PGS only': 'o', 'PGS plus': 's', 'PGS extended': 'H'}
 COL_DICT = {'wo T2DM/CVD': 'orangered', 'w T2DM': 'blueviolet',
               'w T2DM & CVD': 'limegreen'}
+# NOTE keep the numeric order to simplify testing
+SORT_DICT = {'AF': 0,  'CVD': 1, 'CHD': 2,
+             'HF': 3, 'CVD + AF + HF': 4,'Ischaemic Stroke': 5, }
 COL_NAME='col'
 SHAPE_NAME='shape'
 POINT = 'test_cstatistic'
 UB = POINT + '_ub'
 LB = POINT + '_lb'
+GROUP='evaluated_outcome'
+MODEL='model'
+ORDER_OUTER ={GROUP: ['CVD', 'AF', 'HF', 'Ischaemic Stroke', 'CVD + AF + HF']}
+ORDER_INNER ={MODEL: ['PGS only', 'PGS extended', 'PGS plus']}
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # DATA
 data1 = examples.load_forest_data()
-# add y-axis position, col and shape - NOTE add strings to constants mod
-data1['y_axis'] = [0.0, 2.0, 4.0, 0.0, 2.0, 4.0, 0.0, 2.0, 4.0, 10.0, 12.0,
-                   14.0, 10.0, 12.0, 14.0, 10.0, 12.0, 14.0, 20.0, 22.0, 24.0,
-                   20.0, 22.0, 24.0, 20.0, 22.0, 24.0, 30.0, 32.0, 34.0, 30.0,
-                   32.0, 34.0, 30.0, 32.0, 34.0, 40.0, 42.0, 44.0, 40.0, 42.0,
-                   44.0, 40.0, 42.0, 44.0, 50.0, 52.0, 54.0, 50.0, 52.0, 54.0,
-                   50.0, 52.0, 54.0]
+#  col and shape
 data1[COL_NAME] = data1.subgroup_name.map(COL_DICT)
 data1[SHAPE_NAME] = data1.model.map(SHAPE_DICT)
 # select a single 'study'
 data2 = data1[data1.model=='PGS only'].copy()
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# assign_distance
+class TestOrderRow(object):
+    '''
+    Test the `order_row` function
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_order_row(self):
+        # copy data
+        data_in = data1.copy()
+        # run
+        res1 = forest.order_row(data_in, order_outer=ORDER_OUTER,
+                               order_inner=ORDER_INNER,
+                               )
+        res2 = forest.order_row(data_in, order_outer=ORDER_OUTER,
+                               )
+        # test
+        assert list(res1[GROUP].unique()) == list(ORDER_OUTER.values())[0]
+        assert list(res1[MODEL].unique()) == list(ORDER_INNER.values())[0]
+        assert list(res1[res1[GROUP]=='AF'][MODEL].unique()) ==\
+            list(ORDER_INNER.values())[0]
+        assert list(res2[GROUP].unique()) == list(ORDER_OUTER.values())[0]
+        assert list(res2[MODEL].unique()) != list(ORDER_INNER.values())[0]
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# assign_distance
+class TestAssignDistance(object):
+    '''
+    Test the `_assign_distance` function
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_assign_distance_default(self):
+        # removing y_axis
+        data_in = data1.copy()
+        del data_in[FNames.y_col]
+        # getting y_axis
+        res = forest._assign_distance(data_in, group=GROUP)
+        # test
+        assert FNames.y_col in res.columns
+        assert res[FNames.y_col].mean() == 58.0
+        assert sum(res[FNames.y_col].isnull()) == 0
+        # testing if the y-axis values are the distinct per model
+        assert list(res[res['model'] == 'PGS only'][FNames.y_col]) != \
+            list(res[res['model'] == 'PGS plus'][FNames.y_col])
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_assign_distance_custom(self):
+        # removing y_axis
+        data_in = data1.copy()
+        del data_in[FNames.y_col]
+        # getting y_axis
+        res = forest._assign_distance(data_in, group=GROUP, strata='model',
+                                      start=2,
+                                      sort_dict=SORT_DICT,
+                                      )
+        # test
+        assert list(res[GROUP].unique()) == list(SORT_DICT.keys())
+        # testing if the y-axis values are the same per model
+        assert list(res[res['model'] == 'PGS only'][FNames.y_col]) == \
+            list(res[res['model'] == 'PGS plus'][FNames.y_col])
+        assert res[FNames.y_col].mean() == 24.0
+        assert res[FNames.y_col].min() == 2
+        assert sum(res[FNames.y_col].isnull()) == 0
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_forest
 class TestPlotForest(object):
     """
-    Testing functions for the `plot_forest` function.
+    Testing the `plot_forest` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest(self):

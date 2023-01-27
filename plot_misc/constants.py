@@ -34,11 +34,13 @@ class ForestNames(object):
     s_col      = 's_col'
     c_col      = 'c_col'
     g_col      = 'g_col'
+    y_col      = 'y_axis'
     strata_del = 'strata_del'
     order_col  = 'order'
     min        = 'min'
     max        = 'max'
     mean       = 'mean'
+    
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names
