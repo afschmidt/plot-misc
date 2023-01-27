@@ -38,8 +38,9 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     AE_MSG = 'Please supply a `dict` of length one.'
     if len(order_outer) > 1:
         raise AttributeError(AE_MSG)
-    if len(order_inner) > 1:
-        raise AttributeError(AE_MSG)
+    if not order_inner is None:
+        if len(order_inner) > 1:
+            raise AttributeError(AE_MSG)
     # ### algorithm
     size_in = data.shape
     outer_col = list(order_outer.keys())[0]

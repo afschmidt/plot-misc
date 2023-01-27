@@ -79,7 +79,10 @@ import os
 import re
 import pandas as pd
 import numpy as np
-from plot_misc.constants import UtilsNames
+from plot_misc.constants import (
+    UtilsNames,
+    ForestNames,
+)
 
 # The name of the example datasets directory
 _EXAMPLE_DATASETS = "example_datasets"
@@ -283,6 +286,16 @@ def load_forest_data(*args, **kwargs):
         os.path.join(_ROOT_DATASETS_DIR, 'forest_data.tsv.gz'),
         sep='\t', index_col=0
     )
+    # add y-axis
+    df[ForestNames.y_col] = \
+        [
+            0.0, 2.0, 4.0, 0.0, 2.0, 4.0, 0.0, 2.0, 4.0, 10.0, 12.0,
+            14.0, 10.0, 12.0, 14.0, 10.0, 12.0, 14.0, 20.0, 22.0, 24.0,
+            20.0, 22.0, 24.0, 20.0, 22.0, 24.0, 30.0, 32.0, 34.0, 30.0,
+            32.0, 34.0, 30.0, 32.0, 34.0, 40.0, 42.0, 44.0, 40.0, 42.0,
+            44.0, 40.0, 42.0, 44.0, 50.0, 52.0, 54.0, 50.0, 52.0, 54.0,
+            50.0, 52.0, 54.0
+        ]
     # return
     return df
 
