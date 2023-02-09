@@ -125,6 +125,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         for x, y, l in zip(xs, ys, above[point_labels]):
             texts.append(ax.text(x, y, l, size=tsize))
         if adjust:
+            # NOTE update the kwargs to a dict and add the overwrite function
             adjust_text(texts, lim=lim, zorder=3, ax=ax,
                         arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
                         **kwargs)

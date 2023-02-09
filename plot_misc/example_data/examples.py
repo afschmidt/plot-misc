@@ -516,3 +516,22 @@ def load_calibration_bins(**kwargs):
     # return
     return df
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_incidence_matrix_data(**kwargs):
+    """
+    Loads a table linking genes to traits, represented by a `1` with a `0`
+    for genes and traits without a potential assocaition.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'incidence_matrix_data.tsv.gz'),
+        sep='\t', index_col=0, **kwargs,
+    )
+    # return
+    return df
+

@@ -110,6 +110,7 @@ def _apply_and_rename(data:pd.DataFrame, original_columns:list,
     return data
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE refactor this into a Class where each part can be called as a function
 def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
                log10_columns:list=None, rename_columns:dict=None,
                drop_original:bool=True, rename_column_values:dict=None,
@@ -161,6 +162,10 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
     is_type(rename_columns, (dict, type(None)))
     is_type(rename_column_values, (dict, type(None)))
     is_type(drop_original, bool)
+    # ### constants
+    VE_MSG = ('`replace_string_columns` expectes a list with two entries '
+              'specifying the match and its replacement.'
+              )
     # ### copy()
     frame = data.copy()
     # ### renaming
@@ -199,19 +204,13 @@ def formatting(data, strip_columns:list=None, replace_string_columns:dict=None,
                 for val in value:
                     if len(val) != 2:
                         # check if it has two elements
-                        raise ValueError('`replace_string_columns` '
-                                         'expectes a list with two entries '
-                                         'specifying the match and its '
-                                         'replacement.')
+                        raise ValueError(VS_MSG)
                     frame[key] = frame[key].str.replace(val[0], val[1])
             else:
             # otherwise sinlge replacement
                 if len(value) != 2:
                     # check if it has two elements
-                    raise ValueError('`replace_string_columns` '
-                                     'expectes a list with two entries '
-                                     'specifying the match and its '
-                                     'replacement.')
+                    raise ValueError(VS_MSG)
                 frame[key] = frame[key].str.replace(value[0], value[1],
                                                     regex=True)
     # ### which columns should be log10 transformed

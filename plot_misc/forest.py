@@ -168,8 +168,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
                 kwargs_span_dict:Dict[Any, Any]={}
-                ):
-                    
+                ) -> plt.Axes:
     """
     A forest plot function, that allows for grouping of estimates by `group`.
     Related if there are estimates with the same `y_col` value these get
