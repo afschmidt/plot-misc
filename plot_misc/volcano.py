@@ -9,7 +9,7 @@ from typing import Any, List, Type, Union, Tuple, Optional, Dict
 def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  point_labels:Union[str,None]=None, legend:bool=False,
                  fsize:Tuple[float, float]=(7,10),
-                 adjust:bool=False, lim:float=1000,
+                 annot:bool=True, adjust:bool=False, lim:float=1000,
                  alpha:float=0.00001,
                  col:Tuple[str, str, str]=('orangered','dimgrey','lightcoral'),
                  xlab:str='Point estimate',
@@ -23,21 +23,23 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  **kwargs:Optional[Any],
                  ):
     '''
-    Creates a volcano plots, where significant results are labeled.
+    Creates a volcano plots, were significant results are labeled.
     
     Arguments
     ---------
     Data : pd.DataFrame
         A pandas dataframe with -log10(pvalues) and
         effect estimates and a column the points can be labels by.
-    y_column, x_column, point_labels : str
+    y_column, x_column, points_labels : str
         A column name in data.
     legend : boolean
         Should the legend be returned (default: False).
     fsize : tuple
         Figure size W by H in inches.
-    adjust : boolean
-        Should overplotting of annotations be decreased.  Note this starts a
+    annot : boolean
+        Should significant dots be annotated, by the `point_labels` column.
+    adust : boolean
+        Should overplotting of `annot` be decreased.  Note this starts a
         (computational demanding) iterative process.
     lim : float
         The tolerance for overplotting, higher numbers indicate lower tolerance
@@ -54,8 +56,6 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         Size of the dots
     tsize : float
         Size of the text size
-    transparency_ns : float
-        Transparency value of the non-significant results (default 0.6)
     text_index : list
         An optional list of pandas indices or booleans to subset the printed
         labels.
@@ -72,8 +72,8 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     '''
     
     # raise warning
-    if (adjust == True and point_labels == None):
-        warnings.warn('`adjust` is ignored if `point_labels` is None',
+    if (adjust == True and annot == False):
+        warnings.warn('`adjust` is ignored if `annot` is False',
                       SyntaxWarning)
     
     ### getting figure
@@ -109,14 +109,14 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ### do we want to set the ylim
     if not ylim is None:
         plt.ylim( ylim[0], ylim[1] )
-    # adjust text only if labels are specified
-    if not point_labels is None:
+    # adjust text only if annot is true
+    if annot:
         # check if column is present
         if not point_labels in data.columns:
             raise IndexError('`point_label` is not present in the data.columns')
         # get text, do we want to subset
         if not text_index is None:
-            text_data = data[data[point_labels].isin(text_index)]
+            text_data = data[text_index]
             above = text_data[text_data[y_column] >= threshold]
             xs = above[x_column]
             ys = above[y_column]
