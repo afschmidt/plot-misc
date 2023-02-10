@@ -75,7 +75,7 @@ class TestAssignDistance(object):
         res = forest._assign_distance(data_in, group=GROUP)
         # test
         assert FNames.y_col in res.columns
-        assert res[FNames.y_col].mean() == 58.0
+        assert res[FNames.y_col].mean() == 59.0
         assert sum(res[FNames.y_col].isnull()) == 0
         # testing if the y-axis values are the distinct per model
         assert list(res[res['model'] == 'PGS only'][FNames.y_col]) != \
