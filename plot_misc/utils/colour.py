@@ -1,5 +1,5 @@
 '''
-Basic collection of colours
+Basic collection of colours.
 '''
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

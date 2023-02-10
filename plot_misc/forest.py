@@ -1,3 +1,10 @@
+'''
+A module to draw forest plots.
+
+Aside from the plotting functions the moduel contains fuctions to
+appropriatly orrientate input DataFrames.
+'''
+
 # imports
 import pandas as pd
 import numpy as np

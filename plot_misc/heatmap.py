@@ -1,6 +1,6 @@
 
 '''
-Heatmas functions
+A module to draw and annotate heatmaps using matplotlib.
 
 Code addapted from:
     <https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html>
@@ -25,7 +25,8 @@ def heatmap(data:Union[pd.DataFrame, as_array],
             cbar_label:str="",
             cbar_kw:Dict[Any, Any]={},
             ax:Union[plt.Axes, None]=None,
-            **kwargs:Optional[Any]):
+            **kwargs:Optional[Any]) -> Tuple[matplotlib.image.AxesImage,
+                                             matplotlib.colorbar.Colorbar]:
     """
     Create a heatmap from a numpy array and two lists of labels.
     
@@ -56,6 +57,10 @@ def heatmap(data:Union[pd.DataFrame, as_array],
         not provided, use current axes or create a new one.  Optional.
     **kwargs
         All other arguments are forwarded to `imshow`.
+    
+    Returns
+    -------
+    mpl.image.AxesImage, mpl.colorbar.Colorbar
     """
     
     # create a axes if needed
@@ -113,7 +118,7 @@ def annotate_heatmap(im:plt.Axes.imshow,
                      valfmt:Union[str, matplotlib.ticker.Formatter, None]=None,
                      textcolors:Union[Tuple[str], List[str]]=("black", "white"),
                      threshold:Union[float,None]=None, **text_kw:Optional[Any],
-                     ):
+                     ) -> List[plt.Text]:
     """
     A function to annotate a heatmap.
     
@@ -137,6 +142,12 @@ def annotate_heatmap(im:plt.Axes.imshow,
     **text_kw
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
+    
+    Returns
+    -------
+    List of plt.text.Text:
+        The plt.text.Text objects contain `tuple`-like objects with the
+        Cartesian-coordinates and the text for each coordinate.
     """
     
     # mapping data to matrix

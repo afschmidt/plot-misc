@@ -1,5 +1,5 @@
 """
-Various bar chart functions.
+A collection of various bar chart functions.
 """
 import matplotlib.pyplot as plt
 import pandas as pd

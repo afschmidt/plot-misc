@@ -1,7 +1,9 @@
-# A function to draw incidence matrices.
-#
-# It will make a n by m grid of lines  populating the intersections with dots.
-# important intersection will be highlighted
+'''
+A function to draw incidence matrices.
+
+It will make a n by m grid of lines  populating the intersections with dots.
+important intersection will be highlighted
+'''
 
 # importing
 import pandas as pd

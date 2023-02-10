@@ -1,5 +1,5 @@
 '''
-Constants used throughout the package
+Constants used throughout the plot-misc package.
 '''
 
 import pandas as pd

@@ -1,3 +1,8 @@
+'''
+A collection of figure templates relevant for machine learning projects.
+
+Includes, for example, code for lollipop graphs or calibration plots.
+'''
 # imports
 from matplotlib.colorbar import colorbar_factory
 import matplotlib.pyplot as plt
