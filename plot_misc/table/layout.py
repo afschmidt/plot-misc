@@ -19,6 +19,9 @@ from plot_misc.constants import (
 # constants
 MAXLOG10=20
 
+warnings.warn('The `layout.py` module will be moved to the `data-clean` '
+              'package in the near future.',
+              FutureWarning)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _nlog10_func(p, max=MAXLOG10):
     """
