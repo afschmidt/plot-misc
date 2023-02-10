@@ -70,7 +70,7 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
-                     between_pad:float=4, start:float=0, new_col:str='y_axis',
+                     between_pad:float=4, start:float=1, new_col:str='y_axis',
                      sort_dict:Union[Dict[str,int], None, str]=None,
                      strata:Union[str, None]=None,
                      ):
