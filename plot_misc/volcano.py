@@ -1,3 +1,12 @@
+'''
+Provides a function to draw and annotate volcano plots.
+
+Dots are plotted on a Cartesian-grid with typically the -log10(p-value) on
+the y-axis and a measure of magnitude on the x-axis. Different colours can be
+used to identify certain key parts of the grahp.
+
+Label overlap is addressed by sourcing `adjustText`.
+'''
 import matplotlib.pyplot as plt
 import numpy as np
 from adjustText import adjust_text

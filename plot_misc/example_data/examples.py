@@ -1,11 +1,6 @@
 """Provides centralised access to example data sets that can be used in tests
 and also in example code and/or jupyter notebooks.
 
-The `skeleton_package.example_data.examples` module is very simple, this is
-not really designed for editing via end users but they should call the two
-public methods functions, `skeleton_package.example_data.examples.get_data()`,
-`skeleton_package.example_data.examples.help()`.
-
 Notes
 -----
 Data can be "added" either through functions that generate the data on the fly

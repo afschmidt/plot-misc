@@ -1,4 +1,9 @@
-#!/usr/bin/env python3
+'''
+A collection of general utility functions not belonging to a single type of
+plot.
+'''
+
+
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
