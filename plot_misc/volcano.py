@@ -2,13 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from adjustText import adjust_text
 from pandas.core.frame import DataFrame
+from plot_misc.utils.utils import _update_kwargs
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_volcano(data:DataFrame, y_column:str, x_column:str,
-                 point_labels:Union[str,None]=None, legend:bool=False,
-                 fsize:Tuple[float, float]=(7,10),
+                 point_label:Union[str,None]=None, legend:bool=False,
+                 fsize:Union[Tuple[float, float], None]=None,
                  adjust:bool=False, lim:float=1000,
                  alpha:float=0.00001,
                  col:Tuple[str, str, str]=('orangered','dimgrey','lightcoral'),
@@ -16,11 +17,13 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  ylab:str=r'$-log_{10}(pvalue)$',
                  ylim:Union[List[float],None]=None,
                  msize:float=10,
-                 tsize:float=5,
+                 lsize:float=5,
                  transparency_ns:float=0.6,
-                 text_index:Union[List[str],None]=None,
+                 index_label:Union[List[str],None]=None,
                  ax:Union[plt.Axes, None]=None,
-                 **kwargs:Optional[Any],
+                 label_kwargs_dict:Dict[Any, Any]={},
+                 scatter_sig_kwargs_dict:Dict[Any, Any]={},
+                 scatter_nonsig_kwargs_dict:Dict[Any, Any]={},
                  ):
     '''
     Creates a volcano plots, where significant results are labeled.
@@ -30,12 +33,12 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     Data : pd.DataFrame
         A pandas dataframe with -log10(pvalues) and
         effect estimates and a column the points can be labels by.
-    y_column, x_column, point_labels : str
+    y_column, x_column, point_label : str
         A column name in data.
     legend : boolean
         Should the legend be returned (default: False).
-    fsize : tuple
-        Figure size W by H in inches.
+    fsize : tuple, default `NoneType`.
+        Figure size W by H in inches. Set to `NoneType` to skip.
     adjust : boolean
         Should overplotting of annotations be decreased.  Note this starts a
         (computational demanding) iterative process.
@@ -52,18 +55,21 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         The y-limit, by default is simply uses the data limits.
     msize : float
         Size of the dots
-    tsize : float
+    lsize : float
         Size of the text size
     transparency_ns : float
         Transparency value of the non-significant results (default 0.6)
-    text_index : list
+    index_label : list
         An optional list of pandas indices or booleans to subset the printed
         labels.
     ax : plt.axes
         An optional matplotlib axis. If supplied the function works on the axis
         and does not return anything.
-    **kwargs : dict
-        Optional arguments for `adjust_text`.
+    *_kwargs_dict : dict, default empty dict,
+        Optional arguments supplied to the various plotting functions:
+            label_kwargs_dict          -- > adjust_text
+            scatter_sig_kwargs_dict    -- > ax.bar
+            scatter_nonsig_kwargs_dict -- > ax.bar
     
     Returns
     -------
@@ -72,8 +78,8 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     '''
     
     # raise warning
-    if (adjust == True and point_labels == None):
-        warnings.warn('`adjust` is ignored if `point_labels` is None',
+    if (adjust == True and point_label == None):
+        warnings.warn('`adjust` is ignored if `point_label` is None',
                       SyntaxWarning)
     
     ### getting figure
@@ -90,44 +96,51 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     above = data[data[y_column] >= threshold]
     xs = above[x_column]
     ys = above[y_column]
-    ax.scatter(xs, ys, c=col[0], edgecolor=(1, 1, 1, 0), zorder=2,
-               label=r'$-\log_{10}$(p-value) > ' + str(round(threshold, 2)),
-               s=msize)
+    # kwargs
+    new_sig_kwargs = _update_kwargs(
+        update_dict=scatter_sig_kwargs_dict,
+        edgecolor=(1, 1, 1, 0), zorder=2, c=col[0], s=msize,
+    )
+    ax.scatter(xs, ys, **new_sig_kwargs)
     ### getting data below threshold
     below = data[data[y_column] < threshold]
     xns = below[x_column]
     yns = below[y_column]
-    ax.scatter(xns, yns, c=col[1], edgecolor=(1, 1, 1, 0),
-               linewidths=0.0,
-               label='Not Sig', zorder=2, s=msize, alpha=transparency_ns
-               )
+    # kwargs
+    new_nonsig_kwargs = _update_kwargs(
+        update_dict=scatter_nonsig_kwargs_dict,
+        edgecolor=(1, 1, 1, 0), zorder=2, linewidths=0.0, s=msize,
+        alpha=transparency_ns, c=col[1],
+    )
+    ax.scatter(xns, yns,  **new_nonsig_kwargs,)
     ### adding annotations
-    if legend:
-        ax.legend()
     plt.xlabel(xlab)
     plt.ylabel(ylab)
     ### do we want to set the ylim
     if not ylim is None:
         plt.ylim( ylim[0], ylim[1] )
     # adjust text only if labels are specified
-    if not point_labels is None:
+    if not point_label is None:
         # check if column is present
-        if not point_labels in data.columns:
-            raise IndexError('`point_label` is not present in the data.columns')
+        if not point_label in data.columns:
+            raise IndexError('`point_label` is not present in the data.columns.')
         # get text, do we want to subset
-        if not text_index is None:
-            text_data = data[data[point_labels].isin(text_index)]
+        if not index_label is None:
+            text_data = data.loc[index_label]
             above = text_data[text_data[y_column] >= threshold]
             xs = above[x_column]
             ys = above[y_column]
         # getting the actual labels
         texts = []
-        for x, y, l in zip(xs, ys, above[point_labels]):
-            texts.append(ax.text(x, y, l, size=tsize))
+        for x, y, l in zip(xs, ys, above[point_label]):
+            texts.append(ax.text(x, y, l, size=lsize))
         if adjust:
             # NOTE update the kwargs to a dict and add the overwrite function
-            adjust_text(texts, lim=lim, zorder=3, ax=ax,
-                        arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
-                        **kwargs)
+            new_label_kwargs = _update_kwargs(
+                updaete_dict=label_kwargs_dict,
+                lim=lim, zorder=3, ax=ax,
+                arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
+            )
+            adjust_text(texts, **new_label_kwargs,)
     # return the figure and axes
     return f, ax
