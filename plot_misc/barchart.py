@@ -178,7 +178,7 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
     edgecolor : List of strings
         The bar edgecolor.
     ax : plt.Axes
-    kwargs_*_dict : dict, default empty dict,
+    *_kwargs_dict : dict, default empty dict,
         Optional arguments supplied to the various plotting functions:
             total_kwargs_dict    --> ax.bar
             subtotal_kwargs_dict --> ax.bar
