@@ -59,6 +59,9 @@ class TestPlotVolcano(object):
                             point_label='label',
                             index_label=index,
                             lsize=20,
+                            label_kwargs_dict={
+                                'arrowprops':dict(arrowstyle='->', color='red')
+                            },
                             )
         # check if label is there
         text = ax.axes.texts.pop()
