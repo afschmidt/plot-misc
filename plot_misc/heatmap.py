@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import is_type, as_array
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
@@ -55,6 +56,10 @@ def heatmap(data:Union[pd.DataFrame, as_array],
     ax : plt.Axes, default NoneType
         A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
         not provided, use current axes or create a new one.  Optional.
+    *_kw : dict, default empty dict,
+        Optional arguments supplied to the various plotting functions:
+            grid_kw --> ax.grid
+            cbar_kw --> ax.figure.colorbar
     **kwargs
         All other arguments are forwarded to `imshow`.
     
@@ -82,6 +87,7 @@ def heatmap(data:Union[pd.DataFrame, as_array],
     im = ax.imshow(matrix, **kwargs)
     # Create colorbar
     if cbar_bool == True:
+        # NOTE if the kwargs for colobar is extended use `_update_kwargs
         cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
         cbar.ax.set_ylabel(cbar_label, rotation=-90, va="bottom")
     else:
@@ -106,8 +112,11 @@ def heatmap(data:Union[pd.DataFrame, as_array],
     ax.set_xticks(np.arange(matrix.shape[1]+1)-.5, minor=True)
     ax.set_yticks(np.arange(matrix.shape[0]+1)-.5, minor=True)
     # grid
-    ax.grid(which="minor", color=grid_col, linestyle=grid_linestyle,
-            linewidth=grid_linewidth, **grid_kw)
+    new_grid_kwargs = _update_kwargs(
+        update_dict=grid_kw, which="minor", color=grid_col,
+                     linestyle=grid_linestyle, linewidth=grid_linewidth,
+                     )
+    ax.grid(**new_grid_kwargs)
     ax.tick_params(which="minor", bottom=False, left=False)
     # return stuff
     return im, cbar
@@ -117,7 +126,8 @@ def annotate_heatmap(im:plt.Axes.imshow,
                      data:Union[pd.DataFrame, as_array, None]=None,
                      valfmt:Union[str, matplotlib.ticker.Formatter, None]=None,
                      textcolors:Union[Tuple[str], List[str]]=("black", "white"),
-                     threshold:Union[float,None]=None, **text_kw:Optional[Any],
+                     threshold:Union[float,None]=None,
+                     **text_kw:Optional[Any],
                      ) -> List[plt.Text]:
     """
     A function to annotate a heatmap.
@@ -130,7 +140,8 @@ def annotate_heatmap(im:plt.Axes.imshow,
         A 2D numpy array of shape (M, N). Optional.
     valfmt : str or `matplotlib.ticker.Formatter`, default NoneType
         The format of the annotations inside the heatmap.  This should either
-        use the string format method, e.g. "$ {x:.2f}", or be a
+        use the string format method, e.g. "$ {x:.2f}" - (note the `x` is needs
+        to be included to represent the numerical), or be a
         `matplotlib.ticker.Formatter`.  Optional.
     textcolors: list of tuple of string, default ('black', 'white')
         A pair of colors.  The first is used for values below a threshold,
@@ -169,10 +180,10 @@ def annotate_heatmap(im:plt.Axes.imshow,
             threshold = None
     # Set default alignment to center, but allow it to be
     # overwritten by text_kw.
-    # kw will act as kwargs for im.axes.text
-    kw = dict(horizontalalignment="center",
-              verticalalignment="center")
-    kw.update(text_kw)
+    kw = _update_kwargs(update_dict=text_kw,
+                        horizontalalignment="center",
+                        verticalalignment="center",
+                        )
     # Get the formatter in case a string is supplied
     if not valfmt is None:
         if isinstance(valfmt, str):

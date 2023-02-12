@@ -76,9 +76,9 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         and does not return anything.
     *_kwargs_dict : dict, default empty dict,
         Optional arguments supplied to the various plotting functions:
-            label_kwargs_dict          -- > adjust_text
-            scatter_sig_kwargs_dict    -- > ax.bar
-            scatter_nonsig_kwargs_dict -- > ax.bar
+            label_kwargs_dict          --> adjust_text
+            scatter_sig_kwargs_dict    --> ax.bar
+            scatter_nonsig_kwargs_dict --> ax.bar
     
     Returns
     -------
