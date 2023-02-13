@@ -146,7 +146,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         if adjust:
             # NOTE update the kwargs to a dict and add the overwrite function
             new_label_kwargs = _update_kwargs(
-                updaete_dict=label_kwargs_dict,
+                update_dict=label_kwargs_dict,
                 lim=lim, zorder=3, ax=ax,
                 arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
             )
