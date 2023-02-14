@@ -10,7 +10,7 @@ This repository collects plotting modules written on top of `matplotlib` or
 plot-misc can be installed pip installed to a specific conda environment by 
 first activating the desired environment.
 
-```
+```sh
 conda activate ENVIRONMENT_NAME
 # update your packages using conda
 conda env update --file resources/conda_env/conda_update.yml
