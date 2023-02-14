@@ -12,6 +12,9 @@ first activating the desired environment.
 
 ```
 conda activate ENVIRONMENT_NAME
+# update your packages using conda
+conda env update --file resources/conda_env/conda_update.yml
+# install plot-misc 
 python -m pip install -e .
 ```
 

@@ -1,3 +1,4 @@
+name: plot_misc
 channels:
   - anaconda
   - conda-forge
@@ -20,6 +21,4 @@ dependencies:
   - pyplink=1.*
   - adjusttext=0.7.*
   - pip
-
-
 
