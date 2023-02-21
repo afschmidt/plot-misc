@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import seaborn as sns
 import plot_misc.example_data.examples as examples
 import plot_misc.heatmap as heatmap
 
@@ -76,3 +77,19 @@ class TestAnnotateHeatmap(object):
         # assert
         assert len(texts) == DATA.shape[0] * DATA.shape[1]
         assert texts[0].get_text() == '{:.1%}'.format(DATA.iloc[0,0])
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# clustermap
+class TestClusterMap(object):
+    """
+    Testing the `clustermap` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_clustermap(self):
+        # plotting
+        cm = heatmap.clustermap(data=DATA, fsize=(25,25))
+        # asserting
+        assert isinstance(cm, sns.matrix.ClusterGrid)
+        assert (cm.data.to_numpy() == DATA.to_numpy()).all()
+        assert cm.dendrogram_col.method == 'average'
+        assert cm.dendrogram_col.metric == 'euclidean'
+        assert cm.cbar_pos == (0.09, 0.02, 0.03, 0.10)

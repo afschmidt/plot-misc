@@ -9,6 +9,7 @@ Code addapted from:
 # modules
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
@@ -204,3 +205,108 @@ def annotate_heatmap(im:plt.Axes.imshow,
             texts.append(text)
     # returning stuff
     return texts
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def clustermap(data:pd.DataFrame,
+               cmap:matplotlib.colormaps=matplotlib.colormaps['Spectral'],
+               annot:Union[pd.DataFrame, None]=None,
+               fsize:Tuple[float]=(15, 15),
+               linewidths:float=1.0,
+               cpos:Union[None, Tuple[float]]=(0.09, 0.02, 0.03, 0.10),
+               annotsize:float=6, clab:str='', clabfs:float=7,
+               fmt:str=".3",
+               clabpos:str='left', clabtsize:float=5,
+               xticklabsize:float=8, yticklabsize:float=6,
+               yticks:bool=True, xticks:bool=True,
+               cbar_dict_kw:Dict[Any, Any] = {},
+               tree_dict_kw:Dict[Any, Any] = {},
+               annot_dict_kw:Dict[Any, Any] = {},
+               clustermap_dict_kw:Dict[Any, Any] = {},
+               ) -> sns.matrix.ClusterGrid:
+    '''
+    Creates a heatmap where the rows and columns are clustered by the values in
+    `data`; wraps `sns.clustermap`.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame
+        A datafarme of shape (M, N).
+    fsize : tuple of two floats, default (15, 15)
+        figure size in cm
+    linewidths : float, default 1.0
+        Width of the lines that will divide each cell.
+    annot : pd.DataFrame, default None
+        An opional dataframe used for annotation.
+    annotsize : float, default 6.0
+        The fontsize of the annotations, will be parsed to
+        `matplotlib.axes.Axes.text`.
+    fmt : string, default '.3'
+        String formatting code to use when adding annotations.
+    cmap : matplotlib.colormaps, default 'viridis'
+        matplotlib colormaps
+    cpos : tuple of four floats,
+        Position of the colorbar axes in the figure
+        (left, bottom, width, height). Set to None to disable colour bar.
+    clab : str, default ' '
+        colour guide y-axis title.
+    clabsf : float, default 7.0.
+        The title fontsize
+    clabpos : str, 'left'.
+        Position of the title.
+    clabtsize : float, default 5.0
+        colour guide tick label fontsize.
+    xticklabsize : float, default 8
+        The x-axis tick label fontsize.
+    yticklabsize : float, default 6
+        The y-axis tick label fontsize.
+    yticks : boolean, default `True`
+        Whether the yticks should be plotted.
+    xticks : boolean, default `True`
+        Whether the xticks should be plotted.
+    *_kw : dict, default empty dict,
+        Optional arguments supplied to the various plotting functions:
+            cbar_dict_kw        --> matplotlib.figure.Figure.colorbar
+            tree_dict_kw        --> matplotlib.collections.LineCollection
+            annot_dict_kw       --> matplotlib.axes.Axes.text
+            clustermap_dict_kw  --> sns.clustermap
+    
+    Returns
+    -------
+    sns.matrix.ClusterGrid
+    '''
+    # constants
+    FSCALE=0.393700787
+    # update keyword dictionaries
+    annot_kw = _update_kwargs(update_dict=annot_dict_kw,
+                              size=annotsize,
+                              )
+    clustermap_kw = _update_kwargs(update_dict=clustermap_dict_kw,
+                                   fmt=fmt, linewidths=linewidths,
+                                   figsize=(fsize[0] * FSCALE, fsize[1] * FSCALE),
+                                   cbar_pos=cpos, cmap=cmap,
+                                   annot=annot,
+                                   )
+    # make figure
+    cm = sns.clustermap(data,
+                        cbar_kws=cbar_dict_kw,
+                        tree_kws=tree_dict_kw,
+                        annot_kws=annot_kw,
+                        **clustermap_kw,
+                        )
+    # cbar labels
+    cm.ax_cbar.axes.yaxis.set_label_text(clab, fontsize=clabfs)
+    cm.ax_cbar.axes.yaxis.set_label_position(clabpos)
+    cm.ax_cbar.tick_params(labelsize=clabtsize)
+    # heatmap tick labels
+    cm.ax_heatmap.set_xticklabels(cm.ax_heatmap.get_xmajorticklabels(),
+                                   fontsize = xticklabsize)
+    cm.ax_heatmap.set_yticklabels(cm.ax_heatmap.get_ymajorticklabels(),
+                                   fontsize = yticklabsize)
+    # removing axis labels
+    cm.ax_heatmap.set_ylabel("")
+    cm.ax_heatmap.set_xlabel("")
+    # add both xy ticks
+    cm.ax_heatmap.tick_params('both', reset=False, bottom=xticks, right=yticks)
+    # return
+    return cm
+
