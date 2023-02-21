@@ -35,7 +35,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  scatter_nonsig_kwargs_dict:Dict[Any, Any]={},
                  ):
     '''
-    Creates a volcano plots, were significant results are labeled.
+    Creates a volcano plots, where significant results are labeled.
     
     Arguments
     ---------
