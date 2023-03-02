@@ -208,7 +208,7 @@ def annotate_heatmap(im:plt.Axes.imshow,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def clustermap(data:pd.DataFrame,
-               cmap:matplotlib.colormaps=matplotlib.colormaps['Spectral'],
+               cmap:matplotlib.cm.get_cmap=matplotlib.cm.get_cmap('Spectral'),
                annot:Union[pd.DataFrame, None]=None,
                fsize:Tuple[float]=(15, 15),
                linewidths:float=1.0,
