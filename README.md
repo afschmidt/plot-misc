@@ -24,9 +24,9 @@ Dependencies are automatically installed using `setup.py`.
 
 ## Usage
 
-Please have a look at the examples in [resources]
-(https://gitlab.com/SchmidtAF/plot-misc/-/tree/master/resources/examples) for 
-some possible recipes. 
+Please have a look at the examples in 
+[resources](https://gitlab.com/SchmidtAF/plot-misc/-/tree/master/resources/examples)
+for some possible recipes. 
 
 ## Updates
 
