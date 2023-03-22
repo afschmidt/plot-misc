@@ -10,9 +10,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-from typing import Any, List, Type, Union, Tuple, Dict
+from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import ForestNames as FNames
+from plot_misc.constants import (
+    is_type,
+    are_columns_in_df,
+    # is_df,
+)
 
 # #############################################################################
 # functions
@@ -277,7 +282,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         f = None
     # ################## plot points and errors
     for _, row in df.iterrows():
-        # coordiantes
+        # coordinates
         xs = row[x_col]
         ys = row[y_col]
         # add points
@@ -382,4 +387,154 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     # ################### return the figure and axis
     return f, ax
 
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO add option for y-axes labels and supply a y-axis position as list,
+# should be compared to have the same length
+def plot_table(
+    dataframe: pd.core.frame.DataFrame,
+    ax: plt.Axes,
+    string_col: str,
+    pad:float=0,
+    horizontalalignment_text:str="center",
+    horizontalalignment_header:str="center",
+    verticalalignment:str="center",
+    negative_padding:float=1.0,
+    size_text:float=10,
+    size_header:float=10,
+    y_col:str='y_axis',
+    yticklabel:Optional[Union[Sequence[str], None]]=None,
+    ytickloc:Optional[Union[Sequence[float], None]]=None,
+    l_yticklab_pad:Optional[Union[float, None]]=None,
+    r_yticklab_pad:Optional[Union[float, None]]=None,
+    annoteheader: Optional[Union[str, None]]=None,
+    kwargs_text_dict:Dict[Any, Any]={},
+    kwargs_header_dict:Dict[Any, Any]={},
+) -> plt.Axes:
+    """
+    Plots a side-table using `ax.text` and supplied `plt.Axes`.
+    
+    ----------
+    dataframe (pandas.core.frame.DataFrame)
+            Pandas DataFrame containg `string_col` that should be plotted.
+            margin of error, etc.
+    y_col : str, default 'y_axis',
+        The column name of the y-axis values used to identify rows.
+    string_col : str,
+            The the column name that should be plotted. Should contain a
+            `string` value.
+    annoteheaders str, default `NoneType`
+        string to annotate the table column.
+    negative_padding : float, default 1.0
+        determines the y-coordinate of the table header as:
+        `ax.get_ylim()[1] - ngative_padding`
+    size_text : float, default 10
+        The font size for the table text.
+    size_header : float, default 10
+        The font size for the table header.
+    yticklabel : list of strings,
+        A list of string containing the y-axis labels. Should match the length
+        of `ytickloc`.
+    ytickloc : list of floats,
+        A list of floats defining the y-axis locations for the ticks.
+    [l|r]_yticklab_pad: float,
+        An optional float to pad the y-axis labels.
+    ax : plt.axes,
+            Axes to operate on.
+    kwargs_*_dict : dict, default empty dict,
+        Optional arguments supplied to the various plotting functions:
+            kwargs_text_dict          --> ax.text
+            kwargs_header_dict        --> ax.text
+    Returns
+    -------
+    ax : plt.axes,
+        a matplotlib axes.
+    righttext_width: float,
+        The text width.
+    
+    """
+    # ################### do check and set defaults
+    is_type(string_col, str)
+    is_type(y_col, str)
+    is_type(annoteheader, str)
+    is_type(horizontalalignment_text, str)
+    is_type(horizontalalignment_header, str)
+    is_type(verticalalignment, str)
+    is_type(size_header, (float, int))
+    is_type(size_text, (int, float))
+    is_type(negative_padding, float)
+    is_type(ax, plt.Axes)
+    is_type(l_yticklab_pad, (type(None), float))
+    is_type(r_yticklab_pad, (type(None), float))
+    is_type(yticklabel, (type(None), list))
+    is_type(ytickloc, (type(None), list))
+    # check if columns are in dataframe
+    are_columns_in_df(dataframe, expected_columns=[string_col, y_col])
+    # ################### remove spines
+    ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
+    # remove lables
+    ax.xaxis.set_ticklabels([])
+    # remove ticks
+    ax.set_xticks([])
+    # ################### add y-labels
+    if (not yticklabel is None) and (ytickloc is None):
+        ValueError('`ytickloc` should be supplied if `yticklabel` is defined.')
+    if (yticklabel is None) and (not ytickloc is None):
+        ValueError('`yticklabel` should be supplied if `ytickloc` is defined.')
+    if (not yticklabel is None) and (not ytickloc is None):
+        if len(yticklabel) != len(ytickloc):
+            IndexError('`yticklabel` and `ytickloc` containts distinct values.')
+        # add optional label padding
+        if not l_yticklab_pad is None:
+            yticklabel = [l_yticklab_pad + str(s) for s in yticklabel]
+        if not r_yticklab_pad is None:
+            yticklabel = [str(s) + r_yticklab_pad for s in yticklabel]
+        # plot y-tick labels
+        ax.set_yticks(ytickloc)
+        # TODO add kwargs for this
+        ax.yaxis.set_ticklabels(yticklabel, weight='bold', size=10)
+        ax.tick_params(left=False)
+    else:
+        # remove y ticks
+        ax.yaxis.set_ticklabels([])
+        ax.set_yticks([])
+    # ################### extract column
+    # x location
+    xloc = np.mean(ax.get_xlim()) * (1 + pad)
+    # tick labels
+    for _, row in dataframe.iterrows():
+        yticklabel1 = row[y_col]
+        yticklabel2 = row[string_col]
+        if pd.isna(yticklabel2):
+            yticklabel2 = ""
+        # update the kwargs
+        new_text_kwargs = _update_kwargs(
+            update_dict=kwargs_text_dict,
+            size=size_text,
+            horizontalalignment=horizontalalignment_text,
+            verticalalignment=verticalalignment,
+        )
+        # plotting table text
+        ax.text(
+            x=xloc,
+            y=yticklabel1,
+            s=yticklabel2,
+            **new_text_kwargs,
+        )
+    # ################### add header
+    if annoteheader is not None:
+        # update the kwargs
+        new_header_kwargs = _update_kwargs(
+            update_dict=kwargs_header_dict,
+            size=size_header,
+            horizontalalignment=horizontalalignment_header,
+            verticalalignment=verticalalignment,
+            fontweight="bold",
+        )
+        t = ax.text(
+            x=xloc,
+            y=ax.get_ylim()[1] - negative_padding,
+            s=annoteheader,
+            **new_header_kwargs,
+        )
+    # ################### return
+    return ax
