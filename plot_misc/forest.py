@@ -401,6 +401,7 @@ def plot_table(
     negative_padding:float=1.0,
     size_text:float=10,
     size_header:float=10,
+    size_yticklabel:float=10,
     y_col:str='y_axis',
     yticklabel:Optional[Union[Sequence[str], None]]=None,
     ytickloc:Optional[Union[Sequence[float], None]]=None,
@@ -409,6 +410,7 @@ def plot_table(
     annoteheader: Optional[Union[str, None]]=None,
     kwargs_text_dict:Dict[Any, Any]={},
     kwargs_header_dict:Dict[Any, Any]={},
+    kwargs_yticklabel_dict:Dict[Any, Any]={},
 ) -> plt.Axes:
     """
     Plots a side-table using `ax.text` and supplied `plt.Axes`.
@@ -442,8 +444,9 @@ def plot_table(
             Axes to operate on.
     kwargs_*_dict : dict, default empty dict,
         Optional arguments supplied to the various plotting functions:
-            kwargs_text_dict          --> ax.text
-            kwargs_header_dict        --> ax.text
+            kwargs_text_dict            --> ax.text
+            kwargs_header_dict          --> ax.text
+            kwargs_yticklabel_dict      --> ax.yaxis.set_ticklabels
     Returns
     -------
     ax : plt.axes,
@@ -490,8 +493,15 @@ def plot_table(
             yticklabel = [str(s) + r_yticklab_pad for s in yticklabel]
         # plot y-tick labels
         ax.set_yticks(ytickloc)
-        # TODO add kwargs for this
-        ax.yaxis.set_ticklabels(yticklabel, weight='bold', size=10)
+        # update kwargs for labels
+        new_yticklabel_kwargs = _update_kwargs(
+            update_dict=kwargs_yticklabel_dict,
+            weight='bold', size=size_yticklabel,
+        )
+        ax.yaxis.set_ticklabels(yticklabel,
+                                **new_yticklabel_kwargs,
+                                )
+        # remove the actual tick
         ax.tick_params(left=False)
     else:
         # remove y ticks
