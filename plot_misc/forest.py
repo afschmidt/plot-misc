@@ -392,17 +392,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
 # should be compared to have the same length
 def plot_table(
     dataframe: pd.core.frame.DataFrame,
-    ax: plt.Axes,
-    string_col: str,
-    pad:float=0,
-    horizontalalignment_text:str="center",
-    horizontalalignment_header:str="center",
-    verticalalignment:str="center",
-    negative_padding:float=1.0,
-    size_text:float=10,
-    size_header:float=10,
-    size_yticklabel:float=10,
-    y_col:str='y_axis',
+    ax: plt.Axes, string_col: str, pad:float=1,
+    halignment_text:str="center", halignment_header:str="center",
+    size_header:float=10, size_yticklabel:float=10, y_col:str='y_axis',
+    valignment:str="center", negative_padding:float=1.0, size_text:float=10,
     yticklabel:Optional[Union[Sequence[str], None]]=None,
     ytickloc:Optional[Union[Sequence[float], None]]=None,
     l_yticklab_pad:Optional[Union[float, None]]=None,
@@ -424,8 +417,11 @@ def plot_table(
     string_col : str,
             The the column name that should be plotted. Should contain a
             `string` value.
-    annoteheaders str, default `NoneType`
+    annoteheaders : str, default `NoneType`
         string to annotate the table column.
+    pad : float, default 1
+        Multiplication factor for the x-coordinate location:
+        `mean(ax.get_xlim())`.
     negative_padding : float, default 1.0
         determines the y-coordinate of the table header as:
         `ax.get_ylim()[1] - ngative_padding`
@@ -457,11 +453,12 @@ def plot_table(
     """
     # ################### do check and set defaults
     is_type(string_col, str)
+    is_type(pad, (float, int))
     is_type(y_col, str)
     is_type(annoteheader, str)
-    is_type(horizontalalignment_text, str)
-    is_type(horizontalalignment_header, str)
-    is_type(verticalalignment, str)
+    is_type(halignment_text, str)
+    is_type(halignment_header, str)
+    is_type(valignment, str)
     is_type(size_header, (float, int))
     is_type(size_text, (int, float))
     is_type(negative_padding, float)
@@ -509,7 +506,7 @@ def plot_table(
         ax.set_yticks([])
     # ################### extract column
     # x location
-    xloc = np.mean(ax.get_xlim()) * (1 + pad)
+    xloc = np.mean(ax.get_xlim()) * pad
     # tick labels
     for _, row in dataframe.iterrows():
         yticklabel1 = row[y_col]
@@ -520,8 +517,8 @@ def plot_table(
         new_text_kwargs = _update_kwargs(
             update_dict=kwargs_text_dict,
             size=size_text,
-            horizontalalignment=horizontalalignment_text,
-            verticalalignment=verticalalignment,
+            horizontalalignment=halignment_text,
+            verticalalignment=valignment,
         )
         # plotting table text
         ax.text(
@@ -536,8 +533,8 @@ def plot_table(
         new_header_kwargs = _update_kwargs(
             update_dict=kwargs_header_dict,
             size=size_header,
-            horizontalalignment=horizontalalignment_header,
-            verticalalignment=verticalalignment,
+            horizontalalignment=halignment_header,
+            verticalalignment=valignment,
             fontweight="bold",
         )
         t = ax.text(
