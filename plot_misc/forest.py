@@ -392,10 +392,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
 # should be compared to have the same length
 def plot_table(
     dataframe: pd.core.frame.DataFrame,
-    ax: plt.Axes, string_col: str, pad:float=1,
+    ax: plt.Axes, string_col: str, pad:float=1.0, pad_header:float=1.0,
     halignment_text:str="center", halignment_header:str="center",
+    valignment_text:str="center", valignment_header:str="center",
+    negative_padding:float=1.0, size_text:float=10,
     size_header:float=10, size_yticklabel:float=10, y_col:str='y_axis',
-    valignment:str="center", negative_padding:float=1.0, size_text:float=10,
     yticklabel:Optional[Union[Sequence[str], None]]=None,
     ytickloc:Optional[Union[Sequence[float], None]]=None,
     l_yticklab_pad:Optional[Union[float, None]]=None,
@@ -452,17 +453,18 @@ def plot_table(
     
     """
     # ################### do check and set defaults
+    is_type(y_col, str)
+    is_type(ax, plt.Axes)
     is_type(string_col, str)
     is_type(pad, (float, int))
-    is_type(y_col, str)
     is_type(annoteheader, str)
     is_type(halignment_text, str)
+    is_type(valignment_text, str)
     is_type(halignment_header, str)
-    is_type(valignment, str)
+    is_type(valignment_header, str)
     is_type(size_header, (float, int))
     is_type(size_text, (int, float))
     is_type(negative_padding, float)
-    is_type(ax, plt.Axes)
     is_type(l_yticklab_pad, (type(None), float))
     is_type(r_yticklab_pad, (type(None), float))
     is_type(yticklabel, (type(None), list))
@@ -507,6 +509,7 @@ def plot_table(
     # ################### extract column
     # x location
     xloc = np.mean(ax.get_xlim()) * pad
+    xloc_header = np.mean(ax.get_xlim()) * pad_header
     # tick labels
     for _, row in dataframe.iterrows():
         yticklabel1 = row[y_col]
@@ -518,7 +521,7 @@ def plot_table(
             update_dict=kwargs_text_dict,
             size=size_text,
             horizontalalignment=halignment_text,
-            verticalalignment=valignment,
+            verticalalignment=valignment_text,
         )
         # plotting table text
         ax.text(
@@ -534,11 +537,11 @@ def plot_table(
             update_dict=kwargs_header_dict,
             size=size_header,
             horizontalalignment=halignment_header,
-            verticalalignment=valignment,
+            verticalalignment=valignment_header,
             fontweight="bold",
         )
         t = ax.text(
-            x=xloc,
+            x=xloc_header,
             y=ax.get_ylim()[1] - negative_padding,
             s=annoteheader,
             **new_header_kwargs,
