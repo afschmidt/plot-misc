@@ -165,7 +165,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
 def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 ub_col:Union[str, None]=None, y_col:str='y_axis',
                 s_col:str='o', c_col:str='black', g_col:Union[str, None]=None,
-                shape_size:float=40, ci_lwd:float=2,
+                a_col:Union[float, str]=1, shape_size:float=40, ci_lwd:float=2,
                 ci_colour:str='indianred', connect_shape:bool = False,
                 connect_shape_colour:str='black', connect_shape_lwd:float=1,
                 span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
@@ -198,7 +198,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         the string value will be added to an `s_col` column.
     c_col : str, default 'black',
         The column name of the shape colour indicators. If string is not found
-        in `df` the string value will be added to an `s_col` column.
+        in `df` the string value will be added to an `c_col` column.
+    a_col : float or str, default 1,
+        The column name of the alpha value for each point. If the string is not
+        found in `df`, the float will be added to an `a_col` column.
     g_col : str, default None,
         The column name of the group indicator; often the outcome or study
         indicators. If None, a column with a unique value for each row will be
@@ -242,9 +245,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     # ################### do check and set defaults
     if not isinstance(df, pd.DataFrame):
         raise TypeError('`df` should be a pd.DataFrame.')
-    # set default shape and colour
+    # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
+    a_col_name = a_col
     if s_col_name not in df.columns:
         s_col_name = FNames.s_col
         df[s_col_name] = s_col
@@ -257,6 +261,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         warnings.warn('`{0}` not found in `df`, creating `c_col` column '
                       'with value {1}.'.format(c_col_name, c_col), RuntimeWarning)
         del c_col
+    if a_col not in df.columns:
+        a_col_name = FNames.a_col
+        df[a_col_name] = a_col
+        warnings.warn('`{0}` not found in `df`, creating `a_col` column '
+                      'with value {1}.'.format(a_col_name, a_col), RuntimeWarning)
+        del a_col
     if g_col is None:
         g_col = FNames.g_col
         df[g_col] = range(df.shape[0])
@@ -275,6 +285,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                                             s=shape_size,
                                             marker=row[s_col_name],
                                             c=row[c_col_name],
+                                            alpha=row[a_col_name],
                                             zorder=2,
         )
         ax.scatter(x=xs, y=ys, **new_scatter_kwargs,

@@ -14,11 +14,13 @@ CMTOINCH = 1/2.54
 SHAPE_DICT = {'PGS only': 'o', 'PGS plus': 's', 'PGS extended': 'H'}
 COL_DICT = {'wo T2DM/CVD': 'orangered', 'w T2DM': 'blueviolet',
               'w T2DM & CVD': 'limegreen'}
+ALPHA_DICT = {'wo T2DM/CVD': .4, 'w T2DM': .65, 'w T2DM & CVD': .9}
 # NOTE keep the numeric order to simplify testing
 SORT_DICT = {'AF': 0,  'CVD': 1, 'CHD': 2,
              'HF': 3, 'CVD + AF + HF': 4,'Ischaemic Stroke': 5, }
 COL_NAME='col'
 SHAPE_NAME='shape'
+ALPHA_NAME='alpha'
 POINT = 'test_cstatistic'
 UB = POINT + '_ub'
 LB = POINT + '_lb'
@@ -33,6 +35,7 @@ data1 = examples.load_forest_data()
 #  col and shape
 data1[COL_NAME] = data1.subgroup_name.map(COL_DICT)
 data1[SHAPE_NAME] = data1.model.map(SHAPE_DICT)
+data1[ALPHA_NAME] = data1.subgroup_name.map(ALPHA_DICT)
 # select a single 'study'
 data2 = data1[data1.model=='PGS only'].copy()
 
@@ -110,7 +113,7 @@ class TestPlotForest(object):
         f, ax = plt.subplots(1, figsize=(15, 15))
         _, ax = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME,
+                                   s_col=SHAPE_NAME, a_col=ALPHA_NAME,
                                    c_col=COL_NAME, ci_colour='black',
                                    g_col='evaluated_outcome', shape_size= 19,
                                    ci_lwd=2,
@@ -124,9 +127,11 @@ class TestPlotForest(object):
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
-        # check the shape size
+        # check the shape size and alphas
         collect=ax.collections
         assert collect[0].get_sizes() == 19
+        assert list(data2[ALPHA_NAME]) == \
+                list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[3].get_xdata()) == \
@@ -138,14 +143,17 @@ class TestPlotForest(object):
         _, ax = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
+                                   a_col=ALPHA_NAME,
                                    g_col='evaluated_outcome',
                                    )
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
-        # check the shape size
+        # check the shape size and alphas
         collect=ax.collections
         assert collect[0].get_sizes() == 40
+        assert list(data2[ALPHA_NAME]) == \
+                list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[9].get_xdata()) == \
@@ -159,7 +167,7 @@ class TestPlotForest(object):
         _, ax = forest.plot_forest(df=data1,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
-                                   ci_colour='black',
+                                   a_col=ALPHA_NAME, ci_colour='black',
                                    g_col='evaluated_outcome',
                                    connect_shape=True,
                                    kwargs_scatter_dict={'edgecolors':'black'},
@@ -168,13 +176,15 @@ class TestPlotForest(object):
         # check the points are correct
         assert list(data1[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
-        # check the shape size
+        # check the shape size and alphas
         collect=ax.collections
         assert collect[0].get_sizes() == 40
+        assert list(data1[ALPHA_NAME]) == \
+                list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[9].get_xdata()) == \
-            list(data2.loc[:,[LB, UB]].iloc[9])
+            list(data1.loc[:,[LB, UB]].iloc[9])
         assert lines[5].get_linestyle() == '-'
         assert lines[6].get_solid_capstyle() == 'projecting'
         assert lines[3].get_lw() == 2.0

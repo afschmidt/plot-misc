@@ -33,6 +33,7 @@ class TableNames(object):
 class ForestNames(object):
     s_col      = 's_col'
     c_col      = 'c_col'
+    a_col      = 'a_col'
     g_col      = 'g_col'
     y_col      = 'y_axis'
     strata_del = 'strata_del'
