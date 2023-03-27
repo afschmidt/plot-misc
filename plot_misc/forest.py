@@ -1,5 +1,5 @@
 '''
-A module to draw forest plots.
+A module to draw forest plots and side tables.
 
 Aside from the plotting functions the moduel contains fuctions to
 appropriatly orrientate input DataFrames.
@@ -16,7 +16,6 @@ from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
     is_type,
     are_columns_in_df,
-    # is_df,
 )
 
 # #############################################################################
@@ -121,7 +120,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     """
     # check input
     if not group in df.columns:
-        raise KeyError('`df` does not contain column {0}'.format(group))
+        raise KeyError('`df` does not contain column {0}.'.format(group))
     if strata is None:
         # use a place-holder strata
         strata=FNames.strata_del
@@ -246,6 +245,19 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     Returns
     -------
     Unpacks a matplotlib figure, axes
+    
+    Examples
+    --------
+    Additional characteristics can be mapped through the various kwargs_*_dict,
+    calling the `row` object which represents a row of the `df` through
+    `df.iterrows()`:
+    
+    >>> plot_forest(df,
+    >>>             ...,
+    >>>             kwargs_scatter_dict={'linewidths': row[lw_col_name]},
+    >>>            )
+    >>>
+    
     """
     # ################### do check and set defaults
     if not isinstance(df, pd.DataFrame):
