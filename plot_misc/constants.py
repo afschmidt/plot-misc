@@ -41,6 +41,7 @@ class ForestNames(object):
     min        = 'min'
     max        = 'max'
     mean       = 'mean'
+    fontweight = 'bold'
     
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

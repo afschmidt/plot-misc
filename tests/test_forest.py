@@ -22,6 +22,8 @@ COL_NAME='col'
 SHAPE_NAME='shape'
 ALPHA_NAME='alpha'
 POINT = 'test_cstatistic'
+STRING_COL = 'string'
+STRING_HEAD = 'test'
 UB = POINT + '_ub'
 LB = POINT + '_lb'
 GROUP='evaluated_outcome'
@@ -189,3 +191,31 @@ class TestPlotForest(object):
         assert lines[6].get_solid_capstyle() == 'projecting'
         assert lines[3].get_lw() == 2.0
         assert lines[3].get_color() == 'black'
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# plot_table
+class TestPlotTable(object):
+    """
+    Testing the `plot_table` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_table(self):
+        # figure
+        _, ax = plt.subplots(1, figsize=(5,5))
+        # string
+        data2[STRING_COL] = data2[POINT].map('{:,.2f}'.format)
+        ax.set_ylim(min(data2.y_axis.to_list()), max(data2.y_axis.to_list()))
+        # the function to test
+        _ = forest.plot_table(data2, annoteheader=STRING_HEAD,
+                              string_col=STRING_COL, ax=ax,
+                              halignment_text='left',
+                              halignment_header='center',
+                              size_text=5, size_header=6,
+                              negative_padding=2,
+                              )
+        # assert
+        assert [t.get_text() for t in ax.texts] ==\
+            data2[STRING_COL].to_list() + [STRING_HEAD]
+        assert ax.texts[-1].get_fontsize() == 6
+        assert ax.texts[1].get_fontsize() == 5
+        assert ax.texts[1].get_horizontalalignment() == 'left'

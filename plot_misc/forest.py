@@ -388,8 +388,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO add option for y-axes labels and supply a y-axis position as list,
-# should be compared to have the same length
 def plot_table(
     dataframe: pd.core.frame.DataFrame,
     ax: plt.Axes, string_col: str, pad:float=1.0, pad_header:float=1.0,
@@ -464,9 +462,9 @@ def plot_table(
     is_type(valignment_header, str)
     is_type(size_header, (float, int))
     is_type(size_text, (int, float))
-    is_type(negative_padding, float)
-    is_type(l_yticklab_pad, (type(None), float))
-    is_type(r_yticklab_pad, (type(None), float))
+    is_type(negative_padding, (float, int))
+    is_type(l_yticklab_pad, (type(None), float, int))
+    is_type(r_yticklab_pad, (type(None), float, int))
     is_type(yticklabel, (type(None), list))
     is_type(ytickloc, (type(None), list))
     # check if columns are in dataframe
@@ -495,7 +493,8 @@ def plot_table(
         # update kwargs for labels
         new_yticklabel_kwargs = _update_kwargs(
             update_dict=kwargs_yticklabel_dict,
-            weight='bold', size=size_yticklabel,
+            weight=FNames.fontweight,
+            size=size_yticklabel,
         )
         ax.yaxis.set_ticklabels(yticklabel,
                                 **new_yticklabel_kwargs,
@@ -538,7 +537,7 @@ def plot_table(
             size=size_header,
             horizontalalignment=halignment_header,
             verticalalignment=valignment_header,
-            fontweight="bold",
+            fontweight=FNames.fontweight,
         )
         t = ax.text(
             x=xloc_header,
