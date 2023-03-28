@@ -25,7 +25,7 @@ from plot_misc.constants import (
 # TODO write test
 def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
               order_inner:Union[Dict[str, List[str]], None]=None
-              ) -> pd.DataFrame:
+              ) -> pd.core.frame.DataFrame:
     '''
     Order a data frame by and outer and inner order, say by study and within
     study by outcome.
@@ -47,6 +47,9 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     '''
     # check input
     AE_MSG = 'Please supply a `dict` of length one.'
+    is_type(data, pd.DataFrame)
+    is_type(order_outer, dict)
+    is_type(order_inner, (type(None), dict))
     if len(order_outer) > 1:
         raise AttributeError(AE_MSG)
     if not order_inner is None:
@@ -84,7 +87,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=1, new_col:str='y_axis',
                      sort_dict:Union[Dict[str,int], None, str]=None,
                      strata:Union[str, None]=None,
-                     ):
+                     ) -> pd.core.frame.DataFrame:
     """
     A helper function that adds a `y-axis` column (useful for Cartesian graphs)
     to a dataframe based on group membership. The within_pad arguments
@@ -97,7 +100,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
         The dataframe that contains the `group` of interest.
     group : str,
         A string that maps to a column in df.
-    strat : str, default None
+    strata : str, default None
         An optional df column which nests the `group` values.
     within_pad : float,
         The distance between point estimates nested within a group.
@@ -119,8 +122,16 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     df : pd.DataFrame
     """
     # check input
-    if not group in df.columns:
-        raise KeyError('`df` does not contain column {0}.'.format(group))
+    is_type(df, pd.DataFrame)
+    is_type(group, str)
+    is_type(new_col, str)
+    is_type(strata, (type(None), str))
+    is_type(within_pad, (int, float))
+    is_type(between_pad, (int, float))
+    is_type(sort_dict, (type(None), dict))
+    are_columns_in_df(df, expected_columns=[group])
+    # if not group in df.columns:
+    #     raise KeyError('`df` does not contain column {0}.'.format(group))
     if strata is None:
         # use a place-holder strata
         strata=FNames.strata_del
@@ -179,7 +190,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
                 kwargs_span_dict:Dict[Any, Any]={}
-                ) -> plt.Axes:
+                ) -> Tuple[plt.Figure, plt.Axes]:
     """
     A forest plot function, that allows for grouping of estimates by `group`.
     Related if there are estimates with the same `y_col` value these get
@@ -244,7 +255,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Returns
     -------
-    Unpacks a matplotlib figure, axes
+    Unpacks a matplotlib figure, axes.
+    f : plt.Figure.
+    x : plt.Axes.
     
     Examples
     --------
@@ -260,6 +273,25 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     """
     # ################### do check and set defaults
+    is_type(x_col, str)
+    is_type(lb_col, (type(None), str))
+    is_type(ub_col, (type(None), str))
+    is_type(y_col, str)
+    is_type(s_col, str)
+    is_type(c_col, str)
+    is_type(g_col, str)
+    is_type(a_col, (int, float, str))
+    is_type(shape_size, (int, float))
+    is_type(ci_lwd, (int, float))
+    is_type(ci_colour, str)
+    is_type(connect_shape, bool)
+    is_type(span, bool)
+    is_type(connect_shape_lwd, (int, float))
+    is_type(connect_shape_colour, str)
+    is_type(span_colour, list)
+    is_type(ax, (type(None), plt.Axes))
+    is_type(figsize, tuple)
+    is_type(reverse_y, bool)
     if not isinstance(df, pd.DataFrame):
         raise TypeError('`df` should be a pd.DataFrame.')
     # set default shape and colour and alpha
@@ -409,8 +441,8 @@ def plot_table(
     size_header:float=10, size_yticklabel:float=10, y_col:str='y_axis',
     yticklabel:Optional[Union[Sequence[str], None]]=None,
     ytickloc:Optional[Union[Sequence[float], None]]=None,
-    l_yticklab_pad:Optional[Union[float, None]]=None,
-    r_yticklab_pad:Optional[Union[float, None]]=None,
+    l_yticklab_pad:Optional[Union[str, None]]=None,
+    r_yticklab_pad:Optional[Union[str, None]]=None,
     annoteheader: Optional[Union[str, None]]=None,
     kwargs_text_dict:Dict[Any, Any]={},
     kwargs_header_dict:Dict[Any, Any]={},
@@ -445,8 +477,8 @@ def plot_table(
         of `ytickloc`.
     ytickloc : list of floats,
         A list of floats defining the y-axis locations for the ticks.
-    [l|r]_yticklab_pad: float,
-        An optional float to pad the y-axis labels.
+    [l|r]_yticklab_pad: str,
+        An optional string to use as a prefix or suffic of the y-axis labels.
     ax : plt.axes,
             Axes to operate on.
     kwargs_*_dict : dict, default empty dict,
@@ -458,9 +490,6 @@ def plot_table(
     -------
     ax : plt.axes,
         a matplotlib axes.
-    righttext_width: float,
-        The text width.
-    
     """
     # ################### do check and set defaults
     is_type(y_col, str)
@@ -517,7 +546,7 @@ def plot_table(
         # remove y ticks
         ax.yaxis.set_ticklabels([])
         ax.set_yticks([])
-    # ################### extract column
+    # ################### plot string column
     # x location
     xloc = np.mean(ax.get_xlim()) * pad
     xloc_header = np.mean(ax.get_xlim()) * pad_header
