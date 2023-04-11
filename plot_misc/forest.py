@@ -186,6 +186,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
                 ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
+                verbose:bool=False,
                 kwargs_scatter_dict:Dict[Any, Any]={},
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
@@ -301,20 +302,26 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if s_col_name not in df.columns:
         s_col_name = FNames.s_col
         df[s_col_name] = s_col
-        warnings.warn('`{0}` not found in `df`, creating `s_col` column '
-                      'with value {1}.'.format(s_col_name, s_col), RuntimeWarning)
+        if verbose == True:
+            warnings.warn('`{0}` not found in `df`, creating `s_col` column '
+                          'with value {1}.'.format(s_col_name, s_col),
+                          RuntimeWarning)
         del s_col
     if c_col not in df.columns:
         c_col_name = FNames.c_col
         df[c_col_name] = c_col
-        warnings.warn('`{0}` not found in `df`, creating `c_col` column '
-                      'with value {1}.'.format(c_col_name, c_col), RuntimeWarning)
+        if verbose == True:
+            warnings.warn('`{0}` not found in `df`, creating `c_col` column '
+                          'with value {1}.'.format(c_col_name, c_col),
+                          RuntimeWarning)
         del c_col
     if a_col not in df.columns:
         a_col_name = FNames.a_col
         df[a_col_name] = a_col
-        warnings.warn('`{0}` not found in `df`, creating `a_col` column '
-                      'with value {1}.'.format(a_col_name, a_col), RuntimeWarning)
+        if verbose == True:
+            warnings.warn('`{0}` not found in `df`, creating `a_col` column '
+                          'with value {1}.'.format(a_col_name, a_col),
+                          RuntimeWarning)
         del a_col
     if g_col is None:
         g_col = FNames.g_col
@@ -380,7 +387,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                         )
             else:
                 warnings.warn('The line segments have the same x-axis value, '
-                              'the line plotting will be skipped.', RuntimeWarning)
+                              'the line plotting will be skipped.',
+                              RuntimeWarning)
     # ################### calculate y-axis mid points
     y_locations = y_locations[y_col].sort_values(FNames.min)
     y_mid = []
