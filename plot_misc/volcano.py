@@ -123,11 +123,12 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     )
     ax.scatter(xns, yns,  **new_nonsig_kwargs,)
     ### adding annotations
-    plt.xlabel(xlab)
-    plt.ylabel(ylab)
+    # TODO add kwargs for both labels (separately)
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(ylab)
     ### do we want to set the ylim
     if not ylim is None:
-        plt.ylim( ylim[0], ylim[1] )
+        ax.set_ylim( ylim[0], ylim[1] )
     # adjust text only if labels are specified
     if not point_label is None:
         # check if column is present
