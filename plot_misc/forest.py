@@ -114,6 +114,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     -------
     df : pd.DataFrame
     """
+    df = df.copy()
     # check input
     if not group in df.columns:
         raise KeyError('`df` does not contain column {0}'.format(group))
@@ -245,6 +246,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     # ################### do check and set defaults
     if not isinstance(df, pd.DataFrame):
         raise TypeError('`df` should be a pd.DataFrame.')
+    if not df[x_col].dtype.kind in 'iufc':
+        raise TypeError('`x_col` should be numeric')
+    if not df[ub_col].dtype.kind in 'iufc':
+        raise TypeError('`ub_col` should be numeric')
+    if not df[lb_col].dtype.kind in 'iufc':
+        raise TypeError('`lb_col` should be numeric')
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
@@ -305,6 +312,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         y_values = [ys, ys]
         new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
                                             c=ci_colour, linewidth=ci_lwd,
+                                            alpha=row[a_col_name],
         )
         ax.plot(x_values, y_values, **new_plot_ci_kwargs,
                 )
