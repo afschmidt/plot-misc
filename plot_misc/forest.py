@@ -408,6 +408,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             miny = np.nan
         # get mid
         y_mid.append(np.nanmean([maxy, miny]))
+    # ################### adjust y margins
+    mima = list(df.sort_values(y_col)[y_col])[:2]
+    diff = mima[1] - mima[0]
+    new_margins = [min(df[y_col]) - diff/2, max(df[y_col]) + diff/2]
+    ax.set_ylim(new_margins)
     # add the starting and endpoints
     y_mid.insert(0, y_locations.iloc[0][FNames.min])
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
@@ -434,10 +439,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             )
             ax.axhspan(ymin, ymax, **new_span_kwargs,
                        )
-    # ################### adjust y margins
-    new_margins = [ax.get_ylim()[0], ax.get_ylim()[1]]
-    new_margins[1] = y_mid[-1]
-    ax.set_ylim(new_margins)
     # ################### add y-axis labels
     ax.set_yticks(y_locations[FNames.mean])
     ax.set_yticklabels(y_locations.index)
