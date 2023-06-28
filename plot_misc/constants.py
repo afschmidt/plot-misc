@@ -101,7 +101,7 @@ def is_type(param: Any, types: Union[Tuple[Type], Type]) -> bool:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def is_df(df: Any) -> bool:
     """
-    Checks if objects is a pd.DataFrame.
+    Checks if object is a pd.DataFrame.
     
     Parameters
     ----------
@@ -112,6 +112,32 @@ def is_df(df: Any) -> bool:
     True if the df is a pd.DataFrame. Raises InputValidationError otherwise.
     """
     return is_type(df, pd.DataFrame)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def is_coltype(column: Any, types: str) -> bool:
+    """
+    Checks if given dataframe column(s) matches any of the supplied types
+    
+    Parameters
+    ----------
+    column: dataframe column to test
+    types: either a single type, or a concatenated string of types
+    
+    Returns
+    -------
+    True if the column(s) match(es) the given types.
+    Raises InputValidationError otherwise.
+    """
+    df = pd.DataFrame(column)
+    if df.shape[1] > 1:
+        for col in df.columns:
+            if not df[col].dtype.kind in types:
+                raise InputValidationError(f"Expected any of [{types}], got {df[col].dtype.kind}")
+    else:
+        if not column.dtype.kind in types:
+            raise InputValidationError(f"Expected any of [{types}], got {column.dtype.kind}")
+    return True
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def same_len(object1: Any, object2: Any,

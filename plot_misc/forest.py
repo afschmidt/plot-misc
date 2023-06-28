@@ -15,6 +15,8 @@ from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
     is_type,
+    is_df,
+    is_coltype,
     are_columns_in_df,
 )
 
@@ -294,14 +296,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(ax, (type(None), plt.Axes))
     is_type(figsize, tuple)
     is_type(reverse_y, bool)
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError('`df` should be a pd.DataFrame.')
-    if not df[x_col].dtype.kind in 'iufc':
-        raise TypeError('`x_col` should be numeric')
-    if not df[ub_col].dtype.kind in 'iufc':
-        raise TypeError('`ub_col` should be numeric')
-    if not df[lb_col].dtype.kind in 'iufc':
-        raise TypeError('`lb_col` should be numeric')
+    is_df(df)
+    is_coltype(df[[x_col, ub_col, lb_col]], 'iufc')
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
