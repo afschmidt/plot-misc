@@ -297,7 +297,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(figsize, tuple)
     is_type(reverse_y, bool)
     is_df(df)
-    is_coltype(df[[x_col, ub_col, lb_col]], 'iufc')
+    is_coltype(df[x_col], 'iufc')
+    if (ub_col is not None) and (lb_col is not None):
+        is_coltype(df[[ub_col, lb_col]], 'iufc')
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
