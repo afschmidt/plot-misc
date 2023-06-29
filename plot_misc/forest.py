@@ -11,7 +11,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
-from plot_misc.utils.utils import _update_kwargs
+from plot_misc.utils.utils import (
+    _update_kwargs,
+    _dict_string_argument,
+)
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
     is_type,
@@ -265,17 +268,22 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Examples
     --------
-    Additional characteristics can be mapped through the various kwargs_*_dict,
-    calling the `row` object which represents a row of the `df` through
-    `df.iterrows()`:
+    Additional control over the dots and confidence intervals characteristics
+    can be leveraged by accessing `kwargs_scatter_dict` or
+    `kwargs_scatter_dict`, and assigning a 'row[col_name]` value to a keyword
+    argument. Here `row` represents a row of the `df` accessed through
+    `df.iterrows()`. The string value will be evaluated and assigned
+    internally:
     
     >>> plot_forest(df,
     >>>             ...,
-    >>>             kwargs_scatter_dict={'linewidths': row[lw_col_name]},
+    >>>             kwargs_scatter_dict={'linewidths': 'row[lw_col_name]'},
     >>>            )
     >>>
     
     """
+    # ################### internal constants
+    ROW = 'row'
     # ################### do check and set defaults
     is_type(x_col, str)
     is_type(lb_col, (type(None), str))
@@ -342,6 +350,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         xs = row[x_col]
         ys = row[y_col]
         # add points
+        # checking if there are string values containing `row` which need to
+        # be evaluated.
+        kwargs_scatter_dict = \
+            _dict_string_argument('row', kwargs_scatter_dict, locals())
+        # updating kwargs dict
         new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
                                             s=shape_size,
                                             marker=row[s_col_name],
@@ -364,9 +377,13 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # plot
         x_values = [lb, ub]
         y_values = [ys, ys]
+        # checking if there are string values containing `row` which need to
+        # be evaluated.
+        kwargs_plot_ci_dict = \
+            _dict_string_argument('row', kwargs_plot_ci_dict, locals())
+        # updating kwargs dict
         new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
                                             c=ci_colour, linewidth=ci_lwd,
-                                            alpha=row[a_col_name],
         )
         ax.plot(x_values, y_values, **new_plot_ci_kwargs,
                 )

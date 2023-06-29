@@ -3,7 +3,7 @@ A collection of general utility functions not belonging to a single type of
 plot.
 '''
 
-
+import re
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -103,11 +103,60 @@ def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
         
         >>> _update_kwargs(update_dict={'c': 'black'}, c='red',
                          alpha = 0.5)
-        {'c': 'black', 'alpha': 0.5}
+        >>> {'c': 'black', 'alpha': 0.5}
     '''
     new_dict = {**kwargs, **update_dict}
     # returns
     return new_dict
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _dict_string_argument(partial_match:str, dict_string:Dict[Any, str],
+                          context=Dict[Any,Any],
+                          ) -> Dict[Any,Any]:
+    '''
+    Will perform an `re.match(dict_string, value)` on all the values of
+    `dict_string`. If a match is found it will evaluate the value and asign
+    it to the correct dictionary key: `dict_string[key] = eval(value)`.
+    This function is handy if an object is only internally defined after a
+    function is innitiated.
+    
+    Parameters
+    ----------
+    partial_match : str,
+        A regex string which will be used to find partial matches in the values
+        of `dict_string`.
+    dict_string : dict,
+        A dictionary with some string values which one wants to evaluate and
+        asign back to the correct dictionary key entry.
+    context : dict,
+        The environment to look for `value` - should contain values as a
+        dictionary containing the string key word, with assigned objects.
+    
+    Returns
+    -------
+    dict
+        A dictionary with the update_dict and kwargs combined, where duplicate
+        entries from update_dict overwrite those in kwargs.
+    
+    Examples
+    --------
+        >>> row=[1, 2]
+        >>> dict_string={'obj1': 'row[0]', 'obj2' : 2}
+        >>> new_dict = _dict_string_argument('row', dict_string,
+                                             context={'row':row})
+        >>> # returns
+        >>> {'obj1': 1, 'obj2': 2}
+    '''
+    # testing input
+    is_type(partial_match, str)
+    is_type(dict_string, dict)
+    # evaluting object
+    for key, value in dict_string.items():
+        if isinstance(value, str):
+            if re.match(partial_match, value):
+                dict_string[key] = eval(value, context)
+    # return stuf
+    return dict_string
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None,

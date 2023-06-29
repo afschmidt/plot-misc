@@ -124,7 +124,9 @@ class TestPlotForest(object):
                                                         'zorder':1},
                                    kwargs_plot_ci_dict={'zorder':2,
                                                         'solid_capstyle':'round',
-                                                        'linestyle':'-.'}
+                                                        'linestyle':'-.',
+                                                        'alpha':'row[a_col_name]',
+                                                        }
                                    )
         # check the points are correct
         assert list(data2[POINT]) ==\

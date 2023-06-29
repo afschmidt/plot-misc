@@ -132,12 +132,15 @@ def is_coltype(column: Any, types: str) -> bool:
     if df.shape[1] > 1:
         for col in df.columns:
             if not df[col].dtype.kind in types:
-                raise InputValidationError(f"Expected any of [{types}], got {df[col].dtype.kind}")
+                raise InputValidationError(
+                    f"Expected any of [{types}], got {df[col].dtype.kind}"
+                )
     else:
         if not column.dtype.kind in types:
-            raise InputValidationError(f"Expected any of [{types}], got {column.dtype.kind}")
+            raise InputValidationError(
+                f"Expected any of [{types}], got {column.dtype.kind}"
+            )
     return True
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def same_len(object1: Any, object2: Any,
