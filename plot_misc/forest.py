@@ -284,9 +284,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     """
     # ################### internal constants
     ROW = 'row'
-    # numpy code for data types: signed int, unsigned int, float-point,
-    # complex floating-point
-    NUM = 'iufc'
     # ################### do check and set defaults
     is_type(x_col, str)
     is_type(lb_col, (type(None), str))
