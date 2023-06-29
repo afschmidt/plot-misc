@@ -1,5 +1,5 @@
 # A collection of plotting functions
-__version__: `0.1.0`
+__version__: `0.2.0`
 
 
 This repository collects plotting modules written on top of `matplotlib` or
@@ -10,8 +10,11 @@ This repository collects plotting modules written on top of `matplotlib` or
 plot-misc can be installed pip installed to a specific conda environment by 
 first activating the desired environment.
 
-```
+```sh
 conda activate ENVIRONMENT_NAME
+# update your packages using conda
+conda env update --file resources/conda_env/conda_update.yml
+# install plot-misc 
 python -m pip install -e .
 ```
 
@@ -21,9 +24,9 @@ Dependencies are automatically installed using `setup.py`.
 
 ## Usage
 
-Please have a look at the examples in [resources]
-(https://gitlab.com/SchmidtAF/plot-misc/-/tree/master/resources/examples) for 
-some possible recipes. 
+Please have a look at the examples in 
+[resources](https://gitlab.com/SchmidtAF/plot-misc/-/tree/master/resources/examples)
+for some possible recipes. 
 
 ## Updates
 

@@ -1,5 +1,33 @@
 # Changelog
 
+
+## v0.2.0 - 27-03-2023
+
+### Fixed
+
+- Updated installation instructions and removed redundancies.
+- Fixed documentation
+
+
+### Added
+
+- seaborn clustermap wrapper.
+- Added additional arguments for plot_forest.
+- Added `plot_table` function to `forest`, including example and tests.
+
+### Changed
+
+_Nothing_
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+_Nothing_
+
+
 ## v0.1.0 - 12-02-2023
 
 ### Fixed

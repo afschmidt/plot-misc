@@ -1,3 +1,4 @@
+name: plot_misc
 channels:
   - anaconda
   - conda-forge
@@ -17,6 +18,4 @@ dependencies:
   - bump2version=1.*
   - adjusttext=0.7.*
   - pip
-
-
 

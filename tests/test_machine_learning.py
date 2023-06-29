@@ -9,6 +9,7 @@ from plot_misc.example_data import examples
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # CONSTANT
+plt.rcParams.update({'figure.max_open_warning': 0})
 VALUES='importance'
 LABELS='name'
 PRED = 'average_predict_risk'

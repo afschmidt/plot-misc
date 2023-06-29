@@ -18,11 +18,11 @@ URL = ''
 EMAIL = 'amand.schmidt@ucl.ac.uk'
 AUTHOR = 'A Floriaan Schmidt'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'numpy', 'pandas', 'matplotlib', 'seaborn', 'scipy', 'sklearn',
+    'numpy', 'pandas', 'matplotlib', 'seaborn', 'scipy', 'scikit-learn',
     'adjustText'
 ]
 

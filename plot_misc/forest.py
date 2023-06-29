@@ -1,5 +1,5 @@
 '''
-A module to draw forest plots.
+A module to draw forest plots and side tables.
 
 Aside from the plotting functions the moduel contains fuctions to
 appropriatly orrientate input DataFrames.
@@ -10,9 +10,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-from typing import Any, List, Type, Union, Tuple, Dict
+from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import ForestNames as FNames
+from plot_misc.constants import (
+    is_type,
+    are_columns_in_df,
+)
 
 # #############################################################################
 # functions
@@ -116,7 +120,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     """
     # check input
     if not group in df.columns:
-        raise KeyError('`df` does not contain column {0}'.format(group))
+        raise KeyError('`df` does not contain column {0}.'.format(group))
     if strata is None:
         # use a place-holder strata
         strata=FNames.strata_del
@@ -165,7 +169,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
 def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 ub_col:Union[str, None]=None, y_col:str='y_axis',
                 s_col:str='o', c_col:str='black', g_col:Union[str, None]=None,
-                shape_size:float=40, ci_lwd:float=2,
+                a_col:Union[float, str]=1, shape_size:float=40, ci_lwd:float=2,
                 ci_colour:str='indianred', connect_shape:bool = False,
                 connect_shape_colour:str='black', connect_shape_lwd:float=1,
                 span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
@@ -198,7 +202,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         the string value will be added to an `s_col` column.
     c_col : str, default 'black',
         The column name of the shape colour indicators. If string is not found
-        in `df` the string value will be added to an `s_col` column.
+        in `df` the string value will be added to an `c_col` column.
+    a_col : float or str, default 1,
+        The column name of the alpha value for each point. If the string is not
+        found in `df`, the float will be added to an `a_col` column.
     g_col : str, default None,
         The column name of the group indicator; often the outcome or study
         indicators. If None, a column with a unique value for each row will be
@@ -238,13 +245,27 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     Returns
     -------
     Unpacks a matplotlib figure, axes
+    
+    Examples
+    --------
+    Additional characteristics can be mapped through the various kwargs_*_dict,
+    calling the `row` object which represents a row of the `df` through
+    `df.iterrows()`:
+    
+    >>> plot_forest(df,
+    >>>             ...,
+    >>>             kwargs_scatter_dict={'linewidths': row[lw_col_name]},
+    >>>            )
+    >>>
+    
     """
     # ################### do check and set defaults
     if not isinstance(df, pd.DataFrame):
         raise TypeError('`df` should be a pd.DataFrame.')
-    # set default shape and colour
+    # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
+    a_col_name = a_col
     if s_col_name not in df.columns:
         s_col_name = FNames.s_col
         df[s_col_name] = s_col
@@ -257,6 +278,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         warnings.warn('`{0}` not found in `df`, creating `c_col` column '
                       'with value {1}.'.format(c_col_name, c_col), RuntimeWarning)
         del c_col
+    if a_col not in df.columns:
+        a_col_name = FNames.a_col
+        df[a_col_name] = a_col
+        warnings.warn('`{0}` not found in `df`, creating `a_col` column '
+                      'with value {1}.'.format(a_col_name, a_col), RuntimeWarning)
+        del a_col
     if g_col is None:
         g_col = FNames.g_col
         df[g_col] = range(df.shape[0])
@@ -267,7 +294,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         f = None
     # ################## plot points and errors
     for _, row in df.iterrows():
-        # coordiantes
+        # coordinates
         xs = row[x_col]
         ys = row[y_col]
         # add points
@@ -275,6 +302,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                                             s=shape_size,
                                             marker=row[s_col_name],
                                             c=row[c_col_name],
+                                            alpha=row[a_col_name],
                                             zorder=2,
         )
         ax.scatter(x=xs, y=ys, **new_scatter_kwargs,
@@ -371,4 +399,163 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     # ################### return the figure and axis
     return f, ax
 
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def plot_table(
+    dataframe: pd.core.frame.DataFrame,
+    ax: plt.Axes, string_col: str, pad:float=1.0, pad_header:float=1.0,
+    halignment_text:str="center", halignment_header:str="center",
+    valignment_text:str="center", valignment_header:str="center",
+    negative_padding:float=1.0, size_text:float=10,
+    size_header:float=10, size_yticklabel:float=10, y_col:str='y_axis',
+    yticklabel:Optional[Union[Sequence[str], None]]=None,
+    ytickloc:Optional[Union[Sequence[float], None]]=None,
+    l_yticklab_pad:Optional[Union[float, None]]=None,
+    r_yticklab_pad:Optional[Union[float, None]]=None,
+    annoteheader: Optional[Union[str, None]]=None,
+    kwargs_text_dict:Dict[Any, Any]={},
+    kwargs_header_dict:Dict[Any, Any]={},
+    kwargs_yticklabel_dict:Dict[Any, Any]={},
+) -> plt.Axes:
+    """
+    Plots a side-table using `ax.text` and supplied `plt.Axes`.
+    
+    ----------
+    dataframe (pandas.core.frame.DataFrame)
+            Pandas DataFrame containg `string_col` that should be plotted.
+            margin of error, etc.
+    y_col : str, default 'y_axis',
+        The column name of the y-axis values used to identify rows.
+    string_col : str,
+            The the column name that should be plotted. Should contain a
+            `string` value.
+    annoteheaders : str, default `NoneType`
+        string to annotate the table column.
+    pad : float, default 1
+        Multiplication factor for the x-coordinate location:
+        `mean(ax.get_xlim())`.
+    negative_padding : float, default 1.0
+        determines the y-coordinate of the table header as:
+        `ax.get_ylim()[1] - ngative_padding`
+    size_text : float, default 10
+        The font size for the table text.
+    size_header : float, default 10
+        The font size for the table header.
+    yticklabel : list of strings,
+        A list of string containing the y-axis labels. Should match the length
+        of `ytickloc`.
+    ytickloc : list of floats,
+        A list of floats defining the y-axis locations for the ticks.
+    [l|r]_yticklab_pad: float,
+        An optional float to pad the y-axis labels.
+    ax : plt.axes,
+            Axes to operate on.
+    kwargs_*_dict : dict, default empty dict,
+        Optional arguments supplied to the various plotting functions:
+            kwargs_text_dict            --> ax.text
+            kwargs_header_dict          --> ax.text
+            kwargs_yticklabel_dict      --> ax.yaxis.set_ticklabels
+    Returns
+    -------
+    ax : plt.axes,
+        a matplotlib axes.
+    righttext_width: float,
+        The text width.
+    
+    """
+    # ################### do check and set defaults
+    is_type(y_col, str)
+    is_type(ax, plt.Axes)
+    is_type(string_col, str)
+    is_type(pad, (float, int))
+    is_type(annoteheader, str)
+    is_type(halignment_text, str)
+    is_type(valignment_text, str)
+    is_type(halignment_header, str)
+    is_type(valignment_header, str)
+    is_type(size_header, (float, int))
+    is_type(size_text, (int, float))
+    is_type(negative_padding, (float, int))
+    is_type(l_yticklab_pad, (type(None), float, int))
+    is_type(r_yticklab_pad, (type(None), float, int))
+    is_type(yticklabel, (type(None), list))
+    is_type(ytickloc, (type(None), list))
+    # check if columns are in dataframe
+    are_columns_in_df(dataframe, expected_columns=[string_col, y_col])
+    # ################### remove spines
+    ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
+    # remove lables
+    ax.xaxis.set_ticklabels([])
+    # remove ticks
+    ax.set_xticks([])
+    # ################### add y-labels
+    if (not yticklabel is None) and (ytickloc is None):
+        ValueError('`ytickloc` should be supplied if `yticklabel` is defined.')
+    if (yticklabel is None) and (not ytickloc is None):
+        ValueError('`yticklabel` should be supplied if `ytickloc` is defined.')
+    if (not yticklabel is None) and (not ytickloc is None):
+        if len(yticklabel) != len(ytickloc):
+            IndexError('`yticklabel` and `ytickloc` containts distinct values.')
+        # add optional label padding
+        if not l_yticklab_pad is None:
+            yticklabel = [l_yticklab_pad + str(s) for s in yticklabel]
+        if not r_yticklab_pad is None:
+            yticklabel = [str(s) + r_yticklab_pad for s in yticklabel]
+        # plot y-tick labels
+        ax.set_yticks(ytickloc)
+        # update kwargs for labels
+        new_yticklabel_kwargs = _update_kwargs(
+            update_dict=kwargs_yticklabel_dict,
+            weight=FNames.fontweight,
+            size=size_yticklabel,
+        )
+        ax.yaxis.set_ticklabels(yticklabel,
+                                **new_yticklabel_kwargs,
+                                )
+        # remove the actual tick
+        ax.tick_params(left=False)
+    else:
+        # remove y ticks
+        ax.yaxis.set_ticklabels([])
+        ax.set_yticks([])
+    # ################### extract column
+    # x location
+    xloc = np.mean(ax.get_xlim()) * pad
+    xloc_header = np.mean(ax.get_xlim()) * pad_header
+    # tick labels
+    for _, row in dataframe.iterrows():
+        yticklabel1 = row[y_col]
+        yticklabel2 = row[string_col]
+        if pd.isna(yticklabel2):
+            yticklabel2 = ""
+        # update the kwargs
+        new_text_kwargs = _update_kwargs(
+            update_dict=kwargs_text_dict,
+            size=size_text,
+            horizontalalignment=halignment_text,
+            verticalalignment=valignment_text,
+        )
+        # plotting table text
+        ax.text(
+            x=xloc,
+            y=yticklabel1,
+            s=yticklabel2,
+            **new_text_kwargs,
+        )
+    # ################### add header
+    if annoteheader is not None:
+        # update the kwargs
+        new_header_kwargs = _update_kwargs(
+            update_dict=kwargs_header_dict,
+            size=size_header,
+            horizontalalignment=halignment_header,
+            verticalalignment=valignment_header,
+            fontweight=FNames.fontweight,
+        )
+        t = ax.text(
+            x=xloc_header,
+            y=ax.get_ylim()[1] - negative_padding,
+            s=annoteheader,
+            **new_header_kwargs,
+        )
+    # ################### return
+    return ax
