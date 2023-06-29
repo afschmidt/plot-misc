@@ -19,7 +19,7 @@ from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
     is_type,
     is_df,
-    is_coltype,
+    is_series_type,
     are_columns_in_df,
 )
 
@@ -308,9 +308,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(figsize, tuple)
     is_type(reverse_y, bool)
     is_df(df)
-    is_coltype(df[x_col], NUM)
+    is_series_type(df[x_col], (float, int))
     if (ub_col is not None) and (lb_col is not None):
-        is_coltype(df[[ub_col, lb_col]], NUM)
+        is_series_type(df[[ub_col, lb_col]], (float, int))
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col

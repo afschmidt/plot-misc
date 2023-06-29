@@ -114,32 +114,34 @@ def is_df(df: Any) -> bool:
     return is_type(df, pd.DataFrame)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def is_coltype(column: Any, types: str) -> bool:
+def is_series_type(column: Union[pd.Series, pd.DataFrame],
+                   types: Union[Tuple[Type], Type],
+                   ) -> bool:
     """
-    Checks if given dataframe column(s) matches any of the supplied types
+    Checks if a pd.DataFrame or pd.Series contest has the supplied type.
+    
+    _Note_: instead of testing the dtypes, the function will look over each
+        element and test this individually.
     
     Parameters
     ----------
-    column: dataframe column to test
-    types: either a single type, or a concatenated string of types
+    column: pd.Series or pd.DataFrame,
+    types: a single type.
     
     Returns
     -------
     True if the column(s) match(es) the given types.
     Raises InputValidationError otherwise.
     """
-    df = pd.DataFrame(column)
-    if df.shape[1] > 1:
-        for col in df.columns:
-            if not df[col].dtype.kind in types:
-                raise InputValidationError(
-                    f"Expected any of [{types}], got {df[col].dtype.kind}"
-                )
-    else:
-        if not column.dtype.kind in types:
-            raise InputValidationError(
-                f"Expected any of [{types}], got {column.dtype.kind}"
-            )
+    # check input
+    is_type(column, (pd.DataFrame, pd.Series))
+    # run tests
+    if isinstance(column, pd.Series):
+        [is_type(col, types) for col in column]
+    elif isinstance(column, pd.DataFrame):
+        for _, col in column.iteritems():
+            [is_type(co, types) for co in col]
+    # return
     return True
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
