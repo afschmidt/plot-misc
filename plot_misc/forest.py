@@ -193,6 +193,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
                 verbose:bool=False,
+                ylim:Union[Tuple[float, float], None]=None,
                 kwargs_scatter_dict:Dict[Any, Any]={},
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
@@ -247,6 +248,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         be added
     span_colour : list of two string, default ['white', 'lightgrey'],
         The colours of the span.
+    ylim : tuple of floats, `NoneType`
+        Overwrite the default y-limits if not set to `NoneType`.
     ax : plt.axes, default None
         An optional matplotlib axis. If supplied the function works on the axis.
     figsize : tuple of two floats, default (10, 10),
@@ -305,6 +308,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(figsize, tuple)
     is_type(reverse_y, bool)
     is_df(df)
+    is_type(ylim, (type(None), tuple))
     is_series_type(df[x_col], (float, int))
     if (ub_col is not None) and (lb_col is not None):
         is_series_type(df[[ub_col, lb_col]], (float, int))
@@ -424,10 +428,14 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # get mid
         y_mid.append(np.nanmean([maxy, miny]))
     # ################### adjust y margins
+    # adjust margin
     mima = list(df.sort_values(y_col)[y_col])[:2]
     diff = mima[1] - mima[0]
     new_margins = [min(df[y_col]) - diff/2, max(df[y_col]) + diff/2]
-    ax.set_ylim(new_margins)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    else:
+        ax.set_ylim(new_margins)
     # add the starting and endpoints
     y_mid.insert(0, y_locations.iloc[0][FNames.min])
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
