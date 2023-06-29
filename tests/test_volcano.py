@@ -18,7 +18,7 @@ DATA = examples.load_volcano_data()
 SIGNIFICANCE = DATA['multiple_testing_threshold'].unique()[0]
 YLIM = [0, 22] # adding some space to the top
 XLIM = [-800,800]
-LABEL = ['WFDC1']
+LABEL = 'WFDC1'
 POINT = 'point'
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -65,7 +65,7 @@ class TestPlotVolcano(object):
                             )
         # check if label is there
         text = ax.axes.texts.pop()
-        assert text.get_text() == LABEL[0]
+        assert text.get_text() == LABEL
         # check the points are correct
         list(data2['pvalue_log10'])[0] in ax.collections[1].get_offsets().data[:,1]
         # get conficence interval coordinates

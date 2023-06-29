@@ -15,6 +15,8 @@ from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
     is_type,
+    is_df,
+    is_coltype,
     are_columns_in_df,
 )
 
@@ -121,6 +123,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     -------
     df : pd.DataFrame
     """
+    df = df.copy()
     # check input
     is_type(df, pd.DataFrame)
     is_type(group, str)
@@ -293,8 +296,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(ax, (type(None), plt.Axes))
     is_type(figsize, tuple)
     is_type(reverse_y, bool)
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError('`df` should be a pd.DataFrame.')
+    is_df(df)
+    is_coltype(df[x_col], 'iufc')
+    if (ub_col is not None) and (lb_col is not None):
+        is_coltype(df[[ub_col, lb_col]], 'iufc')
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
@@ -361,6 +366,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         y_values = [ys, ys]
         new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
                                             c=ci_colour, linewidth=ci_lwd,
+                                            alpha=row[a_col_name],
         )
         ax.plot(x_values, y_values, **new_plot_ci_kwargs,
                 )
@@ -400,6 +406,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             miny = np.nan
         # get mid
         y_mid.append(np.nanmean([maxy, miny]))
+    # ################### adjust y margins
+    mima = list(df.sort_values(y_col)[y_col])[:2]
+    diff = mima[1] - mima[0]
+    new_margins = [min(df[y_col]) - diff/2, max(df[y_col]) + diff/2]
+    ax.set_ylim(new_margins)
     # add the starting and endpoints
     y_mid.insert(0, y_locations.iloc[0][FNames.min])
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
@@ -426,10 +437,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             )
             ax.axhspan(ymin, ymax, **new_span_kwargs,
                        )
-    # ################### adjust y margins
-    new_margins = [ax.get_ylim()[0], ax.get_ylim()[1]]
-    new_margins[1] = y_mid[-1]
-    ax.set_ylim(new_margins)
     # ################### add y-axis labels
     ax.set_yticks(y_locations[FNames.mean])
     ax.set_yticklabels(y_locations.index)
