@@ -284,6 +284,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     """
     # ################### internal constants
     ROW = 'row'
+    # numpy code for data types: signed int, unsigned int, float-point,
+    # complex floating-point
+    NUM = 'iufc'
     # ################### do check and set defaults
     is_type(x_col, str)
     is_type(lb_col, (type(None), str))
@@ -305,9 +308,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(figsize, tuple)
     is_type(reverse_y, bool)
     is_df(df)
-    is_coltype(df[x_col], 'iufc')
+    is_coltype(df[x_col], NUM)
     if (ub_col is not None) and (lb_col is not None):
-        is_coltype(df[[ub_col, lb_col]], 'iufc')
+        is_coltype(df[[ub_col, lb_col]], NUM)
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
@@ -353,7 +356,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # checking if there are string values containing `row` which need to
         # be evaluated.
         kwargs_scatter_dict = \
-            _dict_string_argument('row', kwargs_scatter_dict, locals())
+            _dict_string_argument(ROW, kwargs_scatter_dict, locals())
         # updating kwargs dict
         new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
                                             s=shape_size,
@@ -380,7 +383,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # checking if there are string values containing `row` which need to
         # be evaluated.
         kwargs_plot_ci_dict = \
-            _dict_string_argument('row', kwargs_plot_ci_dict, locals())
+            _dict_string_argument(ROW, kwargs_plot_ci_dict, locals())
         # updating kwargs dict
         new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
                                             c=ci_colour, linewidth=ci_lwd,
