@@ -349,6 +349,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if g_col is None:
         g_col = FNames.g_col
         df[g_col] = range(df.shape[0])
+    # logic checks
+    if (span_return == True) and (span == False):
+        warnings.warn('`span_return` will be ingored when `span` is set to '
+                      '`False`.')
     # ################## should we create a figure and axis
     if ax is None:
         f, ax = plt.subplots(figsize=figsize)
@@ -460,7 +464,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 ymax = y_mid[t+1]
             except IndexError:
                 ymax = y_mid[t]
-                pass
             # change every second step
             if t % 2 == 0:
                 col = span_colour[0]
