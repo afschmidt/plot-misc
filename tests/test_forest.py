@@ -113,21 +113,21 @@ class TestPlotForest(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest(self):
         f, ax = plt.subplots(1, figsize=(15, 15))
-        _, ax = forest.plot_forest(df=data2,
-                                   x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME, a_col=ALPHA_NAME,
-                                   c_col=COL_NAME, ci_colour='black',
-                                   g_col='evaluated_outcome', shape_size= 19,
-                                   ci_lwd=2,
-                                   ax=ax,
-                                   kwargs_scatter_dict={'edgecolors':'black',
-                                                        'zorder':1},
-                                   kwargs_plot_ci_dict={'zorder':2,
-                                                        'solid_capstyle':'round',
-                                                        'linestyle':'-.',
-                                                        'alpha':'row[a_col_name]',
-                                                        }
-                                   )
+        _, ax, _ = forest.plot_forest(df=data2,
+                                      x_col=POINT, lb_col=LB, ub_col=UB,
+                                      s_col=SHAPE_NAME, a_col=ALPHA_NAME,
+                                      c_col=COL_NAME, ci_colour='black',
+                                      g_col='evaluated_outcome', shape_size= 19,
+                                      ci_lwd=2,
+                                      ax=ax,
+                                      kwargs_scatter_dict={'edgecolors':'black',
+                                                           'zorder':1},
+                                      kwargs_plot_ci_dict={'zorder':2,
+                                                           'solid_capstyle':'round',
+                                                           'linestyle':'-.',
+                                                           'alpha':'row[a_col_name]',
+                                                           }
+                                      )
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -135,7 +135,7 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 19
         assert list(data2[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[3].get_xdata()) == \
@@ -145,7 +145,7 @@ class TestPlotForest(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_noci_forest(self):
         f, ax = plt.subplots(1, figsize=(15, 15))
-        _, ax = forest.plot_forest(df=data2,
+        _, ax, _ = forest.plot_forest(df=data2,
                                    x_col=POINT,
                                    s_col=SHAPE_NAME, a_col=ALPHA_NAME,
                                    c_col=COL_NAME, ci_colour='black',
@@ -162,10 +162,10 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 19
         assert list(data2[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest_wo_ax(self):
-        _, ax = forest.plot_forest(df=data2,
+        _, ax, _ = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME,
@@ -178,7 +178,7 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 40
         assert list(data2[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[9].get_xdata()) == \
@@ -189,7 +189,7 @@ class TestPlotForest(object):
         assert lines[3].get_color() == 'indianred'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_complex_forest(self):
-        _, ax = forest.plot_forest(df=data1,
+        _, ax, _ = forest.plot_forest(df=data1,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME, ci_colour='black',
@@ -197,7 +197,7 @@ class TestPlotForest(object):
                                    connect_shape=True,
                                    kwargs_scatter_dict={'edgecolors':'black'},
                                    kwargs_connect_segments_dict={'zorder':1},
-                                  )
+                                   )
         # check the points are correct
         assert list(data1[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -205,7 +205,7 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 40
         assert list(data1[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[9].get_xdata()) == \
@@ -214,6 +214,29 @@ class TestPlotForest(object):
         assert lines[6].get_solid_capstyle() == 'projecting'
         assert lines[3].get_lw() == 2.0
         assert lines[3].get_color() == 'black'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_forest_return_other(self):
+        '''
+        evaluating the returned 'other' tuple
+        '''
+        # not retruning anything
+        _, ax, other = forest.plot_forest(df=data2,
+                                   x_col=POINT, lb_col=LB, ub_col=UB,
+                                   s_col=SHAPE_NAME, c_col=COL_NAME,
+                                   a_col=ALPHA_NAME,
+                                   )
+        assert len(other) == 0
+        assert isinstance(other, dict)
+        # retruning something
+        _, ax, other = forest.plot_forest(df=data2,
+                                   x_col=POINT, lb_col=LB, ub_col=UB,
+                                   s_col=SHAPE_NAME, c_col=COL_NAME,
+                                   a_col=ALPHA_NAME,
+                                   span=True, span_return=True,
+                                   )
+        assert len(other) != 0
+        assert isinstance(other[FNames.span], dict)
+        assert isinstance(other, dict)
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_table

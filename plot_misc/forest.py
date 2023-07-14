@@ -189,7 +189,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 a_col:Union[float, str]=1, shape_size:float=40, ci_lwd:float=2,
                 ci_colour:str='indianred', connect_shape:bool = False,
                 connect_shape_colour:str='black', connect_shape_lwd:float=1,
-                span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
+                span:bool = True, span_return:bool = False,
+                span_colour:List[str] = ['white', 'lightgrey'],
                 ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
                 verbose:bool=False,
@@ -198,7 +199,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
                 kwargs_span_dict:Dict[Any, Any]={}
-                ) -> Tuple[plt.Figure, plt.Axes]:
+                ) -> Tuple[plt.Figure, plt.Axes, Dict[Any,Any]]:
     """
     A forest plot function, that allows for grouping of estimates by `group`.
     Related if there are estimates with the same `y_col` value these get
@@ -246,6 +247,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     span : boolean, default True,
         Whether an colour-interchanging horizontal background segment should
         be added
+    span_return : boolean, default False,
+        Whether to return a dictionary with the span coordinates and kwargs to
+        ``ax.axhspan``.
     span_colour : list of two string, default ['white', 'lightgrey'],
         The colours of the span.
     ylim : tuple of floats, `NoneType`
@@ -265,9 +269,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Returns
     -------
-    Unpacks a matplotlib figure, axes.
-    f : plt.Figure.
-    x : plt.Axes.
+    Unpacks a matplotlib figure, axes, tuple,
+    f : plt.Figure,
+    x : plt.Axes,
+    d : dictionary with optional runtime information - currently returns a span
+        coordiniates, and kwargs.
     
     Examples
     --------
@@ -294,7 +300,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(y_col, str)
     is_type(s_col, str)
     is_type(c_col, str)
-    is_type(g_col, str)
+    is_type(g_col, (type(None),str))
     is_type(a_col, (int, float, str))
     is_type(shape_size, (int, float))
     is_type(ci_lwd, (int, float))
@@ -441,9 +447,14 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
     # ################### Add horizontal segments
     if span ==True:
+        # to store the span y-axis coordiniates, colours
+        span_dict = {}
         # add segments
         for t in range(len(y_mid)-1):
             ymin = y_mid[t]
+            # # skipp if first or last (too tired to find an actual solution!)
+            # if (t == 0) or (t == (len(y_mid)-1)):
+            #     continue
             # stop if t is too large
             try:
                 ymax = y_mid[t+1]
@@ -462,14 +473,22 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             )
             ax.axhspan(ymin, ymax, **new_span_kwargs,
                        )
+            if span_return == True:
+                span_dict[t] = {FNames.min:ymin, FNames.max:ymax,
+                                FNames.kwargs:new_span_kwargs,
+                                }
     # ################### add y-axis labels
     ax.set_yticks(y_locations[FNames.mean])
     ax.set_yticklabels(y_locations.index)
     # ################### invert y-axis
     if reverse_y == True:
         ax.invert_yaxis()
-    # ################### return the figure and axis
-    return f, ax
+    # ################### return the figure, axis, and other
+    other = {}
+    if span_return == True:
+        other = {FNames.span: span_dict}
+    return f, ax, other
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_table(
