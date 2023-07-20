@@ -31,7 +31,7 @@ for some possible recipes.
 ## Updates
 
 plot-misc applies [Semantic Versioning](https://semver.org/).
-Please see the [changelog](./CHANGELOG.md') for version specific updates.
+Please see the [changelog]('./CHANGELOG.md') for version specific updates.
 
 ## Contributing
 
