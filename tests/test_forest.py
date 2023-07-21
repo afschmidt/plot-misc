@@ -220,23 +220,22 @@ class TestPlotForest(object):
         evaluating the returned 'other' tuple
         '''
         # not retruning anything
-        _, ax, other = forest.plot_forest(df=data2,
+        _, ax, log = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME,
                                    )
-        assert len(other) == 0
-        assert isinstance(other, dict)
+        assert isinstance(log.__getattribute__(FNames.span),type(None))
         # retruning something
-        _, ax, other = forest.plot_forest(df=data2,
+        _, ax, log = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME,
                                    span=True, span_return=True,
                                    )
-        assert len(other) != 0
-        assert isinstance(other[FNames.span], dict)
-        assert isinstance(other, dict)
+        assert len(log.__getattribute__(FNames.span)) != 0
+        assert isinstance(log.__getattribute__(FNames.span), dict)
+        assert isinstance(log.__getattribute__(FNames.span), dict)
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_table

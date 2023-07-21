@@ -23,6 +23,36 @@ from plot_misc.constants import (
     are_columns_in_df,
 )
 
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# Class
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class PlotForestResults(object):
+    '''
+    The `calc_matrices` results objects
+    '''
+    SET_ARGS = [
+        FNames.span,
+    ]
+    # Initiation the class
+    def __init__(self, **kwargs):
+        """
+        Initialise
+        """
+        for k in kwargs.keys():
+            if k not in self.__class__.SET_ARGS:
+                raise AttributeError("unrecognised argument '{0}'".format(k))
+        # Loops over `SET_ARGS`, assigns the kwargs content to name `s`.
+        for s in self.__class__.SET_ARGS:
+            try:
+                setattr(self, s, kwargs[s])
+            except KeyError:
+                warnings.warn("argument '{0}' is set to 'None'".format(s))
+                setattr(self, s, None)
+    # /////////////////////////////////////////////////////////////////////////
+    def __str__(self):
+        return f"A `PlotForestResults` class."
+
 # #############################################################################
 # functions
 
@@ -199,7 +229,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
                 kwargs_span_dict:Dict[Any, Any]={}
-                ) -> Tuple[plt.Figure, plt.Axes, Dict[Any,Any]]:
+                ) -> Tuple[plt.Figure, plt.Axes, PlotForestResults]:
     """
     A forest plot function, that allows for grouping of estimates by `group`.
     Related if there are estimates with the same `y_col` value these get
@@ -269,11 +299,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Returns
     -------
-    Unpacks a matplotlib figure, axes, tuple,
+    Unpacks a matplotlib figure, axes, class,
     f : plt.Figure,
     x : plt.Axes,
-    d : dictionary with optional runtime information - currently returns a span
-        coordiniates, and kwargs.
+    p : PlotForestResults class
     
     Examples
     --------
@@ -490,7 +519,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     other = {}
     if span_return == True:
         other = {FNames.span: span_dict}
-    return f, ax, other
+    return f, ax, PlotForestResults(**other)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
