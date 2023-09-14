@@ -587,7 +587,7 @@ def plot_table(
     is_type(ax, plt.Axes)
     is_type(string_col, str)
     is_type(pad, (float, int))
-    is_type(annoteheader, str)
+    is_type(annoteheader, (type(None), str))
     is_type(halignment_text, str)
     is_type(valignment_text, str)
     is_type(halignment_header, str)
