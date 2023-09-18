@@ -1,0 +1,7 @@
+exclude MANIFEST.in
+exclude .*
+
+recursive-exclude .* *
+recursive-exclude tests *
+recursive-exclude resources *
+include plot_misc/example_data/example_datasets/*

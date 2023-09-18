@@ -1,10 +1,10 @@
 '''
 Constants used throughout the plot-misc package.
 '''
-
 import pandas as pd
 import numpy.typing as npt
 import numpy as np
+from packaging import version
 from typing import Any, List, Type, Union, Tuple
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,6 +141,9 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
     if isinstance(column, pd.Series):
         [is_type(col, types) for col in column]
     elif isinstance(column, pd.DataFrame):
+        if version.parse('2.0.3') <= version.parse(pd.__version__):
+            # iteritems got depricated.
+            column.iteritems = column.items
         for _, col in column.iteritems():
             [is_type(co, types) for co in col]
     # return
