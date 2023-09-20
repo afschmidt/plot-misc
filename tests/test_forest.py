@@ -225,7 +225,7 @@ class TestPlotForest(object):
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME,
                                    )
-        assert isinstance(log.__getattribute__(FNames.span),type(None))
+        assert len(log.__getattribute__(FNames.span)) == 0
         # retruning something
         _, ax, log = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,

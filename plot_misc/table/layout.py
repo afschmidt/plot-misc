@@ -19,7 +19,7 @@ from plot_misc.constants import (
 # constants
 MAXLOG10=20
 
-warnings.warn('The `layout.py` module will be moved to the `data-clean` '
+warnings.warn('The `layout.py` module will be moved to the `clean-data'
               'package in the near future.',
               FutureWarning)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

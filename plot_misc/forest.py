@@ -433,7 +433,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                                             c=row[c_col_name],
                                             alpha=row[a_col_name],
                                             zorder=2,
-        )
+                                            )
         ax.scatter(x=xs, y=ys, **new_scatter_kwargs,
                    )
         # add confidene intervals
@@ -456,7 +456,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # updating kwargs dict
         new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
                                             c=ci_colour, linewidth=ci_lwd,
-        )
+                                            )
         ax.plot(x_values, y_values, **new_plot_ci_kwargs,
                 )
     # ################## aggregate coordinates
@@ -545,7 +545,9 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if reverse_y == True:
         ax.invert_yaxis()
     # ################### return the figure, axis, and other
-    other = {}
+    other = {
+        FNames.span: {},
+    }
     if span_return == True:
         other = {FNames.span: span_dict}
     return f, ax, PlotForestResults(**other)
