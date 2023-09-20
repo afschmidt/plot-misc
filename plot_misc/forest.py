@@ -6,6 +6,7 @@ appropriatly orrientate input DataFrames.
 '''
 
 # imports
+from matplotlib._api.deprecation import deprecated
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -215,11 +216,13 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 ub_col:Union[str, None]=None, y_col:str='y_axis',
+                s_size_col:Union[str,float,None]=None,
                 s_col:str='o', c_col:str='black', g_col:Union[str, None]=None,
-                a_col:Union[float, str]=1, shape_size:float=40, ci_lwd:float=2,
-                ci_colour:str='indianred', connect_shape:bool = False,
-                connect_shape_colour:str='black', connect_shape_lwd:float=1,
-                span:bool = True, span_return:bool = False,
+                a_col:Union[float, str]=1, shape_size:Union[float, None]=None,
+                ci_lwd:float=2, ci_colour:str='indianred',
+                connect_shape:bool = False, connect_shape_colour:str='black',
+                connect_shape_lwd:float=1, span:bool = True,
+                span_return:bool = False,
                 span_colour:List[str] = ['white', 'lightgrey'],
                 ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
@@ -261,8 +264,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         indicators. If None, a column with a unique value for each row will be
         added - so there are no groups. This column will also be used to
         provide y-axis ticklabels.
-    shape_size : float, default 40,
-        The shape size.
+    s_size_col : str, float, default 40
+        The column name of the `shape size` value for each point. Can also
+        simply supply a `float` for a uniform shape. Supplying a `NoneType`
+        will default to 40.
+    shape_size : float, default `NoneType`,
+        The shape size. This will be 'DEPRECATED', use `s_size_col` instead.
     ci_lwd : float, default 1,
         The line width of the confidence intervals.
     ci_colour : float, default 'indianred'
@@ -331,7 +338,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_type(c_col, str)
     is_type(g_col, (type(None),str))
     is_type(a_col, (int, float, str))
-    is_type(shape_size, (int, float))
+    is_type(shape_size, (str,int, float, type(None)))
+    is_type(s_size_col, (str,int, float, type(None)))
     is_type(ci_lwd, (int, float))
     is_type(ci_colour, str)
     is_type(connect_shape, bool)
@@ -378,6 +386,27 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if g_col is None:
         g_col = FNames.g_col
         df[g_col] = range(df.shape[0])
+    # Handel shape size
+    if not shape_size is None:
+        warnings.warn('`shape_size` will be deprecated in future, please use '
+                      '`s_size_col` instead. Note that s_size_col takes '
+                      'precedence over `shape_size` without further warning.',
+                      FutureWarning)
+    if isinstance(shape_size, str):
+        shape_size_name = shape_size
+    elif isinstance(shape_size, (float, int)):
+        shape_size_name = 'shape_size'
+        df[shape_size_name] = shape_size
+    # Use s_size_col
+    if isinstance(s_size_col, str):
+        shape_size_name = shape_size
+    elif isinstance(s_size_col, (float, int)):
+        shape_size_name = 'shape_size'
+        df[shape_size_name] = s_size_col
+    else:
+        # use default
+        shape_size_name = 'shape_size'
+        df[shape_size_name] = 40
     # logic checks
     if (span_return == True) and (span == False):
         warnings.warn('`span_return` will be ingored when `span` is set to '
@@ -399,7 +428,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             _dict_string_argument(ROW, kwargs_scatter_dict, locals())
         # updating kwargs dict
         new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
-                                            s=shape_size,
+                                            s=row[shape_size_name],
                                             marker=row[s_col_name],
                                             c=row[c_col_name],
                                             alpha=row[a_col_name],

@@ -4,7 +4,6 @@ A collection of figure templates relevant for machine learning projects.
 Includes, for example, code for lollipop graphs or calibration plots.
 '''
 # imports
-from matplotlib.colorbar import colorbar_factory
 import matplotlib.pyplot as plt
 import pandas as pd
 from plot_misc.constants import (
@@ -21,6 +20,12 @@ from plot_misc.utils.utils import (
     _update_kwargs,
 )
 from typing import Any, List, Type, Union, Tuple, Dict, Optional
+from packaging import version
+import matplotlib as mpl
+if version.parse('3.4.0') < version.parse(mpl._version.version):
+    from matplotlib.colorbar import Colorbar as colorbar_factory
+else:
+    from matplotlib.colorbar import colorbar_factory
 
 # #############################################################################
 
