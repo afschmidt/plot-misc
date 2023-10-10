@@ -15,6 +15,7 @@ from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
 from plot_misc.utils.utils import (
     _update_kwargs,
     _dict_string_argument,
+    plot_span,
 )
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
@@ -403,7 +404,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     elif isinstance(s_size_col, (float, int)):
         shape_size_name = 'shape_size'
         df[shape_size_name] = s_size_col
-    else:
+    elif shape_size is None:
         # use default
         shape_size_name = 'shape_size'
         df[shape_size_name] = 40
@@ -532,7 +533,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 update_dict=kwargs_span_dict,
                 color=col, zorder=0
             )
-            ax.axhspan(ymin, ymax, **new_span_kwargs,
+            plot_span(ymin, ymax, ax=ax,
+                      **new_span_kwargs,
                        )
             if span_return == True:
                 span_dict[t] = {FNames.min:ymin, FNames.max:ymax,
@@ -566,6 +568,10 @@ def plot_table(
     l_yticklab_pad:Optional[Union[str, None]]=None,
     r_yticklab_pad:Optional[Union[str, None]]=None,
     annoteheader: Optional[Union[str, None]]=None,
+    span:Optional[Union[dict, None]]=None,
+    span_start:str='min',
+    span_stop:str='max',
+    span_kwargs:str='kwargs',
     kwargs_text_dict:Dict[Any, Any]={},
     kwargs_header_dict:Dict[Any, Any]={},
     kwargs_yticklabel_dict:Dict[Any, Any]={},
@@ -601,6 +607,11 @@ def plot_table(
         A list of floats defining the y-axis locations for the ticks.
     [l|r]_yticklab_pad: str,
         An optional string to use as a prefix or suffic of the y-axis labels.
+    span : dict, default `NoneType`
+        Whether you want to add an optional span. Supply a dictionary with
+        k many unique keys and a dictionary value containing `span_start`,
+        `span_stop` and `span_kwargs`. This will all be supplied to
+        `merit_helper.utils.utils.plot_span`.
     ax : plt.axes,
             Axes to operate on.
     kwargs_*_dict : dict, default empty dict,
@@ -630,6 +641,7 @@ def plot_table(
     is_type(r_yticklab_pad, (type(None), float, int))
     is_type(yticklabel, (type(None), list))
     is_type(ytickloc, (type(None), list))
+    is_type(span, (type(None), dict))
     # check if columns are in dataframe
     are_columns_in_df(dataframe, expected_columns=[string_col, y_col])
     # ################### remove spines
@@ -708,5 +720,13 @@ def plot_table(
             s=annoteheader,
             **new_header_kwargs,
         )
+    # ################### add optional span
+    if span is not None:
+        for s in span:
+            plot_span(span[s][span_start],
+                      span[s][span_stop],
+                      ax=ax,
+                      **span[s][span_kwargs],
+                      )
     # ################### return
     return ax

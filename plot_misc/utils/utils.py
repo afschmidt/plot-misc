@@ -159,6 +159,47 @@ def _dict_string_argument(partial_match:str, dict_string:Dict[Any, str],
     return dict_string
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def plot_span(start_span:float, stop_span:float, ax: plt.Axes,
+              horizontal:bool=True, **kwargs:Optional[Any],
+              ):
+    '''
+    Adds an horizontal or vertical span to an `ax` supplied `plt.Axes` object.
+
+    Parameters
+    ----------
+    start_span: float,
+        The y-coordinate to start the span. Represents the x-axis coordinates
+        when horizontal is `False`.
+    stop_span: float,
+        The y-coordinate to end the span. Represents the x-axis coordinates
+        when horizontal is `False`.
+    ax : plt.axes,
+            Axes to operate on.
+    horizontal : Boolean, default `True`
+        Whether to use axhspan or axvspan.
+    **kwargs : Optional
+        Optional arguments supplied to axhspan or axvspan depending on
+        `horizontal`
+    
+    Returns
+    -------
+    None
+    '''
+    is_type(start_span, (int, float))
+    is_type(stop_span, (int, float))
+    is_type(ax, plt.Axes)
+    is_type(horizontal, bool)
+    # horizontal or vertical
+    if horizontal == True:
+        span = ax.axhspan
+    else:
+        span = ax.axvspan
+    # plot
+    span(start_span, stop_span, **kwargs)
+    # return
+    return None
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None,
                  axis:str='x', log:bool=False):
     '''
