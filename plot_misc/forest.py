@@ -166,7 +166,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     is_type(strata, (type(None), str))
     is_type(within_pad, (int, float))
     is_type(between_pad, (int, float))
-    is_type(sort_dict, (type(None), dict))
+    is_type(sort_dict, (type(None), dict, str))
     are_columns_in_df(df, expected_columns=[group])
     # if not group in df.columns:
     #     raise KeyError('`df` does not contain column {0}.'.format(group))
@@ -250,7 +250,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         The column name of the upper bound of an confidence interval.
     y_col : str, default 'y_axis',
         The column name of the y-axis values used to differentiate
-        estimates/studies.
+        estimates/studies.Should contain `int` or `float` values representing
+        the cartesian y-coordinate for each point.
     s_col : str, default 'o',
         The column name of the shape indicators. If string is not found in `df`
         the string value will be added to an `s_col` column.
@@ -354,6 +355,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_df(df)
     is_type(ylim, (type(None), tuple))
     is_series_type(df[x_col], (float, int))
+    is_series_type(df[y_col], (float, int))
     if (ub_col is not None) and (lb_col is not None):
         is_series_type(df[[ub_col, lb_col]], (float, int))
     # set default shape and colour and alpha
