@@ -23,6 +23,7 @@ from plot_misc.constants import (
     is_df,
     is_series_type,
     are_columns_in_df,
+    InputValidationError,
 )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -235,9 +236,15 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 kwargs_span_dict:Dict[Any, Any]={}
                 ) -> Tuple[plt.Figure, plt.Axes, PlotForestResults]:
     """
-    A forest plot function, that allows for grouping of estimates by `group`.
-    Related if there are estimates with the same `y_col` value these get
-    depicted as a horizontal sequence linked by a line segement.
+    Plots points based on their `x_col` and `y_col` values on a Cartesian
+    coordinate system. By including indicators of precision as lower and
+    upper bounds (e.g., representing a confidencen interval), this plot is
+    often referred to as a forest plot.
+    
+    The plotting functions allows for grouping of estimates by `group`.
+    Related, if there are estimates with the same `y_col` value these get
+    depicted as a horizontal sequence linked by an optional line segement
+    (`connect_shaep`).
     
     Arguments
     ---------
@@ -270,8 +277,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         The column name of the `shape size` value for each point. Can also
         simply supply a `float` for a uniform shape. Supplying a `NoneType`
         will default to 40.
-    shape_size : float, default `NoneType`,
-        The shape size. This will be 'DEPRECATED', use `s_size_col` instead.
     ci_lwd : float, default 1,
         The line width of the confidence intervals.
     ci_colour : float, default 'indianred'
@@ -355,7 +360,16 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_df(df)
     is_type(ylim, (type(None), tuple))
     is_series_type(df[x_col], (float, int))
-    is_series_type(df[y_col], (float, int))
+    try:
+        is_series_type(df[y_col], (float, int))
+    except InputValidationError:
+        raise InputValidationError(
+            '`y_col` should refer to a column containing '
+            'integers or floats, which are used to provide '
+            'the y-value in a Cartesian coordinates system. '
+            'Please refer to: '
+            'https://en.wikipedia.org/wiki/Cartesian_coordinate_system .'
+        )
     if (ub_col is not None) and (lb_col is not None):
         is_series_type(df[[ub_col, lb_col]], (float, int))
     # set default shape and colour and alpha

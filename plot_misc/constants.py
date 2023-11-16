@@ -135,8 +135,8 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
     
     Returns
     -------
-    True if the column(s) match(es) the given types.
-    Raises InputValidationError otherwise.
+    True if the column(s) match(es) the given types. Raises
+    InputValidationError otherwise.
     """
     # check input
     is_type(column, (pd.DataFrame, pd.Series))
