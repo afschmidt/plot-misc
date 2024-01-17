@@ -33,6 +33,12 @@ tags
 *.xdv
 !.tex
 !.[R|r]nw
+# local folders
+/build/
+/dist/
+/venv/
+/__pycache__/
 # example data 
 !plot_misc/example_data/example_datasets/*.gz
 !plot_misc/example_data/example_datasets/*.txt
+
