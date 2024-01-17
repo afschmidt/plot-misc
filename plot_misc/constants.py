@@ -49,25 +49,28 @@ class ForestNames(object):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names
 class UtilsNames(object):
-    value_input       = 'curated_matrix_value'
-    annot_input       = 'curated_matrix_annotation'
-    annot_star        = 'matrix_star'
-    annot_pval        = 'matrix_pvalue'
-    annot_effect      = 'matrix_point_estimate'
-    value_point       = 'curated_matrix_point_estimate_value'
-    value_original    = 'crude_point_estimate'
-    source_data       = 'source_data'
-    mat_point         = 'point'
-    mat_pvalue        = 'pvalue'
-    mat_index         = 'id'
-    mat_exposure      = 'exposure'
-    mat_outcome       = 'outcome'
-    mat_exposure_list = ['IL2ra', 'IP10', 'SCF', 'TRAIL']
-    mat_outcome_list  = ['HDL-C', 'LDL-C']
-    mat_annot_star    = 'star'
-    mat_annot_pval    = 'pvalues'
-    mat_annot_point   = 'point_estimates'
-    mat_annot_none    = '`NoneType`'
+    value_input        = 'curated_matrix_value'
+    annot_input        = 'curated_matrix_annotation'
+    annot_star         = 'matrix_star'
+    annot_pval         = 'matrix_pvalue'
+    annot_effect       = 'matrix_point_estimate'
+    value_point        = 'curated_matrix_point_estimate_value'
+    value_original     = 'crude_point_estimate'
+    source_data        = 'source_data'
+    mat_point          = 'point'
+    mat_pvalue         = 'pvalue'
+    mat_index          = 'id'
+    mat_exposure       = 'exposure'
+    mat_outcome        = 'outcome'
+    mat_exposure_list  = ['IL2ra', 'IP10', 'SCF', 'TRAIL']
+    mat_outcome_list   = ['HDL-C', 'LDL-C']
+    mat_annot_star     = 'star'
+    mat_annot_pval     = 'pvalues'
+    mat_annot_point    = 'point_estimates'
+    mat_annot_none     = '`NoneType`'
+    roc_false_positive = 'false_positive'
+    roc_sensitivity    = 'sensitivity'
+    roc_threshold      = 'threshold'
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS
@@ -132,8 +135,8 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
     
     Returns
     -------
-    True if the column(s) match(es) the given types.
-    Raises InputValidationError otherwise.
+    True if the column(s) match(es) the given types. Raises
+    InputValidationError otherwise.
     """
     # check input
     is_type(column, (pd.DataFrame, pd.Series))

@@ -13,6 +13,11 @@ from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
     is_type,
     UtilsNames,
+    as_array,
+    same_len,
+)
+from sklearn.metrics import (
+    roc_curve,
 )
 from plot_misc.table.layout import _nlog10_func
 
@@ -73,6 +78,50 @@ class MidpointNormalize(mpl.colors.Normalize):
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Functions
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def format_roc(observed:as_array, predicted:as_array,
+               **kwargs:Optional[Any],
+               ) -> pd.DataFrame:
+    '''
+    Takes a binary `observed` column vector and a continuous `predicted`
+    column vector, and returns a pd.DataFrame with the columns
+    `false_positive`, `sensitivity` and `threshold`.
+    
+    Arguments
+    ---------
+    observed: numpy array,
+        A column vector of the observed binary outcomes.
+    predicted: numpy array,
+        A column vector of the predicted outcome (should be continuous), e.g.,
+        representing the predicted probability.
+    kwargs: keyword arguments,
+        Supplied to `sklearn.metrics.roc_curve`.
+
+    Returns
+    -------
+    results: pd.DataFrame,
+        With columns: `false_positive`, `sensitivity` and `threshold`.
+    '''
+    # check input
+    is_type(observed, np.ndarray)
+    is_type(predicted, np.ndarray)
+    same_len(observed,predicted)
+    # get columns
+    false_positive, sensitivity, threshold = roc_curve(
+        y_true=observed, y_score=predicted,
+        **kwargs,
+    )
+    # make data frame
+    results = pd.DataFrame(
+        {
+            UtilsNames.roc_false_positive: false_positive,
+            UtilsNames.roc_sensitivity: sensitivity,
+            UtilsNames.roc_threshold: threshold,
+        }
+    )
+    # return
+    return results
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
@@ -157,6 +206,47 @@ def _dict_string_argument(partial_match:str, dict_string:Dict[Any, str],
                 dict_string[key] = eval(value, context)
     # return stuf
     return dict_string
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def plot_span(start_span:float, stop_span:float, ax: plt.Axes,
+              horizontal:bool=True, **kwargs:Optional[Any],
+              ):
+    '''
+    Adds an horizontal or vertical span to an `ax` supplied `plt.Axes` object.
+
+    Parameters
+    ----------
+    start_span: float,
+        The y-coordinate to start the span. Represents the x-axis coordinates
+        when horizontal is `False`.
+    stop_span: float,
+        The y-coordinate to end the span. Represents the x-axis coordinates
+        when horizontal is `False`.
+    ax : plt.axes,
+            Axes to operate on.
+    horizontal : Boolean, default `True`
+        Whether to use axhspan or axvspan.
+    **kwargs : Optional
+        Optional arguments supplied to axhspan or axvspan depending on
+        `horizontal`
+    
+    Returns
+    -------
+    None
+    '''
+    is_type(start_span, (int, float))
+    is_type(stop_span, (int, float))
+    is_type(ax, plt.Axes)
+    is_type(horizontal, bool)
+    # horizontal or vertical
+    if horizontal == True:
+        span = ax.axhspan
+    else:
+        span = ax.axvspan
+    # plot
+    span(start_span, stop_span, **kwargs)
+    # return
+    return None
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None,

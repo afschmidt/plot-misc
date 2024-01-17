@@ -15,6 +15,7 @@ from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
 from plot_misc.utils.utils import (
     _update_kwargs,
     _dict_string_argument,
+    plot_span,
 )
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
@@ -22,6 +23,7 @@ from plot_misc.constants import (
     is_df,
     is_series_type,
     are_columns_in_df,
+    InputValidationError,
 )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -165,7 +167,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     is_type(strata, (type(None), str))
     is_type(within_pad, (int, float))
     is_type(between_pad, (int, float))
-    is_type(sort_dict, (type(None), dict))
+    is_type(sort_dict, (type(None), dict, str))
     are_columns_in_df(df, expected_columns=[group])
     # if not group in df.columns:
     #     raise KeyError('`df` does not contain column {0}.'.format(group))
@@ -234,9 +236,15 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 kwargs_span_dict:Dict[Any, Any]={}
                 ) -> Tuple[plt.Figure, plt.Axes, PlotForestResults]:
     """
-    A forest plot function, that allows for grouping of estimates by `group`.
-    Related if there are estimates with the same `y_col` value these get
-    depicted as a horizontal sequence linked by a line segement.
+    Plots points based on their `x_col` and `y_col` values on a Cartesian
+    coordinate system. By including indicators of precision as lower and
+    upper bounds (e.g., representing a confidencen interval), this plot is
+    often referred to as a forest plot.
+    
+    The plotting functions allows for grouping of estimates by `group`.
+    Related, if there are estimates with the same `y_col` value these get
+    depicted as a horizontal sequence linked by an optional line segement
+    (`connect_shaep`).
     
     Arguments
     ---------
@@ -249,7 +257,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         The column name of the upper bound of an confidence interval.
     y_col : str, default 'y_axis',
         The column name of the y-axis values used to differentiate
-        estimates/studies.
+        estimates/studies.Should contain `int` or `float` values representing
+        the cartesian y-coordinate for each point.
     s_col : str, default 'o',
         The column name of the shape indicators. If string is not found in `df`
         the string value will be added to an `s_col` column.
@@ -268,8 +277,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         The column name of the `shape size` value for each point. Can also
         simply supply a `float` for a uniform shape. Supplying a `NoneType`
         will default to 40.
-    shape_size : float, default `NoneType`,
-        The shape size. This will be 'DEPRECATED', use `s_size_col` instead.
     ci_lwd : float, default 1,
         The line width of the confidence intervals.
     ci_colour : float, default 'indianred'
@@ -353,6 +360,16 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     is_df(df)
     is_type(ylim, (type(None), tuple))
     is_series_type(df[x_col], (float, int))
+    try:
+        is_series_type(df[y_col], (float, int))
+    except InputValidationError:
+        raise InputValidationError(
+            '`y_col` should refer to a column containing '
+            'integers or floats, which are used to provide '
+            'the y-value in a Cartesian coordinates system. '
+            'Please refer to: '
+            'https://en.wikipedia.org/wiki/Cartesian_coordinate_system .'
+        )
     if (ub_col is not None) and (lb_col is not None):
         is_series_type(df[[ub_col, lb_col]], (float, int))
     # set default shape and colour and alpha
@@ -403,7 +420,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     elif isinstance(s_size_col, (float, int)):
         shape_size_name = 'shape_size'
         df[shape_size_name] = s_size_col
-    else:
+    elif shape_size is None:
         # use default
         shape_size_name = 'shape_size'
         df[shape_size_name] = 40
@@ -532,7 +549,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 update_dict=kwargs_span_dict,
                 color=col, zorder=0
             )
-            ax.axhspan(ymin, ymax, **new_span_kwargs,
+            plot_span(ymin, ymax, ax=ax,
+                      **new_span_kwargs,
                        )
             if span_return == True:
                 span_dict[t] = {FNames.min:ymin, FNames.max:ymax,
@@ -566,6 +584,10 @@ def plot_table(
     l_yticklab_pad:Optional[Union[str, None]]=None,
     r_yticklab_pad:Optional[Union[str, None]]=None,
     annoteheader: Optional[Union[str, None]]=None,
+    span:Optional[Union[dict, None]]=None,
+    span_start:str='min',
+    span_stop:str='max',
+    span_kwargs:str='kwargs',
     kwargs_text_dict:Dict[Any, Any]={},
     kwargs_header_dict:Dict[Any, Any]={},
     kwargs_yticklabel_dict:Dict[Any, Any]={},
@@ -601,6 +623,11 @@ def plot_table(
         A list of floats defining the y-axis locations for the ticks.
     [l|r]_yticklab_pad: str,
         An optional string to use as a prefix or suffic of the y-axis labels.
+    span : dict, default `NoneType`
+        Whether you want to add an optional span. Supply a dictionary with
+        k many unique keys and a dictionary value containing `span_start`,
+        `span_stop` and `span_kwargs`. This will all be supplied to
+        `merit_helper.utils.utils.plot_span`.
     ax : plt.axes,
             Axes to operate on.
     kwargs_*_dict : dict, default empty dict,
@@ -630,6 +657,7 @@ def plot_table(
     is_type(r_yticklab_pad, (type(None), float, int))
     is_type(yticklabel, (type(None), list))
     is_type(ytickloc, (type(None), list))
+    is_type(span, (type(None), dict))
     # check if columns are in dataframe
     are_columns_in_df(dataframe, expected_columns=[string_col, y_col])
     # ################### remove spines
@@ -708,5 +736,13 @@ def plot_table(
             s=annoteheader,
             **new_header_kwargs,
         )
+    # ################### add optional span
+    if span is not None:
+        for s in span:
+            plot_span(span[s][span_start],
+                      span[s][span_stop],
+                      ax=ax,
+                      **span[s][span_kwargs],
+                      )
     # ################### return
     return ax
