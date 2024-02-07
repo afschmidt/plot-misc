@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+from scipy.stats import norm
 from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
 from plot_misc.utils.utils import (
     _update_kwargs,
@@ -246,8 +247,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     depicted as a horizontal sequence linked by an optional line segement
     (`connect_shaep`).
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     df : pd.DataFrame,
     x_col : str,
         The column name of the x-axis values (typically point estimates).
@@ -365,8 +366,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     except InputValidationError:
         raise InputValidationError(
             '`y_col` should refer to a column containing '
-            'integers or floats, which are used to provide '
-            'the y-value in a Cartesian coordinates system. '
+            'integers or floats. These are used to as '
+            'y-value in a Cartesian coordinates system. '
             'Please refer to: '
             'https://en.wikipedia.org/wiki/Cartesian_coordinate_system .'
         )
@@ -606,9 +607,11 @@ def plot_table(
             `string` value.
     annoteheaders : str, default `NoneType`
         string to annotate the table column.
-    pad : float, default 1
+    pad: float, default 1
         Multiplication factor for the x-coordinate location:
         `mean(ax.get_xlim())`.
+    pad_header: float, default 1
+        Same as `pad`.
     negative_padding : float, default 1.0
         determines the y-coordinate of the table header as:
         `ax.get_ylim()[1] - ngative_padding`
@@ -746,3 +749,229 @@ def plot_table(
                       )
     # ################### return
     return ax
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# Supported parameter space
+class EmpericalSupport(object):
+    '''
+    ToDo
+    
+    References
+    ----------
+    
+    Attributes
+    ----------
+    calc_kwargs: dictionary, defaults to an empty dict
+        keyword arguments supplied to `calc_empirical_support` when calling
+        the instance method `plot`.
+    plot_kwargs: dictionary, defaults to an empty dict
+        keyword arguments supplied to `plot_empirical_support` when calling
+        the instance method `plot`.
+    TABLE_NAMES: dictionary,
+        list the default table names.
+    
+    Methods
+    -------
+    '''
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __init__(self,
+                 calc_kwargs:Dict[any, any]={},
+                 plot_kwargs:Dict[any, any]={},
+                 ):
+        '''
+        Setting up kwargs for `calc_empirical_support` and
+        `plot_empirical_support`
+        '''
+        self.calc_kwargs = calc_kwargs
+        self.plot_kwargs = plot_kwargs
+   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __str__(self):
+        return (
+            "A class to calculate and plot the parameter space supported "
+            "the available data."
+        )
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    @staticmethod
+    def calc_empirical_support(
+        estimate:float, standard_error:float, alpha:List[float],
+                          ) -> pd.DataFrame:
+        '''
+        Takes an point `estimate` (e.g., a mean difference or log-transformed odds
+        ratio), its `standard_error`, and a list of `alpha's` between 0 and 1. This
+        will be used to calculate the empirical support for a parameter range
+        centered around `estimates`. The empirical support will be calculated
+        in the form of the p-values and confidence intervals, but reflecting to
+        what extent the parameter space is compatibility to the `estimate`.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        '''
+        # check input
+        ERROR='`{}` should not {} {}, current {}: {}.'
+        is_type(estimate, (int,float))
+        is_type(standard_error, (int, float))
+        is_type(alpha, (list, np.ndarray))
+        is_series_type(pd.Series(alpha), float)
+        if max(alpha) > 1:
+            ERROR.format('alpha', 'exceed', '1', 'maximum', str(max(alpha)))
+        if min(alpha) < 0:
+            ERROR.format('alpha', 'be smaller than', '0', 'minimum',
+                         str(min(alpha)))
+        # coverage
+        lb, ub = ( [] for _ in range(2) )
+        for a in alpha:
+            lb.append(estimate - standard_error*norm.ppf(1-a/2))
+            ub.append(estimate + standard_error*norm.ppf(1-a/2))
+        # table
+        n = len(lb)
+        table = pd.DataFrame({
+            FNames.ESTIMATE : [estimate] * n,
+            FNames.LOWER_BOUND: lb,
+            FNames.UPPER_BOUND: ub,
+            FNames.PVALUE: alpha,
+            FNames.CI: [1-a for a in alpha],
+        })
+        # return
+        return table
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    @staticmethod
+    def plot_empirical_support(
+        data:pd.DataFrame, lb_col:str, ub_col:str, support_col:str,
+        line_c:str='black', linewidth:float=1, linestyle:str='-',
+        estimate:Union[float,None]=None, estimate_size:float=1,
+        estimate_shape:str='o', estimate_c:str='orangered',
+        area_c:str='bisque', area_a:float=0.7, area_linewidth:float=1,
+        ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
+        reverse_y:bool=False,
+        kwargs_plot:Dict[any,any]={},
+        kwargs_dot:Dict[any,any]={},
+        kwargs_fill:Dict[any,any]={},
+    ) -> Tuple[plt.Figure, plt.Axes]:
+        '''
+        Creates a Empirical support plot, which identifies the parameter space
+        compatible with `estimate` given desired certainty. Essentially this
+        plots all possible confidence intervals across a range of coverage
+        probabilities between 0 and 1.
+        
+        Parameters
+        ----------
+        data: pd.DataFrame,
+            A pandas DataFrame containing the lower and upper bounds, as well
+            as indicator of support (plotted on the y-axis).
+        lb_col: str,
+            The column name of the lower bound.
+        ub_col: str,
+            The column name of the upper bound.
+        support_col: str,
+            The column name of the support values. Typically this will
+            be a column with confidence interval floats, or a column of
+            p-values/alpha's.
+        line_c: str, default `black`
+            The colour of the confidence interval curves.
+        linewidth: float, default `1`
+            The size of the confidence interval curves.
+        linestyle: str, default `-`
+            The linestyle of the confidence interval curves.
+        estimate: float, default `NoneType`
+            Provide this to plot the estimate as a marker on top of the graph.
+            Set to `NoneType` to skip.
+        estimate_size: float, default `1`
+            The size of the estimate marker.
+        estimate_shape: str, default `o`
+            The estimate marker.
+        estimate_c: str, default `orangered`
+            The color of the estimate marker.
+        
+        Returns
+        -------
+        Unpacks a matplotlib figure and axis.
+        '''
+        # ################## check input
+        is_df(data)
+        is_type(lb_col, str)
+        is_type(ub_col, str)
+        is_type(support_col, (str, type(None)))
+        is_type(line_c, str)
+        is_type(linewidth, (int, float))
+        is_type(linestyle, str)
+        is_type(estimate, (int, float, type(None)))
+        is_type(estimate_size, (int, float))
+        is_type(estimate_c, str)
+        is_type(area_c, str)
+        is_type(area_a, (int, float))
+        is_type(area_linewidth, (int, float))
+        is_type(ax, (type(None), plt.Axes))
+        is_type(figsize, tuple)
+        is_type(reverse_y, bool)
+        # ################## should we create a figure and axis
+        if ax is None:
+            f, ax = plt.subplots(figsize=figsize)
+        else:
+            f = None
+         # ################## constants
+        # find location where lb == ub
+        center=data[data[lb_col] == data[ub_col]][support_col].to_list()[0]
+        # ################## annotate point
+        if estimate is not None:
+            new_dot_kwargs = _update_kwargs(update_dict=kwargs_dot,
+                                            c=estimate_c,
+                                            s=estimate_size,
+                                            marker=estimate_shape,
+                                            zorder=2,
+                                            )
+            ax.scatter(y=center, x=estimate,
+                       **new_dot_kwargs)
+        # ################## plots lines
+        new_plot_kwargs = _update_kwargs(update_dict=kwargs_plot,
+                                         c=line_c,
+                                         linewidth=linewidth,
+                                         linestyle=linestyle,
+                                         zorder=2,
+                                         )
+        yval=data[support_col].to_numpy()
+        for xval in [lb_col, ub_col]:
+            x = data[xval].to_numpy()
+            ax.plot(x, yval,
+                    **new_plot_kwargs)
+        # ################### colour the area
+        if area_c is not None:
+            new_fill_kwargs = _update_kwargs(update_dict=kwargs_fill,
+                                             facecolor=area_c,
+                                             alpha=area_a,
+                                             linewidth=area_linewidth,
+                                             zorder=0,
+                                             )
+            # fine the ylimit
+            if center == 0:
+                ylimits=np.linspace(0,1, data.shape[0])
+            else:
+                ylimits=np.linspace(1,0, data.shape[0])
+            # create the xaxis limits
+            xleft=data[lb_col].to_numpy(); xright=data[ub_col].to_numpy()
+            ax.fill_betweenx(ylimits, xleft, xright,
+                             **new_fill_kwargs)
+        # ################### invert y-axis
+        if reverse_y == True:
+            ax.invert_yaxis()
+        # ################### return the figure, and axis
+        return f, ax, PlotForestResults(**other)
+    # /////////////////////////////////////////////////////////////////////////
+    # main function
+    # generate data - the init should include the calc parameters, remove the kwargs
+    # sort the data input based on the requested support type
+    # place the none kwargs from plot_ here, and include the kwargs here.
+    # def plot
+
+
+# support_col='confidence_interval'
+# lb_col='lower_bound'
+# ub_col='upper_bound'
+
+# table = EmpericalSupport.calc_empirical_support(estimate=np.log(0.86),
+#                                         standard_error=0.06,
+#                                         alpha=np.linspace(1, 0.00001, 1000)
+#                                         )
