@@ -530,3 +530,52 @@ def load_incidence_matrix_data(**kwargs):
     # return
     return df
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_pychart_data(**kwargs):
+        # List of genes
+    genes = ['PKP2', 'MYL2', 'JUP', 'DSC2', 'DSG2', 'TTN', 'DES', 'DSP', 'PLN', 'RBM20', 'BAG3']
+    # Initialize data with zeros for genes
+    data = np.zeros((100, len(genes)), dtype=int)
+    # Assign each patient one gene
+    np.random.seed(0)  # For reproducibility
+    for row in data:
+        row[np.random.randint(len(genes))] = 1
+    # Create DataFrame
+    df = pd.DataFrame(data, columns=genes)
+
+    df['HCM'] = np.random.choice([0, 1], 100)
+    df['DCM'] = 1 - df['HCM']
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def fix_labels(annotations, axis, min_distance=0.1):
+    """
+    Adjust the positions of annotations to prevent overlap.
+
+    Parameters:
+        annotations (list): List of matplotlib annotations to adjust.
+        axis (matplotlib.axes.Axes): The axis where the annotations are displayed.
+        min_distance (float, optional): Minimum vertical distance between annotations. Default is 0.1.
+    """
+    for i, ann1 in enumerate(annotations):
+        for j, ann2 in enumerate(annotations):
+            if i != j:
+                # Get positions of annotations
+                pos1 = axis.transData.inverted().transform(axis.transData.transform(ann1.get_position()))
+                pos2 = axis.transData.inverted().transform(axis.transData.transform(ann2.get_position()))
+
+                # Calculate distance between annotations
+                vertical_distance = abs(pos1[1] - pos2[1])
+                horizontal_distance = abs(pos1[0] - pos2[0])
+
+                # Adjust positions if annotations overlap
+                if vertical_distance < min_distance and horizontal_distance < min_distance:
+                    if pos1[1] < pos2[1]:
+                        pos1 = (pos1[0], pos2[1] - min_distance)
+                    else:
+                        pos2 = (pos2[0], pos1[1] - min_distance)
+
+                    ann1.set_position(pos1)
+                    ann2.set_position(pos2)
+

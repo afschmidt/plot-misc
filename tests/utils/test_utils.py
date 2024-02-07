@@ -3,6 +3,7 @@ testing the `utils` module
 """
 import numpy as np
 from plot_misc.constants import UtilsNames as UNames
+import matplotlib.pyplot as plt
 from plot_misc.example_data import examples
 from plot_misc.utils.utils import (
     _extract,
@@ -10,6 +11,7 @@ from plot_misc.utils.utils import (
     calc_matrices,
     _update_kwargs,
     _dict_string_argument,
+    fix_labels,
     format_roc,
 )
 
@@ -167,6 +169,26 @@ class TestCalcMatrices(object):
                              )
         assert res6.curated_matrix_value.iloc[0].to_list() == \
             [0.596, -0.02]
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class TestFixLabels(object):
+    def test_fix_labels(self):
+        # Create a mock axis
+        fig, ax = plt.subplots()
+        
+        # Create mock annotations with overlapping positions
+        ann1 = ax.annotate("Annotation 1", xy=(0.5, 0.5), xytext=(0.5, 0.5))
+        ann2 = ax.annotate("Annotation 2", xy=(0.5, 0.55), xytext=(0.5, 0.55))
+
+        # Call the utility function to fix labels
+        fix_labels([ann1, ann2], ax, min_distance=0.1)
+
+        # Assert that annotations are adjusted to prevent overlap
+        pos1 = ax.transData.inverted().transform(ax.transData.transform(ann1.get_position()))
+        pos2 = ax.transData.inverted().transform(ax.transData.transform(ann2.get_position()))
+
+        vertical_distance = abs(pos1[1] - pos2[1])
+        assert vertical_distance >= 0.1 - 1e-10 # Floating point precision issue....
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Test_format_roc(object):
