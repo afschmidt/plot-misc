@@ -892,7 +892,8 @@ class EmpericalSupport(object):
         data:pd.DataFrame, lb_col:str, ub_col:str, support_col:str,
         line_c:str='black', linewidth:float=1, linestyle:str='-',
         estimate:Union[float,None]=None, estimate_size:float=40,
-        estimate_shape:str=mpath.Path.unit_circle(), estimate_c:str='orangered',
+        estimate_shape:Union[str, mpath.Path]=mpath.Path.unit_circle(),
+        estimate_c:str='orangered',
         area_c:Union[str, None]=None, area_a:float=0.7,
         ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
         reverse_y:bool=False,
@@ -1024,12 +1025,13 @@ class EmpericalSupport(object):
     def plot(self,
              support:str='coverage', annotate_estimate:bool=False,
              annotate_ci:Union[None,List[float]]=None,
-             line_c:str='black', linewidth:float=1, linestyle:str='-',
+             line_c:str='black', linewidth:float=0.5, linestyle:str='-',
              estimate_size:float=20, estimate_c:str='orangered',
              estimate_shape:str=mpath.Path.unit_circle(),
-             area_c:Union[str, None]=None, area_a:float=0.7,
+             area_c:Union[str, None]=None, area_a:float=1.0,
              reverse_y:Union[None,bool]=None,
-             ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
+             ax:Union[plt.Axes, None]=None,
+             figsize:Tuple[float, float]=(10, 10),
              kwargs_plot:Dict[Any,Any]={},
              kwargs_dot:Dict[Any,Any]={},
              kwargs_fill:Dict[Any,Any]={},
@@ -1156,7 +1158,12 @@ class EmpericalSupport(object):
                 # getting the x and y values
                 x_seg = self.table.iloc[idx][[FNames.LOWER_BOUND,
                                          FNames.UPPER_BOUND]].to_list()
-                y_seg = self.table.iloc[idx][[FNames.CI]].to_list()*2
+                # which y_value to use
+                if support == FNames.EmpericalSupport_Coverage:
+                    Y_COL = FNames.CI
+                else:
+                    Y_COL = FNames.PVALUE
+                y_seg = self.table.iloc[idx][[Y_COL]].to_list()*2
                 # getting the string
                 val_str="{:.2f}".format(np.round(val, 2))
                 segment_labelled(x=x_seg, y=y_seg, label=val_str,

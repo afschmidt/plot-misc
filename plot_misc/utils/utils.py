@@ -736,9 +736,10 @@ def calc_angle_points(x:Tuple[float, float], y:Tuple[float, float],
 # TODO pytest
 def segment_labelled(
     x:Tuple[float, float], y:Tuple[float, float], label:str, ax:plt.Axes,
-    endpoints_marker:str=mpath.Path.unit_circle(), endpoints_size:float=10,
-    endpoints_c:str='orangered', segment_c='black', label_fontsize:float=20,
-    label_background_c='white', overrule_angle:Union[None, float]=None,
+    endpoints_marker:Union[mpath.Path,str]=mpath.Path.unit_circle(),
+    endpoints_size:float=4, endpoints_c:str='orangered', segment_c='black',
+    label_fontsize:float=5, label_background_c='white',
+    overrule_angle:Union[None, float]=None,
     calc_angle_after_trans:bool=True,
     kwargs_segment:Dict[Any, Any]={},
     kwargs_text:Dict[Any, Any]={},
