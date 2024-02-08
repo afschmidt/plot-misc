@@ -1024,7 +1024,16 @@ class EmpericalSupport(object):
     def plot(self,
              support:str='coverage', annotate_estimate:bool=False,
              annotate_ci:Union[None,List[float]]=None,
-             kwargs:Dict[Any,Any]={}, kwargs_xlabel:Dict[Any,Any]={},
+             line_c:str='black', linewidth:float=1, linestyle:str='-',
+             estimate_size:float=20, estimate_c:str='orangered',
+             estimate_shape:str=mpath.Path.unit_circle(),
+             area_c:Union[str, None]=None, area_a:float=0.7,
+             reverse_y:Union[None,bool]=None,
+             ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
+             kwargs_plot:Dict[Any,Any]={},
+             kwargs_dot:Dict[Any,Any]={},
+             kwargs_fill:Dict[Any,Any]={},
+             kwargs_xlabel:Dict[Any,Any]={},
              kwargs_ylabel:Dict[Any,Any]={},
              kwargs_segment:Dict[Any,Any]={},
              kwargs_text:Dict[Any, Any]={},
@@ -1067,10 +1076,9 @@ class EmpericalSupport(object):
         ax : plt.axes, default `NoneType`
             An optional matplotlib axis. If supplied the function works on the
             axis, otherwise the function will create an axis object internally.
-        figsize : tuple of two floats, default (10, 10),
-            The figure size, when ax==None.
-        reverse_y : boolean, default True,
-            inverts the y-axis.
+        reverse_y : boolean, default `NoneType`,
+            Inverts the y-axis.  Set to `False` or `True` to overwrite internal
+            behaviour.
         kwargs_*_dict : dict, default empty dict,
             Optional arguments supplied to the various plotting functions:
                 kwargs_plot    --> ax.plot
@@ -1104,6 +1112,11 @@ class EmpericalSupport(object):
             alpha=self.alpha,
         )
         # ################### plot support
+        # do we need a figure and axis
+        if ax is None:
+            f, ax = plt.subplots(figsize=figsize)
+        else:
+            f = None
         if support == FNames.EmpericalSupport_Coverage:
             self.support_col = FNames.CI
             self.ylabel = 'Coverage'
@@ -1114,34 +1127,38 @@ class EmpericalSupport(object):
             self.support_col = FNames.PVALUE
             self.ylabel = 'Compatibility\n(p-value)'
             self.reverse_y=False
+        if reverse_y is not None:
+            self.reverse_y=reverse_y
         # do we annotate the point
         if annotate_estimate == True:
             plot_estimate=self.estimate
         else:
             plot_estimate=None
-        # plot
-        new_kwargs = _update_kwargs(update_dict=kwargs,
-                                    data=self.table,
-                                    lb_col=FNames.LOWER_BOUND,
-                                    ub_col=FNames.UPPER_BOUND,
-                                    support_col=self.support_col,
-                                    estimate=plot_estimate,
-                                    reverse_y=self.reverse_y,
-                                    )
+        # ################### plot
         f, ax = self.plot_empirical_support(
-            **new_kwargs,
+            data=self.table, support_col=self.support_col,
+            lb_col=FNames.LOWER_BOUND, ub_col=FNames.UPPER_BOUND,
+            estimate=plot_estimate, estimate_size=estimate_size,
+            estimate_shape=estimate_shape, estimate_c=estimate_c,
+            line_c=line_c, linewidth=linewidth, linestyle=linestyle,
+            area_c=area_c, area_a=area_a,
+            ax=ax, figsize=figsize,
+            reverse_y=self.reverse_y,
+            kwargs_plot=kwargs_plot,
+            kwargs_dot=kwargs_dot,
+            kwargs_fill=kwargs_fill,
         )
         # ################### add ci annotations
         if annotate_ci is not None:
-        for val in annotate_ci:
-            # finding the CI with the smallest difference compared to val
-            idx = (table[FNames.CI]-val).abs().argsort().iloc[1]
-            # getting the x and y values
-            x_seg = table.iloc[idx][[FNames.LOWER_BOUND,
-                                     FNames.UPPER_BOUND]].to_list()
-            y_seg = table.iloc[idx][[FNames.CI]].to_list()*2
-            # getting the string
-            val_str="{:.2f}".format(np.round(val, 2))
+            for val in annotate_ci:
+                # finding the CI with the smallest difference compared to val
+                idx = (self.table[FNames.CI]-val).abs().argsort().iloc[1]
+                # getting the x and y values
+                x_seg = self.table.iloc[idx][[FNames.LOWER_BOUND,
+                                         FNames.UPPER_BOUND]].to_list()
+                y_seg = self.table.iloc[idx][[FNames.CI]].to_list()*2
+                # getting the string
+                val_str="{:.2f}".format(np.round(val, 2))
                 segment_labelled(x=x_seg, y=y_seg, label=val_str,
                                  ax=ax,
                                  # will be a line
@@ -1157,43 +1174,4 @@ class EmpericalSupport(object):
                       FNames.data_table : self.table,
                       }
         return f, ax, EmpericalSupportPlotResults(**results_dict)
-
-
-ES = EmpericalSupport(
-    estimate=np.log(0.86), standard_error=0.06,
-    alpha=np.linspace(1, 0.00001, 1000))
-_, ax, res = ES.plot(annotate_estimate=True,
-                   kwargs={
-                       'estimate_size':400,
-                       'area_c':'blue',
-                       'kwargs_dot':{'edgecolors':'black', 'linewidth':4, 'zorder':3 }
-                   })
-
-# x=[-0.2, 0]
-# y=[0.6, 0.7]
-# segment_labelled(x=x, y=y, label='hi',ax=ax,
-#                  overrule_angle=rotn
-#                  )
-
-
-
-# p1 = list(ax.transData.transform_point((x[0], y[0])))
-# p2 = list(ax.transData.transform_point((y[0], y[1])))
-# x_trans=[p1[1], p2[1]]
-# y_trans=[p1[0], p2[0]]
-# calc_angle_points(x_trans, y_trans)
-# fig, ax = plt.subplots()
-# ax.plot(x,y)
-# p1 = ax.transData.transform_point((x[0], y[0]))
-# p2 = ax.transData.transform_point((x[1], y[1]))
-# dy = (p2[1] - p1[1])
-# dx = (p2[0] - p1[0])
-# rotn = np.degrees(np.arctan2(dy, dx))
-# rotn = np.degrees(np.arctan2(y[1]-y[0], x[1]-x[0]))
-# label = 'The annotation text'
-# xylabel = ((x[0]+x[1])/2, (y[0]+y[1])/2)
-# ax.text(x=xylabel[0], y=xylabel[1],s=label, ha='center', va='center', rotation=rotn)
-
-
-
 
