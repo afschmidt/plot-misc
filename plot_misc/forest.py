@@ -1,15 +1,16 @@
 '''
-A module to draw forest plots and side tables.
+A module to draw forest plots and side tables, as well as related plots
 
-Aside from the plotting functions the moduel contains fuctions to
-appropriatly orrientate input DataFrames.
+Aside from the plotting functions the module contains functions to
+appropriately orientated input DataFrames.
 '''
 
 # imports
-from matplotlib._api.deprecation import deprecated
+# from matplotlib._api.deprecation import deprecated
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.path as mpath
 import warnings
 from scipy.stats import norm
 from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
@@ -17,6 +18,7 @@ from plot_misc.utils.utils import (
     _update_kwargs,
     _dict_string_argument,
     plot_span,
+    segment_labelled,
 )
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
@@ -25,6 +27,7 @@ from plot_misc.constants import (
     is_series_type,
     are_columns_in_df,
     InputValidationError,
+    Error_MSG,
 )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -56,6 +59,20 @@ class PlotForestResults(object):
     # /////////////////////////////////////////////////////////////////////////
     def __str__(self):
         return f"A `PlotForestResults` class."
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class EmpericalSupportPlotResults(PlotForestResults):
+    '''
+    Results class for thee EmpericalSupport.plot function, inherits from
+    the `PlotForestResults` class.
+    '''
+    SET_ARGS = [
+        FNames.ESTIMATE,
+        FNames.data_table,
+    ]
+    # /////////////////////////////////////////////////////////////////////////
+    def __str__(self):
+        return f"An `EmpericalSupport` class."
 
 # #############################################################################
 # functions
@@ -752,38 +769,55 @@ def plot_table(
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Supported parameter space
+# TODO write test
 class EmpericalSupport(object):
     '''
-    ToDo
+    A class to calculate and plot a somewhat historic empirical support plot
+    that essentially plots all the possible confidence intervals to show
+    the parameter space that is support by the data for a given coverage level,
+    or equivalently `compatibility` based on the p-value.
     
     References
     ----------
+    `Here <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>`_.
     
     Attributes
     ----------
-    calc_kwargs: dictionary, defaults to an empty dict
-        keyword arguments supplied to `calc_empirical_support` when calling
-        the instance method `plot`.
-    plot_kwargs: dictionary, defaults to an empty dict
-        keyword arguments supplied to `plot_empirical_support` when calling
-        the instance method `plot`.
-    TABLE_NAMES: dictionary,
-        list the default table names.
+    estimate: float,
+        The estimated point estimate.
+    standard_error: float,
+        The standard error of the point estimate.
+    alpha: list of floats,
+        A list of alpha's (i.e., type 1 error rate) between 0 and 1.
+        Typically should be around a 1000 values, for example generated
+        using np.linspace.
     
     Methods
     -------
+    calc_empirical_support(estimate, standard_error, alpha)
+        Calculates the empirical support across a list of alpha's
+    plot_empirical_support(data, lb_col, ub_col, support_col, line_c,
+    linewidth, linestyle, estimate, estimate_size, estimate_shape,
+    estimate_c, area_c, area_a, ax, figsize, reverse_y, kwargs_plot,
+    kwargs_dot, kwargs_fill)
+        Plots an empirical support graph based on a `data` supplied table.
     '''
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __init__(self,
-                 calc_kwargs:Dict[any, any]={},
-                 plot_kwargs:Dict[any, any]={},
+                 estimate:float, standard_error:float, alpha:List[float],
                  ):
         '''
         Setting up kwargs for `calc_empirical_support` and
-        `plot_empirical_support`
+        `plot_empirical_support`.
         '''
-        self.calc_kwargs = calc_kwargs
-        self.plot_kwargs = plot_kwargs
+        # confirm input
+        is_type(estimate, (int, float))
+        is_type(standard_error, (int, float))
+        is_type(alpha, (list, np.ndarray))
+        # asign
+        self.estimate=estimate
+        self.standard_error=standard_error
+        self.alpha=alpha
    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __str__(self):
         return (
@@ -796,19 +830,30 @@ class EmpericalSupport(object):
         estimate:float, standard_error:float, alpha:List[float],
                           ) -> pd.DataFrame:
         '''
-        Takes an point `estimate` (e.g., a mean difference or log-transformed odds
-        ratio), its `standard_error`, and a list of `alpha's` between 0 and 1. This
-        will be used to calculate the empirical support for a parameter range
-        centered around `estimates`. The empirical support will be calculated
-        in the form of the p-values and confidence intervals, but reflecting to
-        what extent the parameter space is compatibility to the `estimate`.
+        Takes an point `estimate` (e.g., a mean difference or log-transformed
+        odds ratio), its `standard_error`, and a list of `alpha's` between 0
+        and 1. This will be used to calculate the empirical support for a
+        parameter range centered around `estimates`. The empirical support will
+        be calculated in the form of the p-values and confidence intervals, but
+        reflecting to what extent the parameter space is compatibility to the
+        `estimate`.
         
         Parameters
         ----------
-        TODO
+        estimate: float,
+            The estimated point estimate.
+        standard_error: float,
+            The standard error of the point estimate.
+        alpha: list of floats,
+            A list of alpha's (i.e., type 1 error rate) between 0 and 1.
+            Typically should be around a 1000 values, for example generated
+            using np.linspace.
         
         Returns
         -------
+        table: pd.DataFrame
+            Returns a table with the lower and upper bounds of the confidence
+            interval, as well as the p-value and confidence interval coverage.
         '''
         # check input
         ERROR='`{}` should not {} {}, current {}: {}.'
@@ -817,10 +862,14 @@ class EmpericalSupport(object):
         is_type(alpha, (list, np.ndarray))
         is_series_type(pd.Series(alpha), float)
         if max(alpha) > 1:
-            ERROR.format('alpha', 'exceed', '1', 'maximum', str(max(alpha)))
+            raise ValueError(
+                ERROR.format('alpha', 'exceed', '1', 'maximum', str(max(alpha)))
+            )
         if min(alpha) < 0:
-            ERROR.format('alpha', 'be smaller than', '0', 'minimum',
-                         str(min(alpha)))
+            raise ValueError(
+                ERROR.format('alpha', 'be smaller than', '0', 'minimum',
+                             str(min(alpha)))
+            )
         # coverage
         lb, ub = ( [] for _ in range(2) )
         for a in alpha:
@@ -842,14 +891,14 @@ class EmpericalSupport(object):
     def plot_empirical_support(
         data:pd.DataFrame, lb_col:str, ub_col:str, support_col:str,
         line_c:str='black', linewidth:float=1, linestyle:str='-',
-        estimate:Union[float,None]=None, estimate_size:float=1,
-        estimate_shape:str='o', estimate_c:str='orangered',
-        area_c:str='bisque', area_a:float=0.7, area_linewidth:float=1,
+        estimate:Union[float,None]=None, estimate_size:float=40,
+        estimate_shape:str=mpath.Path.unit_circle(), estimate_c:str='orangered',
+        area_c:Union[str, None]=None, area_a:float=0.7,
         ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
         reverse_y:bool=False,
-        kwargs_plot:Dict[any,any]={},
-        kwargs_dot:Dict[any,any]={},
-        kwargs_fill:Dict[any,any]={},
+        kwargs_plot:Dict[Any,Any]={},
+        kwargs_dot:Dict[Any,Any]={},
+        kwargs_fill:Dict[Any,Any]={},
     ) -> Tuple[plt.Figure, plt.Axes]:
         '''
         Creates a Empirical support plot, which identifies the parameter space
@@ -885,6 +934,23 @@ class EmpericalSupport(object):
             The estimate marker.
         estimate_c: str, default `orangered`
             The color of the estimate marker.
+        area_c: str, default `NoneType`
+            The colour of the area between the confidence intervals. This
+            is mapped to the facecolor parameter. Set to `NoneType` to skip.
+        area_a: float, default `0.7`
+            The proportion of opacity of the area between the curves.
+        ax : plt.axes, default `NoneType`
+            An optional matplotlib axis. If supplied the function works on the
+            axis, otherwise the function will create an axis object internally.
+        figsize : tuple of two floats, default (10, 10),
+            The figure size, when ax==None.
+        reverse_y : boolean, default True,
+            inverts the y-axis.
+        kwargs_*_dict : dict, default empty dict,
+            Optional arguments supplied to the various plotting functions:
+                kwargs_plot --> ax.plot
+                kwargs_dot  --> ax.scatter
+                kwargs_fill --> ax.fill_betweenx
         
         Returns
         -------
@@ -901,9 +967,8 @@ class EmpericalSupport(object):
         is_type(estimate, (int, float, type(None)))
         is_type(estimate_size, (int, float))
         is_type(estimate_c, str)
-        is_type(area_c, str)
+        is_type(area_c, (type(None),str))
         is_type(area_a, (int, float))
-        is_type(area_linewidth, (int, float))
         is_type(ax, (type(None), plt.Axes))
         is_type(figsize, tuple)
         is_type(reverse_y, bool)
@@ -930,7 +995,7 @@ class EmpericalSupport(object):
                                          c=line_c,
                                          linewidth=linewidth,
                                          linestyle=linestyle,
-                                         zorder=2,
+                                         zorder=1,
                                          )
         yval=data[support_col].to_numpy()
         for xval in [lb_col, ub_col]:
@@ -942,14 +1007,9 @@ class EmpericalSupport(object):
             new_fill_kwargs = _update_kwargs(update_dict=kwargs_fill,
                                              facecolor=area_c,
                                              alpha=area_a,
-                                             linewidth=area_linewidth,
                                              zorder=0,
                                              )
-            # fine the ylimit
-            if center == 0:
-                ylimits=np.linspace(0,1, data.shape[0])
-            else:
-                ylimits=np.linspace(1,0, data.shape[0])
+            ylimits=np.linspace(1,0, data.shape[0])
             # create the xaxis limits
             xleft=data[lb_col].to_numpy(); xright=data[ub_col].to_numpy()
             ax.fill_betweenx(ylimits, xleft, xright,
@@ -958,20 +1018,182 @@ class EmpericalSupport(object):
         if reverse_y == True:
             ax.invert_yaxis()
         # ################### return the figure, and axis
-        return f, ax, PlotForestResults(**other)
+        return f, ax
     # /////////////////////////////////////////////////////////////////////////
     # main function
-    # generate data - the init should include the calc parameters, remove the kwargs
-    # sort the data input based on the requested support type
-    # place the none kwargs from plot_ here, and include the kwargs here.
-    # def plot
+    def plot(self,
+             support:str='coverage', annotate_estimate:bool=False,
+             annotate_ci:Union[None,List[float]]=None,
+             kwargs:Dict[Any,Any]={}, kwargs_xlabel:Dict[Any,Any]={},
+             kwargs_ylabel:Dict[Any,Any]={},
+             kwargs_segment:Dict[Any,Any]={},
+             kwargs_text:Dict[Any, Any]={},
+             )-> Tuple[plt.Figure, plt.Axes, EmpericalSupportPlotResults]:
+        '''
+        Plots an Emperical Support graph based on either `coverage` (iterating
+        the confidence interval coverage percentage), or `compatibility`
+        (iterating the p-value).
+        
+        Parameters
+        ----------
+        support: str, default `coverage`,
+            Plots the confidence interval percentage on the y-axis from 0 to 1,
+            or for `compatible` plots the p-value from 1 to 0.
+        annotate_estimate: bool, default `False`
+            Should the estimate be added as a dot.
+        annotate_ci: list of floats, default `NoneType`
+            Will add a horizontal line segment at each float position using
+            `merit_helper.utils.utils.segment_labelled`.
+        line_c: str, default `black`
+            The colour of the confidence interval curves.
+        linewidth: float, default `1`
+            The size of the confidence interval curves.
+        linestyle: str, default `-`
+            The linestyle of the confidence interval curves.
+        estimate: float, default `NoneType`
+            Provide this to plot the estimate as a marker on top of the graph.
+            Set to `NoneType` to skip.
+        estimate_size: float, default `1`
+            The size of the estimate marker.
+        estimate_shape: str, default `o`
+            The estimate marker.
+        estimate_c: str, default `orangered`
+            The color of the estimate marker.
+        area_c: str, default `NoneType`
+            The colour of the area between the confidence intervals. This
+            is mapped to the facecolor parameter. Set to `NoneType` to skip.
+        area_a: float, default `0.7`
+            The proportion of opacity of the area between the curves.
+        ax : plt.axes, default `NoneType`
+            An optional matplotlib axis. If supplied the function works on the
+            axis, otherwise the function will create an axis object internally.
+        figsize : tuple of two floats, default (10, 10),
+            The figure size, when ax==None.
+        reverse_y : boolean, default True,
+            inverts the y-axis.
+        kwargs_*_dict : dict, default empty dict,
+            Optional arguments supplied to the various plotting functions:
+                kwargs_plot    --> ax.plot
+                kwargs_dot     --> ax.scatter
+                kwargs_fill    --> ax.fill_betweenx
+                kwargs_ylabel  --> ax.set_ylabel
+                kwargs_xlabel  --> ax.set_xlabel
+                kwargs_segment --> ax.plot (merit_helper.utils.utils.segment_labelled)
+                kwargs_text    --> ax.text (merit_helper.utils.utils.segment_labelled)
+        
+        Returns
+        -------
+        Unpacks a matplotlib figure, axes, and a EmpericalSupportPlotResults
+        class containing the internally used data.
+        '''
+        # ################### input
+        is_type(support, str)
+        is_type(annotate_estimate, bool)
+        is_type(annotate_ci, (type(None), list))
+        if (support != FNames.EmpericalSupport_Coverage) &\
+                (support != FNames.EmpericalSupport_Compatability):
+            raise InputValidationError(
+                Error_MSG.INVALID_STRING.format(
+                    'support', FNames.EmpericalSupport_Coverage + ' or ' +
+                    FNames.EmpericalSupport_Compatability
+                )
+            )
+        # ################### calculate support
+        self.table = self.calc_empirical_support(
+            estimate=self.estimate, standard_error=self.standard_error,
+            alpha=self.alpha,
+        )
+        # ################### plot support
+        if support == FNames.EmpericalSupport_Coverage:
+            self.support_col = FNames.CI
+            self.ylabel = 'Coverage'
+            self.table =self.table.sort_values(
+                by=[self.support_col], ascending=False)
+            self.reverse_y=True
+        else:
+            self.support_col = FNames.PVALUE
+            self.ylabel = 'Compatibility\n(p-value)'
+            self.reverse_y=False
+        # do we annotate the point
+        if annotate_estimate == True:
+            plot_estimate=self.estimate
+        else:
+            plot_estimate=None
+        # plot
+        new_kwargs = _update_kwargs(update_dict=kwargs,
+                                    data=self.table,
+                                    lb_col=FNames.LOWER_BOUND,
+                                    ub_col=FNames.UPPER_BOUND,
+                                    support_col=self.support_col,
+                                    estimate=plot_estimate,
+                                    reverse_y=self.reverse_y,
+                                    )
+        f, ax = self.plot_empirical_support(
+            **new_kwargs,
+        )
+        # ################### add ci annotations
+        if annotate_ci is not None:
+        for val in annotate_ci:
+            # finding the CI with the smallest difference compared to val
+            idx = (table[FNames.CI]-val).abs().argsort().iloc[1]
+            # getting the x and y values
+            x_seg = table.iloc[idx][[FNames.LOWER_BOUND,
+                                     FNames.UPPER_BOUND]].to_list()
+            y_seg = table.iloc[idx][[FNames.CI]].to_list()*2
+            # getting the string
+            val_str="{:.2f}".format(np.round(val, 2))
+                segment_labelled(x=x_seg, y=y_seg, label=val_str,
+                                 ax=ax,
+                                 # will be a line
+                                 overrule_angle=0,
+                                 kwargs_segment=kwargs_segment,
+                                 kwargs_text=kwargs_text,
+                                 )
+        # set label
+        ax.set_xlabel('Point estimate', **kwargs_xlabel)
+        ax.set_ylabel(self.ylabel, **kwargs_ylabel)
+        # ################### return
+        results_dict={FNames.ESTIMATE   : self.estimate,
+                      FNames.data_table : self.table,
+                      }
+        return f, ax, EmpericalSupportPlotResults(**results_dict)
 
 
-# support_col='confidence_interval'
-# lb_col='lower_bound'
-# ub_col='upper_bound'
+ES = EmpericalSupport(
+    estimate=np.log(0.86), standard_error=0.06,
+    alpha=np.linspace(1, 0.00001, 1000))
+_, ax, res = ES.plot(annotate_estimate=True,
+                   kwargs={
+                       'estimate_size':400,
+                       'area_c':'blue',
+                       'kwargs_dot':{'edgecolors':'black', 'linewidth':4, 'zorder':3 }
+                   })
 
-# table = EmpericalSupport.calc_empirical_support(estimate=np.log(0.86),
-#                                         standard_error=0.06,
-#                                         alpha=np.linspace(1, 0.00001, 1000)
-#                                         )
+# x=[-0.2, 0]
+# y=[0.6, 0.7]
+# segment_labelled(x=x, y=y, label='hi',ax=ax,
+#                  overrule_angle=rotn
+#                  )
+
+
+
+# p1 = list(ax.transData.transform_point((x[0], y[0])))
+# p2 = list(ax.transData.transform_point((y[0], y[1])))
+# x_trans=[p1[1], p2[1]]
+# y_trans=[p1[0], p2[0]]
+# calc_angle_points(x_trans, y_trans)
+# fig, ax = plt.subplots()
+# ax.plot(x,y)
+# p1 = ax.transData.transform_point((x[0], y[0]))
+# p2 = ax.transData.transform_point((x[1], y[1]))
+# dy = (p2[1] - p1[1])
+# dx = (p2[0] - p1[0])
+# rotn = np.degrees(np.arctan2(dy, dx))
+# rotn = np.degrees(np.arctan2(y[1]-y[0], x[1]-x[0]))
+# label = 'The annotation text'
+# xylabel = ((x[0]+x[1])/2, (y[0]+y[1])/2)
+# ax.text(x=xylabel[0], y=xylabel[1],s=label, ha='center', va='center', rotation=rotn)
+
+
+
+

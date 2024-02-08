@@ -31,25 +31,27 @@ class TableNames(object):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Forest plot
 class ForestNames(object):
-    s_col       = 's_col'
-    c_col       = 'c_col'
-    a_col       = 'a_col'
-    g_col       = 'g_col'
-    y_col       = 'y_axis'
-    strata_del  = 'strata_del'
-    order_col   = 'order'
-    min         = 'min'
-    max         = 'max'
-    mean        = 'mean'
-    fontweight  = 'bold'
-    kwargs      = 'kwargs'
-    span        = 'span'
-    ESTIMATE    = 'estimate'
-    LOWER_BOUND = 'lower_bound'
-    UPPER_BOUND = 'upper_bound'
-    PVALUE      = 'p-value'
-    CI          = 'confidence_interval'
-    
+    s_col                          = 's_col'
+    c_col                          = 'c_col'
+    a_col                          = 'a_col'
+    g_col                          = 'g_col'
+    y_col                          = 'y_axis'
+    strata_del                     = 'strata_del'
+    order_col                      = 'order'
+    min                            = 'min'
+    max                            = 'max'
+    mean                           = 'mean'
+    fontweight                     = 'bold'
+    kwargs                         = 'kwargs'
+    span                           = 'span'
+    ESTIMATE                       = 'estimate'
+    LOWER_BOUND                    = 'lower_bound'
+    UPPER_BOUND                    = 'upper_bound'
+    PVALUE                         = 'p-value'
+    CI                             = 'confidence_interval'
+    data_table                     = 'data_table'
+    EmpericalSupport_Coverage      = 'coverage'
+    EmpericalSupport_Compatability = 'compatibility'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names
@@ -261,4 +263,6 @@ class Error_MSG(object):
     A collection of error messages.
     '''
     MISSING_DF = '`{}` contains missing values.'
+    INVALID_STRING = '`{}` should be limited to `{}`.'
+    INVALID_EXACT_LENGTH = '`{}` needs to contain exactly {} elements, not {}.'
 

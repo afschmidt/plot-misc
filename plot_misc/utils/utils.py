@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.path as mpath
 from scipy import stats as ss
 from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
@@ -15,6 +16,8 @@ from plot_misc.constants import (
     UtilsNames,
     as_array,
     same_len,
+    InputValidationError,
+    Error_MSG,
 )
 from sklearn.metrics import (
     roc_curve,
@@ -619,7 +622,7 @@ def calc_matrices(data:pd.DataFrame,
 def fix_labels(annotations, axis, min_distance=0.1):
     """
     Adjust the positions of annotations to prevent overlap.
-
+    
     Parameters:
         annotations (list): List of matplotlib annotations to adjust.
         axis (matplotlib.axes.Axes): The axis where the annotations are displayed.
@@ -631,17 +634,204 @@ def fix_labels(annotations, axis, min_distance=0.1):
                 # Get positions of annotations
                 pos1 = axis.transData.inverted().transform(axis.transData.transform(ann1.get_position()))
                 pos2 = axis.transData.inverted().transform(axis.transData.transform(ann2.get_position()))
-
+                
                 # Calculate distance between annotations
                 vertical_distance = abs(pos1[1] - pos2[1])
                 horizontal_distance = abs(pos1[0] - pos2[0])
-
+                
                 # Adjust positions if annotations overlap
                 if vertical_distance < min_distance and horizontal_distance < min_distance:
                     if pos1[1] < pos2[1]:
                         pos1 = (pos1[0], pos2[1] - min_distance)
                     else:
                         pos2 = (pos2[0], pos1[1] - min_distance)
-
+                    
                     ann1.set_position(pos1)
                     ann2.set_position(pos2)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO pytest
+def calc_mid_point(x:Tuple[float, float], y:Tuple[float, float],
+                   ) -> Tuple[float, float]:
+    '''
+    Takes two points and returns the Cartesian coordinates of the point in
+    the middle of these two points.
+    
+    Parameters
+    ----------
+    x: list or tuple of two floats,
+        The x-coordinates of the two points.
+    y: list or tuple of two floats,
+        The y-coordinates of the two points.
+    
+    Returns
+    -------
+    mid_point: tuple of two floats,
+        returns coordinate of the point between `x` and `y`.
+    '''
+    # input
+    is_type(x, (list,tuple))
+    is_type(y, (list,tuple))
+    if len(x) != 2:
+        raise InputValidationError(Error_MSG.INVALID_EXACT_LENGTH.format(
+            'x',str(2), str(len(x))))
+    if len(y) != 2:
+        raise InputValidationError(Error_MSG.INVALID_EXACT_LENGTH.format(
+            'y',str(2), str(len(x))))
+    # calculates the mid point
+    x_mid = sum(x)/2
+    y_mid = sum(y)/2
+    # return
+    return x_mid, y_mid
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO pytest
+def calc_angle_points(x:Tuple[float, float], y:Tuple[float, float],
+                      radians:bool=False,
+                      ) -> float:
+    '''
+    Calculate the angle between two points, returns an angle between 0 and
+    360 degrees.
+    
+    Parameters
+    ----------
+    x: list or tuple of two floats,
+        The x-coordinates of the two points.
+    y: list or tuple of two floats,
+        The y-coordinates of the two points.
+    radians:bool, default `False`
+        set to `True` to return the angle in radians, instead of degrees.
+    
+    Returns
+    -------
+    angle: float
+        returns an angle between 0 and 360 degrees.
+    '''
+    # input
+    is_type(radians, bool)
+    is_type(x, (list,tuple))
+    is_type(y, (list,tuple))
+    if len(x) != 2:
+        raise InputValidationError(Error_MSG.INVALID_EXACT_LENGTH.format(
+            'x',str(2), str(len(x))))
+    if len(y) != 2:
+        raise InputValidationError(Error_MSG.INVALID_EXACT_LENGTH.format(
+            'y',str(2), str(len(x))))
+    # get the angle
+    delta_x = x[1] - x[0]
+    delta_y = y[1] - y[0]
+    slope=delta_y/delta_x
+    angle_radians = np.arctan(slope)
+    # convert radians to degrees
+    angle_degrees_original = np.degrees(angle_radians)
+    # ensure the angle is between 0 and 360 degrees
+    angle = (angle_degrees_original + 360) % 360
+    # get the principal angle
+    if radians == True:
+        angle = np.radians(angle)
+    # return
+    return angle
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO pytest
+def segment_labelled(
+    x:Tuple[float, float], y:Tuple[float, float], label:str, ax:plt.Axes,
+    endpoints_marker:str=mpath.Path.unit_circle(), endpoints_size:float=30,
+    endpoints_c:str='orangered', segment_c='black', label_fontsize:float=20,
+    label_background_c='white', overrule_angle:Union[None, float]=None,
+    calc_angle_after_trans:bool=True,
+    kwargs_segment:Dict[Any, Any]={},
+    kwargs_text:Dict[Any, Any]={},
+) -> plt.Axes:
+    '''
+    Plots a line segment between two points, add annotates the middle point
+    with a `label` string.
+    
+    Parameters
+    ----------
+    x: list or tuple of two floats,
+        The x-coordinates of the two points.
+    y: list or tuple of two floats,
+        The y-coordinates of the two points.
+    label: str,
+        The string which be plotted on top of the line segment.
+    endpoints_marker: str, default `unit_circle`,
+        The marker of the line segment endpoints.
+    endpoints_size: float, default 30
+        The marker size.
+    endpoints_c: str, default `orangered`
+        The marker colour.
+    segment_c: str, default `black`
+        The segment line colour
+    label_fontsize: float, default 20
+        The label font size.
+    label_background_c: str, default `white`
+        The label background colour.
+    overrule_angle: float, default `NoneType`
+        Use this to overrule the internally calculated angle against which the
+        label will be plotted.
+    calc_angle_after_trans: bool, default `True`
+        Whether to apply a `ax.transData.transform_point` transformation before
+        calculating the angle the text needs to be plotted on.
+    ax: plt.axes,
+        The matplotlib axis.
+    kwargs_*_dict : dict, default empty dict,
+        Optional arguments supplied to the various plotting functions:
+            kwargs_segment --> ax.plot
+            kwargs_text    --> ax.text
+    '''
+    # ################### input
+    is_type(x, (list,tuple))
+    is_type(y, (list,tuple))
+    is_type(ax, plt.Axes)
+    is_type(label, str)
+    # is_type(endpoints_marker, str)
+    is_type(endpoints_size, (int, float))
+    is_type(endpoints_c, str)
+    is_type(label_fontsize, (int, float))
+    is_type(label_background_c, str)
+    is_type(overrule_angle, (type(None), float, int))
+    if len(x) != 2:
+        raise InputValidationError(Error_MSG.INVALID_EXACT_LENGTH.format(
+            'x',str(2), str(len(x))))
+    if len(y) != 2:
+        raise InputValidationError(Error_MSG.INVALID_EXACT_LENGTH.format(
+            'y',str(2), str(len(x))))
+    # ################### get mid point and angle
+    mid_coordinates=calc_mid_point(x=x, y=y)
+    if overrule_angle is None:
+        # do we need to apply a transformation first
+        if calc_angle_after_trans == True:
+            p1 = list(ax.transData.transform_point((x[0], y[0])))
+            p2 = list(ax.transData.transform_point((y[0], y[1])))
+            x_trans=[p1[0], p2[0]]
+            y_trans=[p1[1], p2[1]]
+        else:
+            x_trans = x
+            y_trans = y
+        text_angle=calc_angle_points(x=x_trans, y=y_trans)
+    else:
+        text_angle=overrule_angle
+    # ################### plot line segment
+    new_segment_kwargs = _update_kwargs(update_dict=kwargs_segment,
+                                        c=segment_c,
+                                        markersize=endpoints_size,
+                                        marker=endpoints_marker,
+                                        markerfacecolor=endpoints_c,
+                                        linestyle='-'
+                                        )
+    ax.plot(x, y,
+            **new_segment_kwargs)
+    # ################### plot label
+    new_label_kwargs = _update_kwargs(update_dict=kwargs_text,
+                                      va='center', ha='center',
+                                      backgroundcolor=label_background_c,
+                                      fontsize=label_fontsize,
+                                      rotation=text_angle,
+                                      )
+    ax.text(mid_coordinates[0], mid_coordinates[1], label,
+            **new_label_kwargs,
+            )
+    # ################### return
+    return ax
+
