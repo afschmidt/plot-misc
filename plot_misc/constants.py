@@ -154,7 +154,7 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
         if version.parse('2.0.3') <= version.parse(pd.__version__):
             # iteritems got depricated.
             column.iteritems = column.items
-        for _, col in column.iteritems():
+        for _, col in column.items():
             [is_type(co, types) for co in col]
     # return
     return True

@@ -77,7 +77,7 @@ class TestAssignDistance(object):
         data_in = data1.copy()
         del data_in[FNames.y_col]
         # getting y_axis
-        res = forest._assign_distance(data_in, group=GROUP)
+        res = forest.assign_distance(data_in, group=GROUP)
         # test
         assert FNames.y_col in res.columns
         assert res[FNames.y_col].mean() == 59.0
@@ -91,7 +91,7 @@ class TestAssignDistance(object):
         data_in = data1.copy()
         del data_in[FNames.y_col]
         # getting y_axis
-        res = forest._assign_distance(data_in, group=GROUP, strata='model',
+        res = forest.assign_distance(data_in, group=GROUP, strata='model',
                                       start=2,
                                       sort_dict=SORT_DICT,
                                       )

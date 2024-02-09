@@ -79,7 +79,6 @@ class EmpericalSupportPlotResults(PlotForestResults):
 # functions
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO write test
 def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
               order_inner:Union[Dict[str, List[str]], None]=None
               ) -> pd.core.frame.DataFrame:
@@ -140,7 +139,7 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     return order_data
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
+def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=1, new_col:str='y_axis',
                      sort_dict:Union[Dict[str,int], None, str]=None,
                      strata:Union[str, None]=None,

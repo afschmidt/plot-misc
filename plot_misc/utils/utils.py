@@ -100,7 +100,7 @@ def format_roc(observed:as_array, predicted:as_array,
         representing the predicted probability.
     kwargs: keyword arguments,
         Supplied to `sklearn.metrics.roc_curve`.
-
+    
     Returns
     -------
     results: pd.DataFrame,
@@ -216,7 +216,7 @@ def plot_span(start_span:float, stop_span:float, ax: plt.Axes,
               ):
     '''
     Adds an horizontal or vertical span to an `ax` supplied `plt.Axes` object.
-
+    
     Parameters
     ----------
     start_span: float,
@@ -623,35 +623,43 @@ def fix_labels(annotations, axis, min_distance=0.1):
     """
     Adjust the positions of annotations to prevent overlap.
     
-    Parameters:
-        annotations (list): List of matplotlib annotations to adjust.
-        axis (matplotlib.axes.Axes): The axis where the annotations are displayed.
-        min_distance (float, optional): Minimum vertical distance between annotations. Default is 0.1.
+    Parameters
+    ----------
+        annotations: list,
+            List of matplotlib annotations to adjust.
+        axis: matplotlib.axes.Axes
+            The axis where the annotations are displayed.
+        min_distance: float, default 0.1
+            Minimum vertical distance between annotations. Default is 0.1.
+    
+    Returns
+    -------
+    ToDo
     """
     for i, ann1 in enumerate(annotations):
         for j, ann2 in enumerate(annotations):
             if i != j:
                 # Get positions of annotations
-                pos1 = axis.transData.inverted().transform(axis.transData.transform(ann1.get_position()))
-                pos2 = axis.transData.inverted().transform(axis.transData.transform(ann2.get_position()))
-                
+                pos1 = axis.transData.inverted().transform(
+                    axis.transData.transform(ann1.get_position())
+                )
+                pos2 = axis.transData.inverted().transform(
+                    axis.transData.transform(ann2.get_position())
+                )
                 # Calculate distance between annotations
                 vertical_distance = abs(pos1[1] - pos2[1])
-                horizontal_distance = abs(pos1[0] - pos2[0])
-                
                 # Adjust positions if annotations overlap
                 if vertical_distance < min_distance and horizontal_distance < min_distance:
                     if pos1[1] < pos2[1]:
                         pos1 = (pos1[0], pos2[1] - min_distance)
                     else:
                         pos2 = (pos2[0], pos1[1] - min_distance)
-                    
                     ann1.set_position(pos1)
                     ann2.set_position(pos2)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO pytest
-def calc_mid_point(x:Tuple[float, float], y:Tuple[float, float],
+def calc_mid_point(x:Union[List[float],Tuple[float, float]],
+                   y:Union[List[float],Tuple[float, float]],
                    ) -> Tuple[float, float]:
     '''
     Takes two points and returns the Cartesian coordinates of the point in
@@ -685,8 +693,8 @@ def calc_mid_point(x:Tuple[float, float], y:Tuple[float, float],
     return x_mid, y_mid
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO pytest
-def calc_angle_points(x:Tuple[float, float], y:Tuple[float, float],
+def calc_angle_points(x:Union[List[float],Tuple[float, float]],
+                      y:Union[List[float],Tuple[float, float]],
                       radians:bool=False,
                       ) -> float:
     '''
@@ -735,17 +743,18 @@ def calc_angle_points(x:Tuple[float, float], y:Tuple[float, float],
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # TODO pytest
 def segment_labelled(
-    x:Tuple[float, float], y:Tuple[float, float], label:str, ax:plt.Axes,
+    x:Tuple[float, float], y:Tuple[float, float], ax:plt.Axes,
+    label:Union[None,str]=None,
     endpoints_marker:Union[mpath.Path,str]=mpath.Path.unit_circle(),
-    endpoints_size:float=4, endpoints_c:str='orangered', segment_c='black',
-    label_fontsize:float=5, label_background_c='white',
+    endpoints_size:float=8, endpoints_c:str='orangered', segment_c='black',
+    label_fontsize:float=10, label_background_c='white',
     overrule_angle:Union[None, float]=None,
     calc_angle_after_trans:bool=True,
     kwargs_segment:Dict[Any, Any]={},
     kwargs_text:Dict[Any, Any]={},
 ) -> plt.Axes:
     '''
-    Plots a line segment between two points, add annotates the middle point
+    Plots a line segment between two points, and annotates the middle point
     with a `label` string.
     
     Parameters
@@ -755,7 +764,8 @@ def segment_labelled(
     y: list or tuple of two floats,
         The y-coordinates of the two points.
     label: str,
-        The string which be plotted on top of the line segment.
+        The string which be plotted on top of the line segment. Set to
+        `NoneType` to not plot anything.
     endpoints_marker: str, default `unit_circle`,
         The marker of the line segment endpoints.
     endpoints_size: float, default 30
@@ -785,7 +795,7 @@ def segment_labelled(
     is_type(x, (list,tuple))
     is_type(y, (list,tuple))
     is_type(ax, plt.Axes)
-    is_type(label, str)
+    is_type(label, (type(None),str))
     # is_type(endpoints_marker, str)
     is_type(endpoints_size, (int, float))
     is_type(endpoints_c, str)
@@ -824,15 +834,16 @@ def segment_labelled(
     ax.plot(x, y,
             **new_segment_kwargs)
     # ################### plot label
-    new_label_kwargs = _update_kwargs(update_dict=kwargs_text,
-                                      va='center', ha='center',
-                                      backgroundcolor=label_background_c,
-                                      fontsize=label_fontsize,
-                                      rotation=text_angle,
-                                      )
-    ax.text(mid_coordinates[0], mid_coordinates[1], label,
-            **new_label_kwargs,
-            )
+    if label is not None:
+        new_label_kwargs = _update_kwargs(update_dict=kwargs_text,
+                                          va='center', ha='center',
+                                          backgroundcolor=label_background_c,
+                                          fontsize=label_fontsize,
+                                          rotation=text_angle,
+                                          )
+        ax.text(mid_coordinates[0], mid_coordinates[1], label,
+                **new_label_kwargs,
+                )
     # ################### return
     return ax
 
