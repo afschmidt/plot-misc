@@ -648,8 +648,10 @@ def fix_labels(annotations, axis, min_distance=0.1):
                 )
                 # Calculate distance between annotations
                 vertical_distance = abs(pos1[1] - pos2[1])
+                horizontal_distance = abs(pos1[0] - pos2[0])
                 # Adjust positions if annotations overlap
-                if vertical_distance < min_distance and horizontal_distance < min_distance:
+                if vertical_distance < min_distance and\
+                        horizontal_distance < min_distance:
                     if pos1[1] < pos2[1]:
                         pos1 = (pos1[0], pos2[1] - min_distance)
                     else:
@@ -741,7 +743,6 @@ def calc_angle_points(x:Union[List[float],Tuple[float, float]],
     return angle
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO pytest
 def segment_labelled(
     x:Tuple[float, float], y:Tuple[float, float], ax:plt.Axes,
     label:Union[None,str]=None,

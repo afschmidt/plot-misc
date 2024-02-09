@@ -264,3 +264,53 @@ class TestPlotTable(object):
         assert ax.texts[-1].get_fontsize() == 6
         assert ax.texts[1].get_fontsize() == 5
         assert ax.texts[1].get_horizontalalignment() == 'left'
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# EmpericalSupport
+class EmpericalSupport(object):
+    """
+    Testing the `EmpericalSupport` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_calc_empirical_support(self):
+        table = forest.EmpericalSupport.calc_empirical_support(
+            -2, 0.2, [0.01, 0.2, 0.8])
+        assert table.mean().round(2).to_list() ==\
+            [-2.0, -2.27, -1.73, 0.34, 0.66]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_empirical_support(self):
+        table=pd.DataFrame(
+            {'estimate': {0: -2, 1: -2, 2: -2},
+             'lower_bound': {0: -2.51516586070978, 1: -2.25631031310892,
+                             2: -2.05066942062716},
+             'upper_bound': {0: -1.48483413929022, 1: -1.7436896868910798,
+                             2: -1.9493305793728402},
+             'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
+             'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
+        )
+        _, ax = forest.EmpericalSupport.plot_empirical_support(
+            table, lb_col='lower_bound', ub_col='upper_bound',
+            support_col='confidence_interval',
+            estimate=None)
+        # assert
+        assert len(ax.lines) == 2
+        for i, line in enumerate(ax.get_lines()):
+            assert list(line.get_ydata()) ==\
+                table['confidence_interval'].to_list()
+            # whether to use the lower or upper bound
+            if i == 0:
+                assert list(line.get_xdata()) == table['lower_bound'].to_list()
+            elif i == 1:
+                assert list(line.get_xdata()) == table['upper_bound'].to_list()
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_tree(self):
+        est = 0.2; m=100
+        space=forest.EmpericalSupport(estimate=est, standard_error=0.001,
+                                      alpha=list(np.linspace(1, 0.00001, m))
+                                      )
+        _, ax, results = space.plot_tree()
+        # assert
+        assert len(ax.lines) == 2
+        assert results.estimate == est
+        assert results.data_table.shape == m

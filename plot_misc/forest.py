@@ -77,7 +77,6 @@ class EmpericalSupportPlotResults(PlotForestResults):
 
 # #############################################################################
 # functions
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
               order_inner:Union[Dict[str, List[str]], None]=None
@@ -588,7 +587,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         other = {FNames.span: span_dict}
     return f, ax, PlotForestResults(**other)
 
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_table(
     dataframe: pd.core.frame.DataFrame,
@@ -978,11 +976,10 @@ class EmpericalSupport(object):
             f, ax = plt.subplots(figsize=figsize)
         else:
             f = None
-         # ################## constants
-        # find location where lb == ub
-        center=data[data[lb_col] == data[ub_col]][support_col].to_list()[0]
         # ################## annotate point
         if estimate is not None:
+            # find location where lb == ub
+            center=data[data[lb_col] == data[ub_col]][support_col].to_list()[0]
             new_dot_kwargs = _update_kwargs(update_dict=kwargs_dot,
                                             c=estimate_c,
                                             s=estimate_size,
