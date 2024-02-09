@@ -1,5 +1,6 @@
 '''
-A module to draw forest plots and side tables, as well as related plots
+A module to draw forest plots and side tables, as well as related illustrations
+such as tree plots.
 
 Aside from the plotting functions the module contains functions to
 appropriately orientated input DataFrames.
@@ -1022,7 +1023,7 @@ class EmpericalSupport(object):
         return f, ax
     # /////////////////////////////////////////////////////////////////////////
     # main function
-    def plot(self,
+    def plot_tree(self,
              support:str='coverage', annotate_estimate:bool=False,
              annotate_ci:Union[None,List[float]]=None,
              line_c:str='black', linewidth:float=0.5, linestyle:str='-',
@@ -1043,7 +1044,8 @@ class EmpericalSupport(object):
         '''
         Plots an Emperical Support graph based on either `coverage` (iterating
         the confidence interval coverage percentage), or `compatibility`
-        (iterating the p-value).
+        (iterating the p-value). Due to its Christmas tree like shape I am
+        refering to this as a `tree plot`.
         
         Parameters
         ----------
