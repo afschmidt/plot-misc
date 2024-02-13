@@ -1,5 +1,5 @@
 """
-A collection of various bar chart functions.
+A collection of various bar chart functions, based on matplotlib.
 """
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -22,19 +22,21 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     Arguments
     ---------
     df : pd.DataFrame,
-    label : str,
+    label : str
         Column lables in `df`.
-    columns : list of strings,
+    columns : list of strings
         List of columns names in `df`.
     ax : plt.ax
-    colours : list of strings,
+        The pyplot.axes objct.
+    colours : list of strings
         List with the number of colours equal to len(columns).
-    transparancy : float, 0.7
+    transparancy : float, default 0.7
         Degree of transparancy, between 0 and 1 (solid).
     wd : float
         Bar width.
-    edgecolor : str of colours, default `black`.
-    kwargs
+    edgecolor : str of colours, default `black`
+        The colour of the bar line edge.
+    kwargs: any
         Arbitrary keyword arguments for `ax.bar`.
     
     Returns
@@ -93,18 +95,19 @@ def stack_barh(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     ---------
     df : pd.DataFrame
     label : str
-        Column labels in `df`.
+        Column labels in `df`
     columns : list of strings
-        List of columns names in `df`.
+        List of columns names in `df`
     ax : plt.ax
+        The pyplot.axes objct.
     colours : list
         List with the number of colours equal to len(columns).
     transparancy : float, 0.7
         Degree of transparancy, between 0 and 1 (solid).
-    wd : float
+    wd : float, default 1.0
         Bar width.
     edgecolor : str of colours, default `black`
-    kwargs
+    kwargs: any
         Arbitrary keyword arguments for `ax.barh`.
     
     Returns
@@ -160,24 +163,25 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
     
     Arguments
     ---------
-    df : pd.DataFrame,
-    label : str,
+    df : pd.DataFrame
+    label : str
         The column name with the axes labels you want to use.
-    subtotal_col : str,
+    subtotal_col : str
         The column name with the (y-axis) values (floats/int) that need to be
         plotted.
     total_col : str, default `NoneType`
         The column name with the (y-axis) values (floats/int) that need to be
         plotted. Skip total_col by setting it to None (default).
-    colours : List of strings,
+    colours : List of strings
         A list of colours of the bars.
-    transparancy : List of floats,
+    transparancy : List of floats
         For the alpha of the bars.
-    wd : List of floats,
+    wd : List of floats
         A float to specify bar widths.
     edgecolor : List of strings
         The bar edgecolor.
     ax : plt.Axes
+        The pyplot.axes objct.
     *_kwargs_dict : dict, default empty dict,
         Optional arguments supplied to the various plotting functions:
             total_kwargs_dict    --> ax.bar
@@ -238,16 +242,17 @@ def bar(df:pd.DataFrame, label:str, column:str, ax:plt.Axes,
     colours : list
         A list of colours, can be a single or multiple values (will get
         recycled).
-    colours : str,
+    colours : str
         A list of colours of the bars.
-    transparancy : str,
+    transparancy : str, default 0.7
         For the alpha of the bars.
-    wd : str,
+    wd : str, default 1.0
         A float to specify bar widths.
-    edgecolor : str
+    edgecolor : str, default `black`
         The bar edgecolor.
     ax : plt.Axes
-    kwargs
+        The pyplot.axes objct.
+    kwargs : any
         Arbitrary keyword arguments for `ax.bar`.
     
     Returns

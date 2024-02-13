@@ -37,7 +37,7 @@ from plot_misc.constants import (
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class PlotForestResults(object):
     '''
-    The `calc_matrices` results objects
+    The results object for `plot_forest`.
     '''
     SET_ARGS = [
         FNames.span,
@@ -64,7 +64,7 @@ class PlotForestResults(object):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class EmpericalSupportPlotResults(PlotForestResults):
     '''
-    Results class for thee EmpericalSupport.plot function, inherits from
+    Results class for the EmpericalSupport.plot function, inherits from
     the `PlotForestResults` class.
     '''
     SET_ARGS = [
@@ -87,8 +87,8 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     
     Parameters
     ----------
-    data : pd.DataFrame,
-    oder_outer : dict,
+    data : pd.DataFrame
+    oder_outer : dict
         The dictionary key will be used to select the `data` column, and the
         dictionary value should contain a list of string to order the column.
     order_inner : dict, default `NoneType`
@@ -151,23 +151,23 @@ def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     
     Arguments
     ---------
-    df : pd.DataFrame,
+    df : pd.DataFrame
         The dataframe that contains the `group` of interest.
-    group : str,
+    group : str
         A string that maps to a column in df.
-    strata : str, default None
+    strata : str, default `NoneType`
         An optional df column which nests the `group` values.
-    within_pad : float,
+    within_pad : float, default 2.0
         The distance between point estimates nested within a group.
-    between_pad : float,
+    between_pad : float, default 4.0
         The distance between groups of point estimates. This is the y-axis
         distance that will be skipped between the last y-axis coordinate in the
         previous group and the starting y-axis coordinate of the current group.
-    start : float, default 0,
+    start : float, default 0
         The starting position of the sequence.
     new_col : str, default `y_axis`
         The name of the column that will be added to `df`.
-    sort_dict : dict, default None
+    sort_dict : dict, default `NoneType`
         Supply a key:value-float combination dictionary to sort the rows on
         `group` membership. Set to `NoneType` to order rows by
         `[order, strata]`. Set to `skip` to do nothing.
@@ -265,27 +265,27 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Parameters
     ----------
-    df : pd.DataFrame,
-    x_col : str,
+    df : pd.DataFrame
+    x_col : str
         The column name of the x-axis values (typically point estimates).
-    lb_col : str, default None,
+    lb_col : str, default None
         The column name of the lower bound of an confidence interval.
-    ub_col : str, default None,
+    ub_col : str, default None
         The column name of the upper bound of an confidence interval.
-    y_col : str, default 'y_axis',
+    y_col : str, default `y_axis`
         The column name of the y-axis values used to differentiate
         estimates/studies.Should contain `int` or `float` values representing
         the cartesian y-coordinate for each point.
-    s_col : str, default 'o',
+    s_col : str, default `o`
         The column name of the shape indicators. If string is not found in `df`
         the string value will be added to an `s_col` column.
-    c_col : str, default 'black',
+    c_col : str, default `black`
         The column name of the shape colour indicators. If string is not found
         in `df` the string value will be added to an `c_col` column.
-    a_col : float or str, default 1,
+    a_col : float or str, default 1
         The column name of the alpha value for each point. If the string is not
         found in `df`, the float will be added to an `a_col` column.
-    g_col : str, default None,
+    g_col : str, default `NoneType`
         The column name of the group indicator; often the outcome or study
         indicators. If None, a column with a unique value for each row will be
         added - so there are no groups. This column will also be used to
@@ -294,34 +294,34 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         The column name of the `shape size` value for each point. Can also
         simply supply a `float` for a uniform shape. Supplying a `NoneType`
         will default to 40.
-    ci_lwd : float, default 1,
+    ci_lwd : float, default 1
         The line width of the confidence intervals.
     ci_colour : float, default 'indianred'
         The line colour of the confidence intervals
-    connect_shape : boolean, default False,
+    connect_shape : boolean, default `False`
         If the point estimates should be connected with a line. Only relevant
         when estimates have the same y-axis.
-    connect_shape_colour : str, default `grey`,
+    connect_shape_colour : str, default `grey`
         The line colour.
-    connect_shape_lwd : float, default 1,
+    connect_shape_lwd : float, default 1.0
         The line width.
-    span : boolean, default True,
+    span : boolean, default `True`
         Whether an colour-interchanging horizontal background segment should
         be added
-    span_return : boolean, default False,
+    span_return : boolean, default `False`
         Whether to return a dictionary with the span coordinates and kwargs to
         ``ax.axhspan``.
-    span_colour : list of two string, default ['white', 'lightgrey'],
+    span_colour : list of two string, default ['white', 'lightgrey']
         The colours of the span.
     ylim : tuple of floats, `NoneType`
         Overwrite the default y-limits if not set to `NoneType`.
-    ax : plt.axes, default None
+    ax : plt.axes, default `NoneType`
         An optional matplotlib axis. If supplied the function works on the axis.
     figsize : tuple of two floats, default (10, 10),
-        The figure size, when ax==None.
-    reverse_y : boolean, default True,
+        The figure size, when ax is set to None.
+    reverse_y : boolean, default `True`
         inverts the y-axis.
-    kwargs_*_dict : dict, default empty dict,
+    kwargs_*_dict : dict, default empty dict
         Optional arguments supplied to the various plotting functions:
             kwargs_scatter_dict          --> ax.scatter
             kwargs_plot_ci_dict          --> ax.plot
@@ -330,10 +330,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Returns
     -------
-    Unpacks a matplotlib figure, axes, class,
-    f : plt.Figure,
-    x : plt.Axes,
-    p : PlotForestResults class
+    figure : plt.Figure
+    axes : plt.Axes
+    results : PlotForestResults class
+    Unpacks matplotlib figure, axes, class
     
     Examples
     --------
@@ -611,21 +611,22 @@ def plot_table(
     """
     Plots a side-table using `ax.text` and supplied `plt.Axes`.
     
+    Parameters
     ----------
-    dataframe (pandas.core.frame.DataFrame)
+    dataframe : pd.DataFrame
             Pandas DataFrame containg `string_col` that should be plotted.
             margin of error, etc.
-    y_col : str, default 'y_axis',
+    y_col : str, default 'y_axis'
         The column name of the y-axis values used to identify rows.
     string_col : str,
             The the column name that should be plotted. Should contain a
             `string` value.
     annoteheaders : str, default `NoneType`
         string to annotate the table column.
-    pad: float, default 1
+    pad: float, default 1.0
         Multiplication factor for the x-coordinate location:
         `mean(ax.get_xlim())`.
-    pad_header: float, default 1
+    pad_header: float, default 1.0
         Same as `pad`.
     negative_padding : float, default 1.0
         determines the y-coordinate of the table header as:
@@ -634,21 +635,21 @@ def plot_table(
         The font size for the table text.
     size_header : float, default 10
         The font size for the table header.
-    yticklabel : list of strings,
+    yticklabel : list of strings
         A list of string containing the y-axis labels. Should match the length
         of `ytickloc`.
-    ytickloc : list of floats,
+    ytickloc : list of floats
         A list of floats defining the y-axis locations for the ticks.
-    [l|r]_yticklab_pad: str,
+    [l|r]_yticklab_pad: str
         An optional string to use as a prefix or suffic of the y-axis labels.
     span : dict, default `NoneType`
         Whether you want to add an optional span. Supply a dictionary with
         k many unique keys and a dictionary value containing `span_start`,
         `span_stop` and `span_kwargs`. This will all be supplied to
         `merit_helper.utils.utils.plot_span`.
-    ax : plt.axes,
+    ax : plt.axes
             Axes to operate on.
-    kwargs_*_dict : dict, default empty dict,
+    kwargs_*_dict : dict, default empty dict
         Optional arguments supplied to the various plotting functions:
             kwargs_text_dict            --> ax.text
             kwargs_header_dict          --> ax.text
@@ -777,29 +778,21 @@ class EmpericalSupport(object):
     
     References
     ----------
-    `Here <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>`_.
+    This is (partially) inspired based on the following
+    `publication <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>`_.
     
-    Attributes
+    Parameters
     ----------
-    estimate: float,
+    estimate: float
         The estimated point estimate.
-    standard_error: float,
+    standard_error: float
         The standard error of the point estimate.
-    alpha: list of floats,
+    alpha: list of floats
         A list of alpha's (i.e., type 1 error rate) between 0 and 1.
         Typically should be around a 1000 values, for example generated
         using np.linspace.
-    
-    Methods
-    -------
-    calc_empirical_support(estimate, standard_error, alpha)
-        Calculates the empirical support across a list of alpha's
-    plot_empirical_support(data, lb_col, ub_col, support_col, line_c,
-    linewidth, linestyle, estimate, estimate_size, estimate_shape,
-    estimate_c, area_c, area_a, ax, figsize, reverse_y, kwargs_plot,
-    kwargs_dot, kwargs_fill)
-        Plots an empirical support graph based on a `data` supplied table.
     '''
+    
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __init__(self,
                  estimate:float, standard_error:float, alpha:List[float],
@@ -890,7 +883,7 @@ class EmpericalSupport(object):
         data:pd.DataFrame, lb_col:str, ub_col:str, support_col:str,
         line_c:str='black', linewidth:float=1, linestyle:str='-',
         estimate:Union[float,None]=None, estimate_size:float=40,
-        estimate_shape:Union[str, mpath.Path]=mpath.Path.unit_circle(),
+        estimate_shape:Union[str, mpath.Path]=mpath.Path.unit_circle,
         estimate_c:str='orangered',
         area_c:Union[str, None]=None, area_a:float=0.7,
         ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
@@ -907,27 +900,27 @@ class EmpericalSupport(object):
         
         Parameters
         ----------
-        data: pd.DataFrame,
+        data: pd.DataFrame
             A pandas DataFrame containing the lower and upper bounds, as well
             as indicator of support (plotted on the y-axis).
-        lb_col: str,
+        lb_col: str
             The column name of the lower bound.
-        ub_col: str,
+        ub_col: str
             The column name of the upper bound.
-        support_col: str,
+        support_col: str
             The column name of the support values. Typically this will
             be a column with confidence interval floats, or a column of
             p-values/alpha's.
         line_c: str, default `black`
             The colour of the confidence interval curves.
-        linewidth: float, default `1`
+        linewidth: float, default `1.0`
             The size of the confidence interval curves.
         linestyle: str, default `-`
             The linestyle of the confidence interval curves.
         estimate: float, default `NoneType`
             Provide this to plot the estimate as a marker on top of the graph.
             Set to `NoneType` to skip.
-        estimate_size: float, default `1`
+        estimate_size: float, default `1.0`
             The size of the estimate marker.
         estimate_shape: str, default `o`
             The estimate marker.
@@ -943,9 +936,9 @@ class EmpericalSupport(object):
             axis, otherwise the function will create an axis object internally.
         figsize : tuple of two floats, default (10, 10),
             The figure size, when ax==None.
-        reverse_y : boolean, default True,
+        reverse_y : boolean, default `True`
             inverts the y-axis.
-        kwargs_*_dict : dict, default empty dict,
+        kwargs_*_dict : dict, default empty dict
             Optional arguments supplied to the various plotting functions:
                 kwargs_plot --> ax.plot
                 kwargs_dot  --> ax.scatter
@@ -1024,7 +1017,7 @@ class EmpericalSupport(object):
              annotate_ci:Union[None,List[float]]=None,
              line_c:str='black', linewidth:float=0.5, linestyle:str='-',
              estimate_size:float=20, estimate_c:str='orangered',
-             estimate_shape:str=mpath.Path.unit_circle(),
+             estimate_shape:str=mpath.Path.unit_circle,
              area_c:Union[str, None]=None, area_a:float=1.0,
              reverse_y:Union[None,bool]=None,
              ax:Union[plt.Axes, None]=None,
@@ -1045,7 +1038,7 @@ class EmpericalSupport(object):
         
         Parameters
         ----------
-        support: str, default `coverage`,
+        support: str, default `coverage`
             Plots the confidence interval percentage on the y-axis from 0 to 1,
             or for `compatible` plots the p-value from 1 to 0.
         annotate_estimate: bool, default `False`
@@ -1055,14 +1048,14 @@ class EmpericalSupport(object):
             `merit_helper.utils.utils.segment_labelled`.
         line_c: str, default `black`
             The colour of the confidence interval curves.
-        linewidth: float, default `1`
+        linewidth: float, default `1.0`
             The size of the confidence interval curves.
         linestyle: str, default `-`
             The linestyle of the confidence interval curves.
         estimate: float, default `NoneType`
             Provide this to plot the estimate as a marker on top of the graph.
             Set to `NoneType` to skip.
-        estimate_size: float, default `1`
+        estimate_size: float, default `1.0`
             The size of the estimate marker.
         estimate_shape: str, default `o`
             The estimate marker.
@@ -1076,10 +1069,10 @@ class EmpericalSupport(object):
         ax : plt.axes, default `NoneType`
             An optional matplotlib axis. If supplied the function works on the
             axis, otherwise the function will create an axis object internally.
-        reverse_y : boolean, default `NoneType`,
+        reverse_y : boolean, default `NoneType`
             Inverts the y-axis.  Set to `False` or `True` to overwrite internal
             behaviour.
-        kwargs_*_dict : dict, default empty dict,
+        kwargs_*_dict : dict, default empty dict
             Optional arguments supplied to the various plotting functions:
                 kwargs_plot    --> ax.plot
                 kwargs_dot     --> ax.scatter
@@ -1091,6 +1084,10 @@ class EmpericalSupport(object):
         
         Returns
         -------
+        f: figure
+        axes: axes
+        results: EmpericalSupportPlotResults
+        
         Unpacks a matplotlib figure, axes, and a EmpericalSupportPlotResults
         class containing the internally used data.
         '''

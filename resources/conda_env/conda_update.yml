@@ -3,21 +3,31 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.8
-  - pandas=1.3
-  - numpy=1.21
-  - pytest=6
-  - pytest-mock=3
-  - pytest-dependency=0.5
-  - scipy=1.7
-  - scikit-learn=0.24
-  - statsmodels=0.12
-  - seaborn=0.11
-  - matplotlib=3.5
-  - bump2version=1
-  - adjusttext=0.7
+  # core 
+  - python>=3.8
+  - pandas>=1.3
+  - numpy>=1.21
+  - pytest=6.*
+  - pytest-mock>=3.*
+  - pytest-dependency>=0.5.*
+  - scipy>=1.5.*
+  - scikit-learn>=1.4.*
+  - statsmodels>=0.12.*
+  - seaborn>=0.11.*
+  - matplotlib>=3.5.*
+  - bump2version=1.*
+  - adjusttext=>0.7
+  # sphinx documentation
+  - sphinx_rtd_theme
+  - sphinx_bootstrap_theme
+  - furo
+  - bump2version
+  - myst-parser
+  - nbsphinx
+  - nbsphinx-link
+  - numpydoc
+  # other
   - jupyter
   - pip
-
 
 
