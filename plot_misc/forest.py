@@ -331,9 +331,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     Returns
     -------
     figure : plt.Figure
+        This will default to `NoneType` unless the figure is internally created.
+        That is when an `ax` argument is supplied.
     axes : plt.Axes
     results : PlotForestResults class
-    Unpacks matplotlib figure, axes, class
+        Unpacks matplotlib figure, axes, class
     
     Examples
     --------
@@ -883,7 +885,7 @@ class EmpericalSupport(object):
         data:pd.DataFrame, lb_col:str, ub_col:str, support_col:str,
         line_c:str='black', linewidth:float=1, linestyle:str='-',
         estimate:Union[float,None]=None, estimate_size:float=40,
-        estimate_shape:Union[str, mpath.Path]=mpath.Path.unit_circle,
+        estimate_shape:Union[str, mpath.Path]=mpath.Path.unit_circle(),
         estimate_c:str='orangered',
         area_c:Union[str, None]=None, area_a:float=0.7,
         ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
@@ -950,20 +952,20 @@ class EmpericalSupport(object):
         '''
         # ################## check input
         is_df(data)
-        is_type(lb_col, str)
-        is_type(ub_col, str)
-        is_type(support_col, (str, type(None)))
-        is_type(line_c, str)
-        is_type(linewidth, (int, float))
-        is_type(linestyle, str)
-        is_type(estimate, (int, float, type(None)))
-        is_type(estimate_size, (int, float))
-        is_type(estimate_c, str)
-        is_type(area_c, (type(None),str))
-        is_type(area_a, (int, float))
-        is_type(ax, (type(None), plt.Axes))
-        is_type(figsize, tuple)
-        is_type(reverse_y, bool)
+        is_type(lb_col, str, 'lb_col')
+        is_type(ub_col, str, 'ub_col')
+        is_type(support_col, (str, type(None)), 'support_col')
+        is_type(line_c, str, 'line_c')
+        is_type(linewidth, (int, float), 'linewidth')
+        is_type(linestyle, str, 'linestyle')
+        is_type(estimate, (int, float, type(None)), 'estimate')
+        is_type(estimate_size, (int, float), 'estimate_size')
+        is_type(estimate_c, str, 'estimate_c')
+        is_type(area_c, (type(None),str), 'area_c')
+        is_type(area_a, (int, float), 'area_a')
+        is_type(ax, (type(None), plt.Axes), 'ax')
+        is_type(figsize, tuple, 'figsize')
+        is_type(reverse_y, bool, 'reverse_y')
         # ################## should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
@@ -1017,7 +1019,7 @@ class EmpericalSupport(object):
              annotate_ci:Union[None,List[float]]=None,
              line_c:str='black', linewidth:float=0.5, linestyle:str='-',
              estimate_size:float=20, estimate_c:str='orangered',
-             estimate_shape:str=mpath.Path.unit_circle,
+             estimate_shape:str=mpath.Path.unit_circle(),
              area_c:Union[str, None]=None, area_a:float=1.0,
              reverse_y:Union[None,bool]=None,
              ax:Union[plt.Axes, None]=None,
@@ -1084,8 +1086,10 @@ class EmpericalSupport(object):
         
         Returns
         -------
-        f: figure
-        axes: axes
+        f: plt.Figure
+            This will default to `NoneType` unless the figure is internally created.
+            That is when an `ax` argument is supplied.
+        axes: plt.Axes
         results: EmpericalSupportPlotResults
         
         Unpacks a matplotlib figure, axes, and a EmpericalSupportPlotResults

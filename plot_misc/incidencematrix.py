@@ -1,8 +1,6 @@
 '''
-A function to draw incidence matrices.
-
-It will make a n by m grid of lines  populating the intersections with dots.
-important intersection will be highlighted
+A function to draw incidence matrices, creating an n by m grid of lines
+populating the intersections with shapes.
 '''
 
 # importing
@@ -29,9 +27,10 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
                          kwargs_scatter_dict:Dict[Any, Any]={},
                          kwargs_vline_dict:Dict[Any, Any]={},
                          kwargs_hline_dict:Dict[Any, Any]={},
-                         ) -> plt.Axes:
+                         ) -> Tuple[plt.Figure, plt.Axes]:
     '''
-    Creates a `categorical heatmap` = a visualization of an incidence matrix.
+    Creates a `categorical heatmap`, essentially visualising an incidence
+    matrix.
     
     Arguments
     ---------
@@ -41,7 +40,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         `dot_colour` breaks and colours, with a specified size and transparency.
     fsize : tuple
         A two element tuple, with the width and height in cm.
-    dot_colour : `list` of `tuple`
+    dot_colour : list of tuples, default `[('grey',0), ('black',1)]`
         A list of arbitrary length, specifying the colour and upper bound
         the colour is applied to. Each tuple should have
         (<colour>, <upper bound>).
@@ -71,7 +70,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
     break_limits : list
         Currently used to specify the lower bound the first colour is applied
         to. Most likely you will never need to touch this.
-    kwargs_*_dict : dict, default empty dict,
+    kwargs_*_dict : dict, default empty dict
         Optional arguments supplied to the various plotting functions:
             kwargs_scatter_dict        --> ax.scatter
             kwargs_vline_dict          --> ax.vline
@@ -79,8 +78,10 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         
     Returns
     -------
-    Unpacks a matplotlib figure, axes, unless `ax` is supplied an plt.axis,
-    in which case nothing is returned.
+    f: plt.Figure
+        This will default to `NoneType` unless the figure is internally created.
+        That is when an `ax` argument is supplied.
+    ax: plt.Axes
     '''
     
     # check inputs

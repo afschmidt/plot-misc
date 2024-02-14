@@ -92,7 +92,8 @@ class InputValidationError(Exception):
     pass
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def is_type(param: Any, types: Union[Tuple[Type], Type]) -> bool:
+def is_type(param: Any, types: Union[Tuple[Type], Type],
+            param_name: Union[str, None]=None) -> bool:
     """
     Checks if a given parameter matches any of the supplied types
     
@@ -100,14 +101,24 @@ def is_type(param: Any, types: Union[Tuple[Type], Type]) -> bool:
     ----------
     param: object to test
     types: either a single type, or a tuple of types to test against.
+    param_name: an optional string to return the parameter name in the
+        errormessage
     
     Returns
     -------
     True if the parameter is an instance of any of the given types.
-    Raises InputValidationError otherwise.
+    Raises AttributeError otherwise.
     """
     if not isinstance(param, types):
-        raise InputValidationError(f"Expected any of [{types}], got {type(param)}")
+        if param_name is None:
+            raise InputValidationError(
+                f"Expected any of [{types}], got {type(param)}."
+            )
+        else:
+            raise InputValidationError(
+                f"Expected any of [{types}], "
+                f"got {type(param)}; Please see parameter: `{param_name}`."
+            )
     return True
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

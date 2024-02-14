@@ -47,14 +47,14 @@ def lollipop(values:as_array, labels:as_array,
     
     Parameters
     ----------
-    max_col : np.ndarray,
-        The column with line endpoints
-    lab_col : np.ndarray,
+    max_col : np.ndarray
+        The column with line endpoints.
+    lab_col : np.ndarray
         The column with tick labels.
     line_color: str, default `tab:orange`
         The line colour.
-    linewidth : float, default 1,
-        The line width.
+    linewidth : float, default 1
+        The linewidth.
     dot_color : str, default `deeppink`
         The dot colour.
     dot_edge_color : str, default `black`
@@ -65,24 +65,28 @@ def lollipop(values:as_array, labels:as_array,
         The line size of the edge.
     xmargin : float, default 0
         The x margins, set to `NoneType` to keep default.
-    xlimit : tuple of float, default `NoneType`
+    xlimit : tuple of floats, default `NoneType`
         The x-axis limits.
     ax : plt.Axes, default `NoneType`
         A `matplotlib.axes.Axes` instance to which the figure is plotted. If
         not provided, use current axes or create a new one.  Optional.
-    figsize : tuple of two floats, default (10, 10),
+    figsize : tuple of two floats, default `(10, 10)`
         The figure size, when ax==None.
-    reverse_y : boolean, default False,
+    reverse_y : boolean, default `False`
         inverts the y-axis.
-    kwargs_*_dict : dict, default empty dict,
+    kwargs_*_dict : dict, default empty dictionaries
         Optional arguments supplied to the various plotting functions:
             kwargs_lines_dict -- > ax.hlines
             kwargs_plot_dict  -- > ax.plot
     
     Returns
     -------
-    tuple: figure, axes
+    figure: plt.Figure
+        This will default to `NoneType` unless the figure is internally created.
+        That is when an `ax` argument is supplied.
+    axes: plt.Axes
     '''
+
     # ################### Check input
     
     # ################### process input
@@ -156,8 +160,8 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
                 ) -> Tuple[plt.Axes, plt.Figure]:
     '''
     Provides a basic template for a calibration plot, comparing the observed
-    and predicted risk. Here the observed risk will be based on some grouping
-    based on the predicted risk, and the average event rate within each group.
+    and predicted risks. Here the observed risk will be based on some grouping
+    of the predicted risk, and the average event rate within each group.
     Hence optional confidence intervals can be included for the observed risk.
     
     Can plot multiple lines (representing distinct prediction models),
@@ -181,22 +185,22 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     upper_observed : str, default `NoneType`
         An optional column name in `data` representing the upper bound of
         the observed risk.
-    ci_colour : string or list of strings,
+    ci_colour : string or list of strings
         The colours that the (optional) confidence intervals should have.
     ci_linewdith : string or list of strings,
         The linewdith of the (optional) confidence intervals.
-    dot_colour : string or list of string,
+    dot_colour : string or list of strings
         The marker colour.
-    dot_marker : string or list of strings,
+    dot_marker : string or list of strings
         The marker for the average agreement between observed and predicted
         risk.
-    line_colour : string or list of strings,
+    line_colour : string or list of strings
         The colour of the line connecting the dots.
-    line_linestyle : string or list of strings,
+    line_linestyle : string or list of strings
         The linestyle of the line(s) connecting the dots.
-    line_linewidth : string or list of floats,
+    line_linewidth : string or list of floats
         The linewidth of the line(s) connecting the dots.
-    diagonal_colour : str,
+    diagonal_colour : str
         The colour of the diagonal line.
     diagonal_linestyle : str
         The linestyle of the diagonal line.
@@ -207,13 +211,21 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         not provided, use current axes or create a new one.  Optional.
     figsize : tuple of two floats, default (6, 6),
         The figure size, when ax==None.
-    kwargs_*_dict : dict, default empty dict,
+    kwargs_*_dict : dict, default empty dictionaries
         Optional arguments supplied to the various plotting functions:
             kwargs_ci_dict       --> ax.plot
-            kwargs_dot_dict   --> ax.scatter
+            kwargs_dot_dict      --> ax.scatter
             kwargs_line_dict     --> ax.plot
             kwargs_diagonal_dict --> ax.axline
+    
+    Returns
+    -------
+    f: plt.Figure
+        This will default to `NoneType` unless the figure is internally created.
+        That is when an `ax` argument is supplied.
+    ax: plt.Axes
     '''
+
     # ################### check input
     is_type(data, (dict, pd.DataFrame))
     is_type(observed, str)

@@ -29,6 +29,12 @@ Content
    api
 
 .. toctree::
+   :maxdepth: 3
+   :caption: Examples
+   
+   examples
+
+.. toctree::
    :maxdepth: 2
    :caption: Project admin
 

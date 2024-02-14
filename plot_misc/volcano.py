@@ -1,11 +1,11 @@
 '''
-Provides a function to draw and annotate volcano plots.
+Provides a template to draw and annotate volcano plots.
 
 Dots are plotted on a Cartesian-grid with typically the -log10(p-value) on
-the y-axis and a measure of magnitude on the x-axis. Different colours can be
-used to identify certain key parts of the grahp.
+the y-axis and a measure of effect magnitude on the x-axis. Different colours
+can be used to identify certain key parts of the graph.
 
-Label overlap is addressed by sourcing `adjustText`.
+Label overlap is addressed by sourcing `adjustText.adjust_text` function.
 '''
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,9 +33,10 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  label_kwargs_dict:Dict[Any, Any]={},
                  scatter_sig_kwargs_dict:Dict[Any, Any]={},
                  scatter_nonsig_kwargs_dict:Dict[Any, Any]={},
-                 ):
+                 ) -> Union[plt.Figure, plt.Axes]:
     '''
-    Creates a volcano plots, where significant results are labeled.
+    Creates a volcano plot, allow to colour and label (subsets of)
+    significant results.
     
     Arguments
     ---------
@@ -46,7 +47,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         A column name in data.
     legend : boolean
         Should the legend be returned (default: False).
-    fsize : tuple, default `NoneType`.
+    fsize : tuple, default `NoneType`
         Figure size W by H in inches. Set to `NoneType` to skip.
     adjust : boolean
         Should overplotting of annotations be decreased.  Note this starts a
@@ -60,12 +61,13 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         A three element tuple listing the colours for:
         significant dots, non-significant dots, and the vertical line.
     xlab, ylab : str
+        The axis label.
     ylim : list
         The y-limit, by default is simply uses the data limits.
     msize : float
-        Size of the dots
+        Size of the dots.
     lsize : float
-        Size of the text size
+        The text size.
     transparency_ns : float
         Transparency value of the non-significant results (default 0.6)
     index_label : list
@@ -74,7 +76,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ax : plt.axes
         An optional matplotlib axis. If supplied the function works on the axis
         and does not return anything.
-    *_kwargs_dict : dict, default empty dict,
+    *_kwargs_dict : dict, default empty dictionaries,
         Optional arguments supplied to the various plotting functions:
             label_kwargs_dict          --> adjust_text
             scatter_sig_kwargs_dict    --> ax.bar
@@ -82,8 +84,10 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     
     Returns
     -------
-    Unpacks a matplotlib figure, axes, unless `ax` is supplied an plt.axis,
-    in which case nothing is returned.
+    figure : plt.Figure
+        This will default to `NoneType` unless the figure is internally created.
+        That is when an `ax` argument is supplied.
+    axes : plt.Axes
     '''
     
     # raise warning

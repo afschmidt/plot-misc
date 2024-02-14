@@ -759,7 +759,7 @@ def calc_angle_points(x:Union[List[float],Tuple[float, float]],
 def segment_labelled(
     x:Tuple[float, float], y:Tuple[float, float], ax:plt.Axes,
     label:Union[None,str]=None,
-    endpoints_marker:Union[mpath.Path,str]=mpath.Path.unit_circle,
+    endpoints_marker:Union[mpath.Path,str]=mpath.Path.unit_circle(),
     endpoints_size:float=8, endpoints_c:str='orangered', segment_c='black',
     label_fontsize:float=10, label_background_c='white',
     overrule_angle:Union[None, float]=None,
