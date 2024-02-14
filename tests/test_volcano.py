@@ -47,7 +47,7 @@ class TestPlotVolcano(object):
     def test_plot_volcano_wlabels(self):
         # adding label data
         data2 = DATA.copy()
-        data2['label'] = np.nan
+        # data2['label'] = np.nan
         data2.loc['9316_67_3_WFDC1',  'label'] = LABEL
         index = ['9316_67_3_WFDC1']
         # plotting

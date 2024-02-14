@@ -443,14 +443,18 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
     
     Returns
     -------
-    pd.dataframes:
-        1. direction times pvalue matrix; floats
-        2. an effect estimate matrix masking non-significant results; str
-        3. an star matrix masking non-significant results; str
-        4. an p-value matrix masking non-significant results; str
-        5. an effect esimate matrix without masking: floats
-        
+    pval : pd.DataFrame
+        Direction times pvalue matrix; floats
+    effect : pd.DataFrame
+        An effect estimate matrix masking non-significant results; str
+    star : pd.DataFrame
+        An star matrix masking non-significant results; str
+    pvalstring : pd.DataFrame
+        P-value matrix masking non-significant results; str
+    effect_float : pd.DataFrame
+        An effect esimate matrix without masking: floats
     """
+    
     # checking input
     if len(digits) > 1:
         digits=digits[0]
@@ -467,7 +471,7 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
     # simply stoaring the float matrix
     effect_float = effect.copy()
     # formatting
-    effect = effect.applymap(dig.format).copy()
+    effect = effect.map(dig.format).copy()
     # scaling
     pval = dir * pval
     # if log == True use larger than
