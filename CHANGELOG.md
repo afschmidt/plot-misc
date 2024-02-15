@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.0.0 - 15-02-2024
+
+### Fixed
+
+_Nothing_
+
+### Added
+
+- Piechart module `pychart`.
+- A point estimate formatting function in `utils.formatting`.
+- A emperical support class to plot trees. 
+- Pytest for the new functions.
+- Adding sphinx documentation
+- Gitlab CI/CD
+
+### Changed
+
+- Updated the python requirements, currently build for python 3.12.
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+_Nothing_
+
 ## v0.3.0 - 29-06-2023
 
 ### Fixed
