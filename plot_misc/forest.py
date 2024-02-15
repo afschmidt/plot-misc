@@ -11,10 +11,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from typing import Any, List, Type, Union, Tuple, Dict, Sequence, Optional
-from plot_misc.utils.utils import _update_kwargs
+from plot_misc.utils.utils import (
+    _update_kwargs,
+    _dict_string_argument,
+)
 from plot_misc.constants import ForestNames as FNames
 from plot_misc.constants import (
     is_type,
+    is_df,
+    is_series_type,
     are_columns_in_df,
 )
 
@@ -25,7 +30,7 @@ from plot_misc.constants import (
 # TODO write test
 def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
               order_inner:Union[Dict[str, List[str]], None]=None
-              ) -> pd.DataFrame:
+              ) -> pd.core.frame.DataFrame:
     '''
     Order a data frame by and outer and inner order, say by study and within
     study by outcome.
@@ -47,6 +52,9 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     '''
     # check input
     AE_MSG = 'Please supply a `dict` of length one.'
+    is_type(data, pd.DataFrame)
+    is_type(order_outer, dict)
+    is_type(order_inner, (type(None), dict))
     if len(order_outer) > 1:
         raise AttributeError(AE_MSG)
     if not order_inner is None:
@@ -84,7 +92,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=1, new_col:str='y_axis',
                      sort_dict:Union[Dict[str,int], None, str]=None,
                      strata:Union[str, None]=None,
-                     ):
+                     ) -> pd.core.frame.DataFrame:
     """
     A helper function that adds a `y-axis` column (useful for Cartesian graphs)
     to a dataframe based on group membership. The within_pad arguments
@@ -97,7 +105,7 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
         The dataframe that contains the `group` of interest.
     group : str,
         A string that maps to a column in df.
-    strat : str, default None
+    strata : str, default None
         An optional df column which nests the `group` values.
     within_pad : float,
         The distance between point estimates nested within a group.
@@ -118,9 +126,18 @@ def _assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     -------
     df : pd.DataFrame
     """
+    df = df.copy()
     # check input
-    if not group in df.columns:
-        raise KeyError('`df` does not contain column {0}.'.format(group))
+    is_type(df, pd.DataFrame)
+    is_type(group, str)
+    is_type(new_col, str)
+    is_type(strata, (type(None), str))
+    is_type(within_pad, (int, float))
+    is_type(between_pad, (int, float))
+    is_type(sort_dict, (type(None), dict))
+    are_columns_in_df(df, expected_columns=[group])
+    # if not group in df.columns:
+    #     raise KeyError('`df` does not contain column {0}.'.format(group))
     if strata is None:
         # use a place-holder strata
         strata=FNames.strata_del
@@ -175,11 +192,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 span:bool = True, span_colour:List[str] = ['white', 'lightgrey'],
                 ax:Union[plt.Axes, None]=None, figsize:tuple=(10, 10),
                 reverse_y:bool=True,
+                verbose:bool=False,
                 kwargs_scatter_dict:Dict[Any, Any]={},
                 kwargs_plot_ci_dict:Dict[Any, Any]={},
                 kwargs_connect_segments_dict:Dict[Any, Any]={},
                 kwargs_span_dict:Dict[Any, Any]={}
-                ) -> plt.Axes:
+                ) -> Tuple[plt.Figure, plt.Axes]:
     """
     A forest plot function, that allows for grouping of estimates by `group`.
     Related if there are estimates with the same `y_col` value these get
@@ -244,24 +262,52 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Returns
     -------
-    Unpacks a matplotlib figure, axes
+    Unpacks a matplotlib figure, axes.
+    f : plt.Figure.
+    x : plt.Axes.
     
     Examples
     --------
-    Additional characteristics can be mapped through the various kwargs_*_dict,
-    calling the `row` object which represents a row of the `df` through
-    `df.iterrows()`:
+    Additional control over the dots and confidence intervals characteristics
+    can be leveraged by accessing `kwargs_scatter_dict` or
+    `kwargs_scatter_dict`, and assigning a 'row[col_name]` value to a keyword
+    argument. Here `row` represents a row of the `df` accessed through
+    `df.iterrows()`. The string value will be evaluated and assigned
+    internally:
     
     >>> plot_forest(df,
     >>>             ...,
-    >>>             kwargs_scatter_dict={'linewidths': row[lw_col_name]},
+    >>>             kwargs_scatter_dict={'linewidths': 'row[lw_col_name]'},
     >>>            )
     >>>
     
     """
+    # ################### internal constants
+    ROW = 'row'
     # ################### do check and set defaults
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError('`df` should be a pd.DataFrame.')
+    is_type(x_col, str)
+    is_type(lb_col, (type(None), str))
+    is_type(ub_col, (type(None), str))
+    is_type(y_col, str)
+    is_type(s_col, str)
+    is_type(c_col, str)
+    is_type(g_col, str)
+    is_type(a_col, (int, float, str))
+    is_type(shape_size, (int, float))
+    is_type(ci_lwd, (int, float))
+    is_type(ci_colour, str)
+    is_type(connect_shape, bool)
+    is_type(span, bool)
+    is_type(connect_shape_lwd, (int, float))
+    is_type(connect_shape_colour, str)
+    is_type(span_colour, list)
+    is_type(ax, (type(None), plt.Axes))
+    is_type(figsize, tuple)
+    is_type(reverse_y, bool)
+    is_df(df)
+    is_series_type(df[x_col], (float, int))
+    if (ub_col is not None) and (lb_col is not None):
+        is_series_type(df[[ub_col, lb_col]], (float, int))
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
@@ -269,20 +315,26 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if s_col_name not in df.columns:
         s_col_name = FNames.s_col
         df[s_col_name] = s_col
-        warnings.warn('`{0}` not found in `df`, creating `s_col` column '
-                      'with value {1}.'.format(s_col_name, s_col), RuntimeWarning)
+        if verbose == True:
+            warnings.warn('`{0}` not found in `df`, creating `s_col` column '
+                          'with value {1}.'.format(s_col_name, s_col),
+                          RuntimeWarning)
         del s_col
     if c_col not in df.columns:
         c_col_name = FNames.c_col
         df[c_col_name] = c_col
-        warnings.warn('`{0}` not found in `df`, creating `c_col` column '
-                      'with value {1}.'.format(c_col_name, c_col), RuntimeWarning)
+        if verbose == True:
+            warnings.warn('`{0}` not found in `df`, creating `c_col` column '
+                          'with value {1}.'.format(c_col_name, c_col),
+                          RuntimeWarning)
         del c_col
     if a_col not in df.columns:
         a_col_name = FNames.a_col
         df[a_col_name] = a_col
-        warnings.warn('`{0}` not found in `df`, creating `a_col` column '
-                      'with value {1}.'.format(a_col_name, a_col), RuntimeWarning)
+        if verbose == True:
+            warnings.warn('`{0}` not found in `df`, creating `a_col` column '
+                          'with value {1}.'.format(a_col_name, a_col),
+                          RuntimeWarning)
         del a_col
     if g_col is None:
         g_col = FNames.g_col
@@ -298,6 +350,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         xs = row[x_col]
         ys = row[y_col]
         # add points
+        # checking if there are string values containing `row` which need to
+        # be evaluated.
+        kwargs_scatter_dict = \
+            _dict_string_argument(ROW, kwargs_scatter_dict, locals())
+        # updating kwargs dict
         new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
                                             s=shape_size,
                                             marker=row[s_col_name],
@@ -320,6 +377,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         # plot
         x_values = [lb, ub]
         y_values = [ys, ys]
+        # checking if there are string values containing `row` which need to
+        # be evaluated.
+        kwargs_plot_ci_dict = \
+            _dict_string_argument(ROW, kwargs_plot_ci_dict, locals())
+        # updating kwargs dict
         new_plot_ci_kwargs = _update_kwargs(update_dict=kwargs_plot_ci_dict,
                                             c=ci_colour, linewidth=ci_lwd,
         )
@@ -348,7 +410,8 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                         )
             else:
                 warnings.warn('The line segments have the same x-axis value, '
-                              'the line plotting will be skipped.', RuntimeWarning)
+                              'the line plotting will be skipped.',
+                              RuntimeWarning)
     # ################### calculate y-axis mid points
     y_locations = y_locations[y_col].sort_values(FNames.min)
     y_mid = []
@@ -360,6 +423,11 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             miny = np.nan
         # get mid
         y_mid.append(np.nanmean([maxy, miny]))
+    # ################### adjust y margins
+    mima = list(df.sort_values(y_col)[y_col])[:2]
+    diff = mima[1] - mima[0]
+    new_margins = [min(df[y_col]) - diff/2, max(df[y_col]) + diff/2]
+    ax.set_ylim(new_margins)
     # add the starting and endpoints
     y_mid.insert(0, y_locations.iloc[0][FNames.min])
     y_mid[-1] = ax.get_ylim()[1] # replace with y-axis limit
@@ -386,10 +454,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
             )
             ax.axhspan(ymin, ymax, **new_span_kwargs,
                        )
-    # ################### adjust y margins
-    new_margins = [ax.get_ylim()[0], ax.get_ylim()[1]]
-    new_margins[1] = y_mid[-1]
-    ax.set_ylim(new_margins)
     # ################### add y-axis labels
     ax.set_yticks(y_locations[FNames.mean])
     ax.set_yticklabels(y_locations.index)
@@ -409,8 +473,8 @@ def plot_table(
     size_header:float=10, size_yticklabel:float=10, y_col:str='y_axis',
     yticklabel:Optional[Union[Sequence[str], None]]=None,
     ytickloc:Optional[Union[Sequence[float], None]]=None,
-    l_yticklab_pad:Optional[Union[float, None]]=None,
-    r_yticklab_pad:Optional[Union[float, None]]=None,
+    l_yticklab_pad:Optional[Union[str, None]]=None,
+    r_yticklab_pad:Optional[Union[str, None]]=None,
     annoteheader: Optional[Union[str, None]]=None,
     kwargs_text_dict:Dict[Any, Any]={},
     kwargs_header_dict:Dict[Any, Any]={},
@@ -445,8 +509,8 @@ def plot_table(
         of `ytickloc`.
     ytickloc : list of floats,
         A list of floats defining the y-axis locations for the ticks.
-    [l|r]_yticklab_pad: float,
-        An optional float to pad the y-axis labels.
+    [l|r]_yticklab_pad: str,
+        An optional string to use as a prefix or suffic of the y-axis labels.
     ax : plt.axes,
             Axes to operate on.
     kwargs_*_dict : dict, default empty dict,
@@ -458,9 +522,6 @@ def plot_table(
     -------
     ax : plt.axes,
         a matplotlib axes.
-    righttext_width: float,
-        The text width.
-    
     """
     # ################### do check and set defaults
     is_type(y_col, str)
@@ -517,7 +578,7 @@ def plot_table(
         # remove y ticks
         ax.yaxis.set_ticklabels([])
         ax.set_yticks([])
-    # ################### extract column
+    # ################### plot string column
     # x location
     xloc = np.mean(ax.get_xlim()) * pad
     xloc_header = np.mean(ax.get_xlim()) * pad_header

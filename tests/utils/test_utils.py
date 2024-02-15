@@ -1,7 +1,6 @@
 """
 testing the `utils` module
 """
-import pandas as pd
 from plot_misc.constants import UtilsNames as UNames
 from plot_misc.example_data import examples
 from plot_misc.utils.utils import (
@@ -9,6 +8,7 @@ from plot_misc.utils.utils import (
     _format_matrices,
     calc_matrices,
     _update_kwargs,
+    _dict_string_argument,
 )
 
 
@@ -21,6 +21,26 @@ class TestUpdate_Kwargs(object):
     def test_update_kwargs(self):
         res = _update_kwargs(update_dict={'c': 'black'}, c='red', alpha = 0.5,)
         assert res == {'c': 'black', 'alpha': 0.5}
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# Testing _dict_string_argument
+class TestDict_String_Argument(object):
+    '''
+    Testing the `_dict_string_argument` function
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_dict_string_argument(self):
+        # test data
+        pmatch='row'
+        row=[1, 2]
+        dict_string={'obj1': 'row[0]',
+                     'obj2' : 2}
+        dict_expected = dict_string.copy()
+        dict_expected['obj1'] = row[0]
+        #actual test
+        new_dict = _dict_string_argument(pmatch, dict_string,
+                                         context={'row':row})
+        assert dict_expected == new_dict
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing extraction and formating

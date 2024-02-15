@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.3.0 - 29-06-2023
+
+### Fixed
+
+- Fixed documentation
+- Various fixes to `forest.py`
+
+### Added
+
+- Expanded the number of input tests.
+- Added a `_dict_string_argument` function to test the content of pd.DataFrame columns or pd.Series.
+- Started a `test_constants.py` module. 
+- Verbose argument to some functions.
+
+### Changed
+
+- volcano.py now calls `ax` instead of `plt` to set limits and labels. 
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+_Nothing_
 
 ## v0.2.0 - 27-03-2023
 

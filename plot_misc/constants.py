@@ -101,7 +101,7 @@ def is_type(param: Any, types: Union[Tuple[Type], Type]) -> bool:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def is_df(df: Any) -> bool:
     """
-    Checks if objects is a pd.DataFrame.
+    Checks if object is a pd.DataFrame.
     
     Parameters
     ----------
@@ -112,6 +112,37 @@ def is_df(df: Any) -> bool:
     True if the df is a pd.DataFrame. Raises InputValidationError otherwise.
     """
     return is_type(df, pd.DataFrame)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def is_series_type(column: Union[pd.Series, pd.DataFrame],
+                   types: Union[Tuple[Type], Type],
+                   ) -> bool:
+    """
+    Checks if a pd.DataFrame or pd.Series contest has the supplied type.
+    
+    _Note_: instead of testing the dtypes, the function will look over each
+        element and test this individually.
+    
+    Parameters
+    ----------
+    column: pd.Series or pd.DataFrame,
+    types: a single type.
+    
+    Returns
+    -------
+    True if the column(s) match(es) the given types.
+    Raises InputValidationError otherwise.
+    """
+    # check input
+    is_type(column, (pd.DataFrame, pd.Series))
+    # run tests
+    if isinstance(column, pd.Series):
+        [is_type(col, types) for col in column]
+    elif isinstance(column, pd.DataFrame):
+        for _, col in column.iteritems():
+            [is_type(co, types) for co in col]
+    # return
+    return True
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def same_len(object1: Any, object2: Any,

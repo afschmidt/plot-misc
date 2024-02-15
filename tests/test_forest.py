@@ -124,7 +124,9 @@ class TestPlotForest(object):
                                                         'zorder':1},
                                    kwargs_plot_ci_dict={'zorder':2,
                                                         'solid_capstyle':'round',
-                                                        'linestyle':'-.'}
+                                                        'linestyle':'-.',
+                                                        'alpha':'row[a_col_name]',
+                                                        }
                                    )
         # check the points are correct
         assert list(data2[POINT]) ==\
@@ -140,6 +142,27 @@ class TestPlotForest(object):
             list(data2.loc[:,[LB, UB]].iloc[3])
         assert lines[4].get_linestyle() == '-.'
         assert lines[4].get_solid_capstyle() == 'round'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_noci_forest(self):
+        f, ax = plt.subplots(1, figsize=(15, 15))
+        _, ax = forest.plot_forest(df=data2,
+                                   x_col=POINT,
+                                   s_col=SHAPE_NAME, a_col=ALPHA_NAME,
+                                   c_col=COL_NAME, ci_colour='black',
+                                   g_col='evaluated_outcome', shape_size= 19,
+                                   ci_lwd=2,
+                                   ax=ax,
+                                   kwargs_scatter_dict={'edgecolors':'black',
+                                                        'zorder':1},
+                                   )
+        # check the points are correct
+        assert list(data2[POINT]) ==\
+            [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
+        # check the shape size and alphas
+        collect=ax.collections
+        assert collect[0].get_sizes() == 19
+        assert list(data2[ALPHA_NAME]) == \
+                list([al.get_alpha() for al in collect])
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest_wo_ax(self):
         _, ax = forest.plot_forest(df=data2,
