@@ -9,7 +9,6 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
-from scipy import stats as ss
 from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
     is_type,
@@ -311,39 +310,6 @@ def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None
         except AttributeError as e:
             raise e
     # done
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def ks_test(data:pd.DataFrame, group:str, values:str,
-            nulldistribution:str='uniform') -> Dict[str, str]:
-    '''
-    Will loop over the unique `group` values to perform overall null-hypothesis
-    tests comparing sets of values against a null-distribution using the
-    Kolmogorov-Smirnoff test.
-    
-    Parameters
-    ----------
-    data : pd.DataFrame
-    group : str
-        A column name in `data` which will be used to group the `values`.
-    values : str
-        A column name in `data` to which you want to apply the
-        Kolmogorov-Smirnoff test to.
-    nulldistribution : str, default `uniform`
-        The null-distribution the `values` should be compared against. This
-        maps to the `Scipy.stats` avalable distributions.
-    
-    
-    Returns
-    -------
-    ks_res: dict
-        A dictionary with `group` values and a `KstestResults` class a items.
-    '''
-    ks_res = {}
-    for c in data[group].unique():
-        temp = data[data[group] == c][values]
-        ks_res[c] = ss.kstest(temp[np.isnan(temp) == False], nulldistribution)
-    # return
-    return ks_res
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _extract(data:pd.DataFrame,
