@@ -336,26 +336,6 @@ def load_heatmap_data(*args, **kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def load_table_data(*args, **kwargs):
-    """
-    Loads MR data for a SAP against many outcomes. Can be used as testing
-    data for table manipulations.
-    
-    Returns
-    -------
-    pd.DataFrame
-    """
-    # files
-    df = pd.read_csv(
-        os.path.join(_ROOT_DATASETS_DIR, 'table_data.tsv.gz'),
-        sep='\t', index_col=0
-    )
-    # return
-    return df
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@dataset
 def load_lollipop_data(*args, **kwargs):
     """
     Loads a feature importance table. Can be used to test the
