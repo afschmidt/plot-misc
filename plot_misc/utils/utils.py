@@ -21,7 +21,7 @@ from plot_misc.constants import (
 from sklearn.metrics import (
     roc_curve,
 )
-from plot_misc.table.layout import _nlog10_func
+from plot_misc.utils.formatting import _nlog10_func
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Class

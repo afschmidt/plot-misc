@@ -770,7 +770,6 @@ def plot_table(
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Supported parameter space
-# TODO write test
 class EmpericalSupport(object):
     '''
     A class to calculate and plot a somewhat historic empirical support plot

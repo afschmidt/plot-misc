@@ -10,6 +10,39 @@ from plot_misc.constants import (
     is_type,
 )
 
+# constants
+MAXLOG10=20
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+def _nlog10_func(p, max=MAXLOG10):
+    """
+    computes negative log10 p-value
+    
+    Parameters
+    ----------
+    p : pandas.Series
+        p-values.
+    max : int, optional
+        cutoff which replaces 0. The default is 16.
+    
+    Returns
+    -------
+    pandas.Series
+    
+    """
+    # which values are rounded to zero
+    notzero = p == 0
+    # transform
+    nlog10 = -1 * np.log10(p)
+    # replacing zero
+    nlog10[notzero] = max
+    # truncating
+    nlog10[nlog10 > max] = max
+    # removing sign
+    nlog10[nlog10 == -0] = 0
+    # returning
+    return(nlog10)
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def format_estimates(point:float, se:Union[float,None]=None,
                       lower:Union[float, None]=None,
