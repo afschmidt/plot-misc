@@ -82,50 +82,6 @@ class MidpointNormalize(mpl.colors.Normalize):
 # Functions
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def format_roc(observed:as_array, predicted:as_array,
-               **kwargs:Optional[Any],
-               ) -> pd.DataFrame:
-    '''
-    Takes a binary `observed` column vector and a continuous `predicted`
-    column vector, and returns a pd.DataFrame with the columns
-    `false_positive`, `sensitivity` and `threshold`.
-    
-    Arguments
-    ---------
-    observed: numpy array
-        A column vector of the observed binary outcomes.
-    predicted: numpy array
-        A column vector of the predicted outcome (should be continuous), e.g.,
-        representing the predicted probability.
-    kwargs: Any
-        Supplied to `sklearn.metrics.roc_curve`.
-    
-    Returns
-    -------
-    results: pd.DataFrame,
-        With columns: `false_positive`, `sensitivity` and `threshold`.
-    '''
-    # check input
-    is_type(observed, np.ndarray)
-    is_type(predicted, np.ndarray)
-    same_len(observed,predicted)
-    # get columns
-    false_positive, sensitivity, threshold = roc_curve(
-        y_true=observed, y_score=predicted,
-        **kwargs,
-    )
-    # make data frame
-    results = pd.DataFrame(
-        {
-            UtilsNames.roc_false_positive: false_positive,
-            UtilsNames.roc_sensitivity: sensitivity,
-            UtilsNames.roc_threshold: threshold,
-        }
-    )
-    # return
-    return results
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
             ) -> Dict[Any, Any]:
     '''

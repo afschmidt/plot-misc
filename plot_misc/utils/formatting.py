@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 '''
-String formatting module.
+A module packaging various (string) formatting functions.
 '''
 import numpy as np
+import pandas as pd
 import warnings
 from scipy.stats import norm
 from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
+    UtilsNames,
     is_type,
+    as_array,
+    same_len,
+)
+from sklearn.metrics import (
+    roc_curve,
 )
 
 # constants
@@ -97,4 +104,47 @@ def format_estimates(point:float, se:Union[float,None]=None,
         '; ' + format(upper, r_format) + ')'
     return format_string
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def format_roc(observed:as_array, predicted:as_array,
+               **kwargs:Optional[Any],
+               ) -> pd.DataFrame:
+    '''
+    Takes a binary `observed` column vector and a continuous `predicted`
+    column vector, and returns a pd.DataFrame with the columns
+    `false_positive`, `sensitivity` and `threshold`.
+    
+    Arguments
+    ---------
+    observed: numpy array
+        A column vector of the observed binary outcomes.
+    predicted: numpy array
+        A column vector of the predicted outcome (should be continuous), e.g.,
+        representing the predicted probability.
+    kwargs: Any
+        Supplied to `sklearn.metrics.roc_curve`.
+    
+    Returns
+    -------
+    results: pd.DataFrame,
+        With columns: `false_positive`, `sensitivity` and `threshold`.
+    '''
+    # check input
+    is_type(observed, np.ndarray)
+    is_type(predicted, np.ndarray)
+    same_len(observed,predicted)
+    # get columns
+    false_positive, sensitivity, threshold = roc_curve(
+        y_true=observed, y_score=predicted,
+        **kwargs,
+    )
+    # make data frame
+    results = pd.DataFrame(
+        {
+            UtilsNames.roc_false_positive: false_positive,
+            UtilsNames.roc_sensitivity: sensitivity,
+            UtilsNames.roc_threshold: threshold,
+        }
+    )
+    # return
+    return results
 
