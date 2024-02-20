@@ -4,8 +4,12 @@ A collection of figure templates relevant for machine learning projects.
 Includes, for example, code for lollipop graphs or calibration plots.
 '''
 # imports
-import matplotlib.pyplot as plt
+import sys
+import warnings
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 from plot_misc.constants import (
     as_array,
     is_type,
@@ -14,14 +18,15 @@ from plot_misc.constants import (
     same_len,
     InputValidationError,
     string_to_list,
+    NamesDecisionCurves as NamesDC,
 )
 from plot_misc.utils.utils import (
     change_ticks,
     _update_kwargs,
 )
 from typing import Any, List, Type, Union, Tuple, Dict, Optional
+from statsmodels.nonparametric.smoothers_lowess import lowess
 from packaging import version
-import matplotlib as mpl
 if version.parse('3.4.0') < version.parse(mpl._version.version):
     from matplotlib.colorbar import Colorbar as colorbar_factory
 else:
@@ -346,3 +351,393 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     ax.margins(margins[0], margins[1])
     # ################### return the figure and axis
     return f, ax
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# Decision Curves
+# TODO ADD Attribute descriptions
+class DecisionCurve(object):
+    '''
+    Calculates the net benefit for one or more prediction models. Can also
+    produce an matplotlib figure, returning the figure and axes for further
+    downstream manipulations
+    
+    Parameters
+    ----------
+    data: pd.DataFrame
+        A table including one or more columns containing predicted scores
+        on the risk scale (i.e., ranging between 0 and 1), and an
+        outcome/target column.
+    '''
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __init__(self,
+                 data:pd.DataFrame,
+                 ):
+        '''
+        Copies the data internally.
+        '''
+        is_df(data)
+        self.data = data.copy()
+        # adding plotting params
+        self.TICK_WIDTH = 0.6
+        self.TICK_LAB_SIZE = 4.5
+        self.TICK_LEN = 3
+        self.LABEL_FONT_SIZE=6
+        self.LABEL_PAD=1.2
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __str__(self):
+        return (
+            "A DecisionCurve class."
+        )
+    @staticmethod
+    def calc_rates(data: pd.DataFrame, outcome:str, model:str,
+                    thresholds: List[float], prevalence: Union[float,int]
+    ) -> pd.DataFrame:
+        '''
+        Calculates the true and false positive rates per threshold value for
+        the supplied models.
+        
+        Parameters
+        ----------
+        data: pd.DataFrame,
+            A dataframe including `outcome` and `model` as a column.
+        outcome: str,
+            Column name in `data` of outcome/target of interest.
+        model : str,
+            Column name from `data` that contain model risk score. Note the
+            risk score should contain values between 0 and 1.
+        thresholds : list of floats or inters,
+            The probability values the net benefit will be calculated for.
+        prevalence : int or float,
+            Value that indicates the prevalence among the population, only to
+            be specified in case-control situations.
+        
+        Returns
+        -------
+        table: pd.core.frame.DataFrame
+            A dataframe with the true positives and false positives as columns.
+            The index consists of the threshold values.
+        
+        Notes
+        -----
+        Code addapted from
+        `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_.
+        
+        Hash: 007c64b
+        '''
+        
+        is_type(outcome, str, 'outcome')
+        is_type(model, str, 'model')
+        is_type(thresholds, list, 'thresholds')
+        is_type(prevalence, (float, int), 'prevalence')
+        is_df(data)
+        # check if the necessary columns are there
+        are_columns_in_df(data, expected_columns=[model, outcome])
+        # #### True positives
+        selected_rows = data[data[outcome].isin([True])].copy()
+        true_outcome = selected_rows[[model]].copy()
+        tp_rate = []
+        for threshold in thresholds:
+            true_tf_above_thresh_count = sum(true_outcome[model] >= threshold)
+            tp_rate.append(
+                (true_tf_above_thresh_count/len(true_outcome[model])) * prevalence
+            )
+            # NOTE the above is equivalent to: true_tf_above_thresh_count/n
+        # #### False postives
+        false_outcome = data[data[outcome].isin([False])][[model]]
+        fp_rate = []
+        for threshold in thresholds:
+            fp_counts = sum(false_outcome[model] >= threshold)
+            fp_rate.append(
+                fp_counts/len(false_outcome[model]) * (1-prevalence)
+            )
+        # ### create pandas dataframe
+        rates = pd.DataFrame({NamesDC.TP_RATE: tp_rate,
+                              NamesDC.FP_RATE: fp_rate},
+                             index=thresholds)
+        rates.index.name = NamesDC.THRESHOLD
+        return rates
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def calc_net_benefit(self,
+                         outcome: str, modelnames: Union[str,list],
+                         thresholds: Union[List[float],None]=None,
+                         harm: Union[None,Dict[str,float]] = None,
+                         prevalence: Union[None,float,int] = None,
+                         ) -> pd.DataFrame:
+        """
+        Decision curve analysis is a method for evaluating and comparing
+        prediction models that incorporates clinical consequences.
+        
+        Parameters
+        ----------%s
+        data: pd.DataFrame,
+            A dataframe including one or more columns containing predicted
+            scores on the risk scale (i.e., ranging between 0 and 1), and an
+            outcome/target column. Each prediction model (e.g., based on a
+            regression or ML) will be univariable evaluated against the
+            outcome/target variable. ``_note_`` for scores with values exactly
+            0 or 1 `sys.float_info.epsilon` is added or subtracted,
+            respectfully.
+        outcome: str,
+            Column name in `data` of outcome/target of interest.
+        modelnames : str or list of strings,
+            Column names from `data` that contain model risk scores or values
+        thresholds : list of floats, default `NoneType`,
+            The probability values the net benefit will be calculated for. If
+            `NoneType` will default to a list between 0 and 1 with 100 equally
+            spaced values.
+        harm : dictionary, default `NoneType`,
+            An optional dictionary, supplied with a `key` referring tot a
+            `modelnames` entry and a float value between 0 and 1. Will be
+            skipped if `NoneType`. Harm represents the burden of model might
+            entail, and its value is subtracted from the crude net benefit.
+        prevalence : int or float, default `NoneType`,
+            Value that indicates the prevalence among the population, only to
+            be specified in case-control situations. Will be skipped if
+            `NoneType`.
+        
+        Returns
+        -------
+        pd.DataFrame
+            Data containing net benefit values for each model, as well as the
+            `all` and `none` strategies
+        
+        Notes
+        -----
+        Code addapted from:
+        `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_
+        
+        Hash: 007c64b
+        """
+        # ### check input
+        is_type(outcome, str, 'outcome')
+        is_type(modelnames, (str, list), 'modelnames')
+        is_type(thresholds, (list, type(None), 'threshold'))
+        is_type(harm, (dict, type(None)), 'harm')
+        is_type(prevalence, (float, int, type(None)), 'prevalence')
+        # set modelnames to list if needed
+        if isinstance(modelnames, str):
+            modelnames = [modelnames]
+        # check if the necessary columns are there
+        are_columns_in_df(self.data, expected_columns=modelnames + [outcome])
+        # set threshold if not supplied
+        if thresholds is None:
+            thresholds = list(np.linspace(0,1,100, endpoint=False))
+        # ### check if supplied values are correct
+        # thresholds are within 0 and 1
+        mint = min(thresholds); maxt=max(thresholds)
+        thresholds_msg=\
+            '`thresholds` should be between 0 and 1, the current ' + \
+            'min/max: {0}/{1}.'
+        if (mint < 0) or (maxt > 1):
+            raise ValueError(thresholds_msg.format(mint,maxt))
+        # check if score values are within 0 and 1
+        non_risk_scores = []
+        score_msg=\
+            'The following `models` have a value outside of the expect ' +\
+            '0 and 1 range: `{0}`.'
+        for m in modelnames:
+            maxm = np.max(self.data[m])
+            minm = np.min(self.data[m])
+            # check if outside 0 or 1
+            if (maxm > 1) or (minm < 0):
+                non_risk_scores = non_risk_scores + [m]
+            # check if exactly 0 or 1
+            if (maxm == 1) or (minm == 0):
+                warnings.warn(
+                    '`{}` contains risk(s) of exactly 1 or 0, these will '
+                    'be truncated.'.format(m))
+                self.data[m]=\
+                    [r + sys.float_info.epsilon if r == 0 else r for r in
+                     self.data[m]]
+                self.data[m]=\
+                    [r - sys.float_info.epsilon if r == 1 else r for r in
+                     self.fdata[m]]
+        if len(non_risk_scores) > 0:
+            raise ValueError(score_msg.format(', '.join(non_risk_scores)))
+        # ### calculating the prevalence
+        if prevalence is None:
+            prevalence=np.mean(self.data[outcome])
+        # ### calculate true positive rate
+        # NOTE 1 loop over the various models and run the calc_rates function
+        # NOTE 2 for the 'all' and 'none' models use a run with a score of 1 or 0.
+        # NOTE 3 column-bind the results
+        self.data[NamesDC.ALL_MODEL] = 1
+        self.data[NamesDC.NONE_MODEL] = 0
+        modelnames_w_standard = modelnames +\
+            [NamesDC.ALL_MODEL, NamesDC.NONE_MODEL]
+        rates_dict = {}
+        for m in modelnames_w_standard:
+            rates_dict[m] = self.calc_rates(self.data, outcome, m, thresholds,
+                                            prevalence)
+            rates_dict[m][NamesDC.MODEL] = m
+            rates_dict[m][NamesDC.THRESHOLD] = rates_dict[m].index
+            # add harm
+            if harm is not None:
+                if m in harm.keys():
+                    rates_dict[m][NamesDC.HARM] = harm[m]
+                else:
+                    rates_dict[m][NamesDC.HARM] = 0
+            else:
+                rates_dict[m][NamesDC.HARM] = 0
+        # make frame
+        results = pd.concat(rates_dict, ignore_index=True)
+        results.set_index(NamesDC.MODEL, inplace=True)
+        # For None model set rates to ero
+        # NOTE fix this in the `calc_rates` function
+        results.loc[NamesDC.NONE_MODEL, [NamesDC.TP_RATE, NamesDC.FP_RATE]] = 0
+        # #### calculate the net benefit
+        results[NamesDC.NETBENEFIT] = (
+            results[NamesDC.TP_RATE] -\
+            (results[NamesDC.THRESHOLD] / (1 - results[NamesDC.THRESHOLD])) *\
+            results[NamesDC.FP_RATE] - results[NamesDC.HARM]
+        )
+        # #### finished
+        self.NUMBER_OF_MODELS = len(modelnames)
+        self.MODEL_NAMES = modelnames
+        self.NET_BENEFIT = results
+        self.CALCULATED=True
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # TODO add lowess_kwargs, plot_kwargs, and _update_dict for both
+    def plot(self,
+             ax:Union[plt.Axes, None]=None,
+             col_dict:Union[None, Dict[str, str]]=None,
+             line_dict:Union[None, Dict[str, str]]=None,
+             lowess_frac:Union[float, None]=None,
+             linewidth:float=0.8,
+             kwargs_lowess:Dict[Any,Any]={},
+             kwargs_plot:Dict[Any,Any]={},
+             ) -> Tuple[plt.Figure, plt.Axes]:
+        '''
+        Plots a decision curve.
+        
+        Parameters
+        ----------
+        col_dict: dict, default `NoneType`
+            A dictionary with the model names as keys and the colours as values.
+            Set to `Nonetype` to plot each line in black.
+        line_dict: dict, default `NoneType`
+            A dictionary with the model names as keys and the linetypes as values.
+            Set to `Nonetype` to use a solid line for all models.
+        ax : plt.axes, default `NoneType`
+            An optional matplotlib axis. If supplied the function works on the
+            axis. Otherwise will internally generate a figure and axes pair.
+        lowess_frac: float, default `NoneType`
+            Set this to a value between 0 and 1 to use a lowess smoothed
+            curve. Set to `NoneType` to use the raw values instead.
+        kwargs_*_dict : dict, default empty dict
+            Optional arguments supplied:
+                kwargs_lowess --> statsmodels.nonparametric.smoothers_lowess
+                kwargs_plot   --> ax.plot
+        
+        Returns
+        -------
+        figure : plt.Figure
+            This will default to `NoneType` unless the figure is internally created.
+            That is when an `ax` argument is supplied.
+        axes : plt.Axes
+        '''
+        
+        # make sure net_benefit is available
+        if not self.CALCULATED:
+            raise RuntimeError('calc_net_benefit must be run before plotting.')
+        # #### check input
+        is_type(ax, (type(None), plt.Axes), 'ax')
+        is_type(line_dict, (type(None), list), 'line_dict')
+        is_type(col_dict, (type(None), list), 'col_dict')
+        is_type(lowess_frac, (float, int, type(None)), 'lowess_frac')
+        if line_dict is None:
+            # create a dict with only one line type
+            pass
+        else:
+            if self.NUMBER_OF_MODELS != len(line_dict):
+                raise InputValidationError(
+                    'Please include a dictionary with exactly {} entries, '
+                    'to match the number of models.'.format(
+                        len(self.NUMBER_OF_MODELS)
+                    )
+                )
+        if line_dict is None:
+            # create a dict with only black
+            pass
+        else:
+            if self.NUMBER_OF_MODELS != len(col_dict):
+                raise InputValidationError(
+                    'Please include a dictionary with exactly {} entries, '
+                    'to match the number of models.'.format(
+                        len(self.NUMBER_OF_MODELS)
+                    )
+                )
+        # #### should we create a figure and axis
+        if ax is None:
+            f, ax = plt.subplots(figsize=figsize)
+        else:
+            f = None
+        # #### plot stuff
+        self.NET_BENEFIT['col'] = pd.Series(col_dict)
+        self.NET_BENEFIT['lty'] = pd.Series(line_dict)
+        # how many models are there?
+        modelnames = list(self.NET_BENEFIT.index.unique())
+        # plot a line per model
+        for model in modelnames:
+            single_model_df = self.NET_BENEFIT.loc[model]
+            X = single_model_df[NamesDC.THRESHOLD].to_numpy()
+            Y = single_model_df[NamesDC.NONE_MODEL].to_numpy()
+            # do we need to use a lowess
+            if lowess_frac is not None:
+                new_kwargs_lowess = _update_kwargs(
+                    update_dict=kwargs_lowess,
+                    return_sorted=False,
+                    it=3,
+                    frac=lowess_frac,
+                )
+                Y_PLOT=lowess(Y, X,
+                              **new_kwargs_lowess,
+                              )
+            else:
+                Y_PLOT = X
+            # The actual plotting
+            new_kwargs_plot = _update_kwargs(
+                update_dict=kwargs_plot,
+                linestyle=self.NET_BENEFIT['lty'][0],
+                color=self.NET_BENEFIT['col'][0],
+                lw=linewidth,
+            )
+            ax.plot( X, Y_PLOT,
+                    **new_kwargs_plot,
+                    )
+        # ##### some light tweaks to the axes
+        # ticks
+        ax.tick_params(axis="x",
+                               rotation=0,
+                               labelsize=self.TICK_LAB_SIZE,
+                               length=self.TICK_LEN,
+                               width=self.TICK_WIDTH,
+                               )
+        ax.tick_params(axis="y",
+                               rotation=0,
+                               labelsize=self.TICK_LAB_SIZE,
+                               length=self.TICK_LEN,
+                               width=self.TICK_WIDTH,
+                               )
+        # limits
+        XSPAN=ax.get_xlim()
+        XSPAN=np.abs(XSPAN[1] - XSPAN[0])
+        YSPAN=ax.get_ylim()
+        YSPAN=np.abs(YSPAN[1] - YSPAN[0])
+        ax.set_xlim(np.min(0,0.01*XPAN), ax.get_xlim()[1])
+        ax.set_ylim(np.min(0,0.01*YPAN), ax.get_ylim()[1])
+        # add lables
+        ax.set_ylabel('Net benefit',
+                      fontsize=self.LABEL_FONT_SIZE,
+                      labelpad=self.LABEL_PAD,
+                      )
+        ax.set_xlabel('Threshold',
+                      fontsize=self.LABEL_FONT_SIZE,
+                      labelpad=self.LABEL_PAD,
+                      )
+        # Hide the right and top spines
+        ax.spines.right.set_visible(False)
+        ax.spines.top.set_visible(False)
+        # ##### returns
+        return f, ax
+
