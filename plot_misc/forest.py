@@ -140,7 +140,7 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
                      between_pad:float=4, start:float=1, new_col:str='y_axis',
-                     sort_dict:Union[Dict[str,int], None, str]=None,
+                     sort_dict:Union[Dict[str,int], None, str]='skip',
                      strata:Union[str, None]=None,
                      ) -> pd.core.frame.DataFrame:
     """
@@ -167,10 +167,10 @@ def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
         The starting position of the sequence.
     new_col : str, default `y_axis`
         The name of the column that will be added to `df`.
-    sort_dict : dict, default `NoneType`
+    sort_dict : dict, default `skip`
         Supply a key:value-float combination dictionary to sort the rows on
         `group` membership. Set to `NoneType` to order rows by
-        `[order, strata]`. Set to `skip` to do nothing.
+        `[order, strata]`. Set to `skip` to not sort.
     
     Returns
     -------

@@ -13,13 +13,8 @@ from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
     is_type,
     UtilsNames,
-    as_array,
-    same_len,
     InputValidationError,
     Error_MSG,
-)
-from sklearn.metrics import (
-    roc_curve,
 )
 from plot_misc.utils.formatting import _nlog10_func
 
