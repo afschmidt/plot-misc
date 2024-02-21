@@ -354,12 +354,35 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Decision Curves
-# TODO ADD Attribute descriptions
 class DecisionCurve(object):
     '''
     Calculates the net benefit for one or more prediction models. Can also
     produce an matplotlib figure, returning the figure and axes for further
     downstream manipulations
+    
+    Attributes
+    ----------
+    data : pd.DataFrame,
+        The provided input data.
+    TICK_WIDTH : float, default 0.6
+        The width ticks.
+    TICK_LAB_SIZE : float, default 4.5
+        The fontsize of the tick labels.
+    TICK_LEN : float, default 3.0
+        The tick length.
+    LABEL_FONT_SIZE : float, default 6.0
+        The fontsize of the axes labels.
+    LABEL_PAD : float, default 1.2
+        The padding of the axes labels.
+    MODEL_NAMES : list of string
+        The names of the available models, including the internally
+        generated: `None model` and `All model`.
+    NUMBER_OF_MODELS : integer
+        The number of available models.
+    NET_BENEFIT : pd.DataFrame
+        The net benefit table.
+    CALCULATED : bool
+        Whether the net benefit table has been calculated.
     
     Parameters
     ----------
@@ -383,6 +406,10 @@ class DecisionCurve(object):
         self.TICK_LEN = 3
         self.LABEL_FONT_SIZE=6
         self.LABEL_PAD=1.2
+        self.CALCULATED = False
+        self.MODEL_NAMES = None
+        self.NUMBER_OF_MODELS = None
+        self.NET_BENEFIT = None
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __str__(self):
         return (
@@ -468,7 +495,7 @@ class DecisionCurve(object):
         prediction models that incorporates clinical consequences.
         
         Parameters
-        ----------%s
+        ----------
         data: pd.DataFrame,
             A dataframe including one or more columns containing predicted
             scores on the risk scale (i.e., ranging between 0 and 1), and an
@@ -640,7 +667,7 @@ class DecisionCurve(object):
         '''
         
         # make sure net_benefit is available
-        if not self.CALCULATED:
+        if self.CALCULATED == False:
             raise RuntimeError('calc_net_benefit must be run before plotting.')
         # #### check input
         is_type(ax, (type(None), plt.Axes), 'ax')
