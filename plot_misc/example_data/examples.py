@@ -226,7 +226,7 @@ def help(name):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def dummy_data(*args, **kwargs):
+def dummy_data():
     """A dummy dataset function that returns a small list.
 
     Returns
@@ -245,7 +245,7 @@ def dummy_data(*args, **kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def dummy_load_data(*args, **kwargs):
+def dummy_load_data():
     """A dummy dataset function that loads a string from a file.
 
     Returns
@@ -267,7 +267,7 @@ def dummy_load_data(*args, **kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def load_forest_data(*args, **kwargs):
+def load_forest_data(**kwargs):
     """
     Loads data on the test performance of a number of polygenics scores.
     Estimates represent c-statistics with confidence intervals.
@@ -279,7 +279,7 @@ def load_forest_data(*args, **kwargs):
     # files
     df = pd.read_csv(
         os.path.join(_ROOT_DATASETS_DIR, 'forest_data.tsv.gz'),
-        sep='\t', index_col=0
+        sep='\t', index_col=0, **kwargs,
     )
     # add y-axis
     df[ForestNames.y_col] = \
@@ -296,7 +296,7 @@ def load_forest_data(*args, **kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def load_barchart_data(*args, **kwargs):
+def load_barchart_data(**kwargs):
     """
     Loads data counting the number of associations between cardiac chambers
     (`LV`, `RV`, `LA`) and cardiac outcomes.
@@ -308,15 +308,14 @@ def load_barchart_data(*args, **kwargs):
     # files
     df = pd.read_csv(
         os.path.join(_ROOT_DATASETS_DIR, 'barchart.tsv.gz'),
-        sep='\t', index_col=0,
-        **kwargs
+        sep='\t', index_col=0, **kwargs,
     )
     # return
     return df
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def load_heatmap_data(*args, **kwargs):
+def load_heatmap_data(**kwargs):
     """
     Loads data representing pvalue times direction of exposures (columns)
     effects on outcomes (rows).
@@ -328,15 +327,14 @@ def load_heatmap_data(*args, **kwargs):
     # files
     df = pd.read_csv(
         os.path.join(_ROOT_DATASETS_DIR, 'heatmap_data.tsv.gz'),
-        sep='\t', index_col=0,
-        **kwargs
+        sep='\t', index_col=0, **kwargs,
     )
     # return
     return df
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def load_lollipop_data(*args, **kwargs):
+def load_lollipop_data(**kwargs):
     """
     Loads a feature importance table. Can be used to test the
     `machine_learning` module.
@@ -348,7 +346,26 @@ def load_lollipop_data(*args, **kwargs):
     # files
     df = pd.read_csv(
         os.path.join(_ROOT_DATASETS_DIR, 'lollipop_data.tsv.gz'),
-        sep='\t', index_col=0
+        sep='\t', index_col=0, **kwargs,
+    )
+    # return
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_net_benefit_data(**kwargs):
+    """
+    Loads a table containing the predicted probabilities for two models, as
+    well as the outcome data. Can be used to test the `machine_learning` module.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'net_benefit.tsv.gz'),
+        sep='\t', index_col=False, **kwargs,
     )
     # return
     return df

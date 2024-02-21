@@ -354,12 +354,35 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Decision Curves
-# TODO ADD Attribute descriptions
 class DecisionCurve(object):
     '''
     Calculates the net benefit for one or more prediction models. Can also
     produce an matplotlib figure, returning the figure and axes for further
     downstream manipulations
+    
+    Attributes
+    ----------
+    data : pd.DataFrame,
+        The provided input data.
+    TICK_WIDTH : float, default 0.6
+        The width ticks.
+    TICK_LAB_SIZE : float, default 4.5
+        The fontsize of the tick labels.
+    TICK_LEN : float, default 3.0
+        The tick length.
+    LABEL_FONT_SIZE : float, default 6.0
+        The fontsize of the axes labels.
+    LABEL_PAD : float, default 1.2
+        The padding of the axes labels.
+    MODEL_NAMES : list of string
+        The names of the available models, including the internally
+        generated: `None model` and `All model`.
+    NUMBER_OF_MODELS : integer
+        The number of available models.
+    NET_BENEFIT : pd.DataFrame
+        The net benefit table.
+    CALCULATED : bool
+        Whether the net benefit table has been calculated.
     
     Parameters
     ----------
@@ -383,11 +406,16 @@ class DecisionCurve(object):
         self.TICK_LEN = 3
         self.LABEL_FONT_SIZE=6
         self.LABEL_PAD=1.2
+        self.CALCULATED = False
+        self.MODEL_NAMES = None
+        self.NUMBER_OF_MODELS = None
+        self.NET_BENEFIT = None
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __str__(self):
         return (
             "A DecisionCurve class."
         )
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     @staticmethod
     def calc_rates(data: pd.DataFrame, outcome:str, model:str,
                     thresholds: List[float], prevalence: Union[float,int]
@@ -462,13 +490,13 @@ class DecisionCurve(object):
                          thresholds: Union[List[float],None]=None,
                          harm: Union[None,Dict[str,float]] = None,
                          prevalence: Union[None,float,int] = None,
-                         ) -> pd.DataFrame:
+                         ):
         """
         Decision curve analysis is a method for evaluating and comparing
         prediction models that incorporates clinical consequences.
         
         Parameters
-        ----------%s
+        ----------
         data: pd.DataFrame,
             A dataframe including one or more columns containing predicted
             scores on the risk scale (i.e., ranging between 0 and 1), and an
@@ -592,18 +620,18 @@ class DecisionCurve(object):
             results[NamesDC.FP_RATE] - results[NamesDC.HARM]
         )
         # #### finished
-        self.NUMBER_OF_MODELS = len(modelnames)
-        self.MODEL_NAMES = modelnames
+        self.MODEL_NAMES = modelnames + [NamesDC.NONE_MODEL, NamesDC.ALL_MODEL]
+        self.NUMBER_OF_MODELS = len(self.MODEL_NAMES)
         self.NET_BENEFIT = results
         self.CALCULATED=True
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    # TODO add lowess_kwargs, plot_kwargs, and _update_dict for both
     def plot(self,
              ax:Union[plt.Axes, None]=None,
              col_dict:Union[None, Dict[str, str]]=None,
              line_dict:Union[None, Dict[str, str]]=None,
              lowess_frac:Union[float, None]=None,
              linewidth:float=0.8,
+             figsize:tuple=(6, 6),
              kwargs_lowess:Dict[Any,Any]={},
              kwargs_plot:Dict[Any,Any]={},
              ) -> Tuple[plt.Figure, plt.Axes]:
@@ -624,6 +652,8 @@ class DecisionCurve(object):
         lowess_frac: float, default `NoneType`
             Set this to a value between 0 and 1 to use a lowess smoothed
             curve. Set to `NoneType` to use the raw values instead.
+        figsize : tuple of two floats, default (6, 6),
+            The figure size in inches, when ax==None.
         kwargs_*_dict : dict, default empty dict
             Optional arguments supplied:
                 kwargs_lowess --> statsmodels.nonparametric.smoothers_lowess
@@ -638,35 +668,33 @@ class DecisionCurve(object):
         '''
         
         # make sure net_benefit is available
-        if not self.CALCULATED:
+        if self.CALCULATED == False:
             raise RuntimeError('calc_net_benefit must be run before plotting.')
         # #### check input
         is_type(ax, (type(None), plt.Axes), 'ax')
-        is_type(line_dict, (type(None), list), 'line_dict')
-        is_type(col_dict, (type(None), list), 'col_dict')
+        is_type(line_dict, (type(None), dict), 'line_dict')
+        is_type(col_dict, (type(None), dict), 'col_dict')
         is_type(lowess_frac, (float, int, type(None)), 'lowess_frac')
         if line_dict is None:
-            # create a dict with only one line type
-            pass
-        else:
-            if self.NUMBER_OF_MODELS != len(line_dict):
-                raise InputValidationError(
-                    'Please include a dictionary with exactly {} entries, '
-                    'to match the number of models.'.format(
-                        len(self.NUMBER_OF_MODELS)
-                    )
+            line_dict = {j:'-' for j in self.MODEL_NAMES }
+        if self.NUMBER_OF_MODELS != len(line_dict):
+            raise InputValidationError(
+                'Please include a dictionary with exactly {} entries, '
+                'to match the number of models. '
+                'Current number supplied for `line_dict` is {}.'.format(
+                    self.NUMBER_OF_MODELS, len(line_dict)
                 )
-        if line_dict is None:
-            # create a dict with only black
-            pass
-        else:
-            if self.NUMBER_OF_MODELS != len(col_dict):
-                raise InputValidationError(
-                    'Please include a dictionary with exactly {} entries, '
-                    'to match the number of models.'.format(
-                        len(self.NUMBER_OF_MODELS)
-                    )
+            )
+        if col_dict is None:
+            col_dict ={k:'black' for k in self.MODEL_NAMES}
+        if self.NUMBER_OF_MODELS != len(col_dict):
+            raise InputValidationError(
+                'Please include a dictionary with exactly {} entries, '
+                'to match the number of models. '
+                'Current number supplied for `col_dict` is {}.'.format(
+                    self.NUMBER_OF_MODELS, len(col_dict)
                 )
+            )
         # #### should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
@@ -681,7 +709,7 @@ class DecisionCurve(object):
         for model in modelnames:
             single_model_df = self.NET_BENEFIT.loc[model]
             X = single_model_df[NamesDC.THRESHOLD].to_numpy()
-            Y = single_model_df[NamesDC.NONE_MODEL].to_numpy()
+            Y = single_model_df[NamesDC.NETBENEFIT].to_numpy()
             # do we need to use a lowess
             if lowess_frac is not None:
                 new_kwargs_lowess = _update_kwargs(
@@ -694,12 +722,12 @@ class DecisionCurve(object):
                               **new_kwargs_lowess,
                               )
             else:
-                Y_PLOT = X
+                Y_PLOT = Y
             # The actual plotting
             new_kwargs_plot = _update_kwargs(
                 update_dict=kwargs_plot,
-                linestyle=self.NET_BENEFIT['lty'][0],
-                color=self.NET_BENEFIT['col'][0],
+                linestyle=single_model_df['lty'].iloc[0],
+                color=single_model_df['col'].iloc[0],
                 lw=linewidth,
             )
             ax.plot( X, Y_PLOT,
@@ -724,8 +752,8 @@ class DecisionCurve(object):
         XSPAN=np.abs(XSPAN[1] - XSPAN[0])
         YSPAN=ax.get_ylim()
         YSPAN=np.abs(YSPAN[1] - YSPAN[0])
-        ax.set_xlim(np.min(0,0.01*XPAN), ax.get_xlim()[1])
-        ax.set_ylim(np.min(0,0.01*YPAN), ax.get_ylim()[1])
+        ax.set_xlim(np.min((0,0.01*XSPAN)), ax.get_xlim()[1])
+        ax.set_ylim(0 - np.max((0.01,0.01*YSPAN)), ax.get_ylim()[1])
         # add lables
         ax.set_ylabel('Net benefit',
                       fontsize=self.LABEL_FONT_SIZE,

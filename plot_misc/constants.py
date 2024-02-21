@@ -79,6 +79,20 @@ class UtilsNames(object):
     roc_sensitivity    = 'sensitivity'
     roc_threshold      = 'threshold'
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class NamesDecisionCurves(object):
+    '''
+    Module names for the decision_curve model
+    '''
+    TP_RATE      = 'True positive rate'
+    FP_RATE      = 'False positive rate'
+    THRESHOLD    = 'Threshold'
+    ALL_MODEL    = 'All model'
+    NONE_MODEL   = 'None model'
+    MODEL        = 'model'
+    NETBENEFIT   = 'Net benefit'
+    HARM         = 'harm'
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS
 
