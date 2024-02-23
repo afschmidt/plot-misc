@@ -95,7 +95,7 @@ def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
     pie_args.update(pie_kwargs)
     wedges, text, autopct = axes.pie(df_for_plot['Count'], **pie_args)
     # set title
-    if title not None:
+    if title is not None:
         axes.set_title(title, **title_kwargs)
     # Equal aspect ratio ensures that pie is drawn as a circle
     axes.axis('equal')

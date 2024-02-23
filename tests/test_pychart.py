@@ -30,7 +30,12 @@ class TestPychart(object):
         # plotting
         fig, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
         # plotting pychart
-        fig, ax = pychart.pychart(DATA, "HCM", genes, colors=['red', 'blue', 'green', 'yellow', 'purple', 'lightblue', 'orange'], smaller=0.5,  title_kwargs={'fontsize': 12, 'y':1.05,'fontweight': 'bold'})
+        fig, ax = pychart.pychart(
+            DATA, title="HCM", columns=genes,
+            colors=['red', 'blue', 'green', 'yellow', 'purple', 'lightblue',
+                    'orange'],
+            title_kwargs={'fontsize': 12, 'y':1.05,'fontweight': 'bold'},
+        )
         # asserting
         assert isinstance(fig, plt.Figure)
         assert ax.get_title() == "HCM"
@@ -45,13 +50,14 @@ class TestPyChartGrid(object):
     def test_pychart_grid(self):
         # Load example data
         df = examples.load_pychart_data()
-        genes = ['PKP2', 'MYL2', 'JUP', 'DSC2', 'DSG2', 'TTN', 'DES', 'DSP', 'PLN',
-                'RBM20', 'BAG3']
-
+        genes=['PKP2', 'MYL2', 'JUP', 'DSC2', 'DSG2', 'TTN', 'DES', 'DSP',
+               'PLN', 'RBM20', 'BAG3']
         # Plotting
-        fig, axes = pychart.pychart_grid(df, ["HCM", "DCM"], genes, num_columns=1,
-                                         title_kwargs={'fontsize': 12, 'y': 1.1, 'fontweight': 'bold'},
-                                         subplots_adjust_kwargs={'hspace': 0.2})
+        fig, axes = pychart.pychart_grid(
+            df, ["HCM", "DCM"], genes, num_columns=1,
+            title_kwargs={'fontsize': 12, 'y': 1.1, 'fontweight': 'bold'},
+            subplots_adjust_kwargs={'hspace': 0.2},
+        )
         # Asserting
         assert isinstance(fig, plt.Figure)
         assert len(axes) == 2
