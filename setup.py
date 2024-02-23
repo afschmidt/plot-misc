@@ -18,7 +18,7 @@ URL = ''
 EMAIL = 'amand.schmidt@ucl.ac.uk'
 AUTHOR = 'A Floriaan Schmidt'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
