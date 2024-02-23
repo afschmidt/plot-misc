@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.1.0 - 23-02-2024
+
+### Fixed
+
+_Nothing_
+
+### Added
+
+- A DecisionCurve class in the machine_learning.
+
+### Changed
+
+- Updated examples.
+- Changed the default behaviour of assign_distance to not sort rows. 
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+- Removes KD test function.
+- Removes table module.
+
 ## v1.0.0 - 15-02-2024
 
 ### Fixed

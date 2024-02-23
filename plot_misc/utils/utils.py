@@ -558,12 +558,12 @@ def fix_labels(annotations:List, axis:plt.Axes,
     
     Parameters
     ----------
-        annotations: list
-            List of matplotlib annotations to adjust.
-        axis: matplotlib.axes.Axes
-            The axis where the annotations are displayed.
-        min_distance: float, default 0.1
-            Minimum vertical distance between annotations. Default is 0.1.
+    annotations: list
+        List of matplotlib ax.annotate objects.
+    axis: matplotlib.axes.Axes
+        The axis where the annotations are displayed.
+    min_distance: float, default 0.1
+        Minimum vertical distance between annotations.
     
     Returns
     -------

@@ -225,7 +225,7 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     
     Returns
     -------
-    f: plt.Figure
+    figure: plt.Figure
         This will default to `NoneType` unless the figure is internally created.
         That is when an `ax` argument is supplied.
     ax: plt.Axes
@@ -362,7 +362,7 @@ class DecisionCurve(object):
     
     Attributes
     ----------
-    data : pd.DataFrame,
+    data : pd.DataFrame
         The provided input data.
     TICK_WIDTH : float, default 0.6
         The width ticks.
@@ -426,16 +426,16 @@ class DecisionCurve(object):
         
         Parameters
         ----------
-        data: pd.DataFrame,
+        data: pd.DataFrame
             A dataframe including `outcome` and `model` as a column.
-        outcome: str,
+        outcome: str
             Column name in `data` of outcome/target of interest.
-        model : str,
+        model : str
             Column name from `data` that contain model risk score. Note the
             risk score should contain values between 0 and 1.
-        thresholds : list of floats or inters,
+        thresholds : list of floats or inters
             The probability values the net benefit will be calculated for.
-        prevalence : int or float,
+        prevalence : int or float
             Value that indicates the prevalence among the population, only to
             be specified in case-control situations.
         
@@ -497,7 +497,7 @@ class DecisionCurve(object):
         
         Parameters
         ----------
-        data: pd.DataFrame,
+        data: pd.DataFrame
             A dataframe including one or more columns containing predicted
             scores on the risk scale (i.e., ranging between 0 and 1), and an
             outcome/target column. Each prediction model (e.g., based on a
@@ -505,20 +505,20 @@ class DecisionCurve(object):
             outcome/target variable. ``_note_`` for scores with values exactly
             0 or 1 `sys.float_info.epsilon` is added or subtracted,
             respectfully.
-        outcome: str,
+        outcome: str
             Column name in `data` of outcome/target of interest.
-        modelnames : str or list of strings,
+        modelnames : str or list of strings
             Column names from `data` that contain model risk scores or values
-        thresholds : list of floats, default `NoneType`,
+        thresholds : list of floats, default `NoneType`
             The probability values the net benefit will be calculated for. If
             `NoneType` will default to a list between 0 and 1 with 100 equally
             spaced values.
-        harm : dictionary, default `NoneType`,
+        harm : dictionary, default `NoneType`
             An optional dictionary, supplied with a `key` referring tot a
             `modelnames` entry and a float value between 0 and 1. Will be
             skipped if `NoneType`. Harm represents the burden of model might
             entail, and its value is subtracted from the crude net benefit.
-        prevalence : int or float, default `NoneType`,
+        prevalence : int or float, default `NoneType`
             Value that indicates the prevalence among the population, only to
             be specified in case-control situations. Will be skipped if
             `NoneType`.
@@ -610,7 +610,7 @@ class DecisionCurve(object):
         # make frame
         results = pd.concat(rates_dict, ignore_index=True)
         results.set_index(NamesDC.MODEL, inplace=True)
-        # For None model set rates to ero
+        # For None model set rates to zero
         # NOTE fix this in the `calc_rates` function
         results.loc[NamesDC.NONE_MODEL, [NamesDC.TP_RATE, NamesDC.FP_RATE]] = 0
         # #### calculate the net benefit
@@ -748,11 +748,9 @@ class DecisionCurve(object):
                                width=self.TICK_WIDTH,
                                )
         # limits
-        XSPAN=ax.get_xlim()
-        XSPAN=np.abs(XSPAN[1] - XSPAN[0])
         YSPAN=ax.get_ylim()
         YSPAN=np.abs(YSPAN[1] - YSPAN[0])
-        ax.set_xlim(np.min((0,0.01*XSPAN)), ax.get_xlim()[1])
+        ax.set_xlim(0, ax.get_xlim()[1])
         ax.set_ylim(0 - np.max((0.01,0.01*YSPAN)), ax.get_ylim()[1])
         # add lables
         ax.set_ylabel('Net benefit',

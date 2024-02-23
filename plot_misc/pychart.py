@@ -1,83 +1,114 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.utils.utils import (
     fix_labels
 )
 from itertools import cycle
 
-def pychart(data, title, columns, figsize=(8, 4), smaller=1, fontsize=8, colors=None, pie_kwargs={}, annotate_kwargs={}, title_kwargs={}):
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
+            figsize:Tuple[float, float]=(8, 4),
+            fontsize:float=8, colors:Union[None, List[str]]=None,
+            pie_kwargs:Dict[Any, Any]={},
+            annotate_kwargs:Dict[Any, Any]={},
+            title_kwargs:Dict[Any, Any]={}
+            ):
     """
-    Create a pie chart based on 'columns' in the DataFrame 'data'.
-
-    Parameters:
-        data (pd.DataFrame): The DataFrame containing data.
-        title (str): Title of the pie chart.
-        columns (list): List of columns to analyze in 'data'.
-        figsize (tuple, optional): Figure size. Default is (8, 4).
-        smaller (int, optional): Scaling factor for figure and labels. Default is 1.
-        fontsize (int, optional): Font size for labels. Default is 8.
-        colors (list, optional): List of colors to use for pie chart segments.
-            If not provided, a default set of colors is used.
-        pie_kwargs (dict, optional): Additional keyword arguments for the pie chart.
-        annotate_kwargs (dict, optional): Additional keyword arguments for annotations.
-
-    Returns:
-        fig (matplotlib.figure.Figure): The matplotlib figure containing the pie chart.
-        ax (matplotlib.axes.Axes): The axes object of the plot.
-
-    Example:
+    Creates a pie chart.
+    
+    Will internally calulate the percentaes based on  list of `columns`
+    available in `data`.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The DataFrame containing data.
+    title : str, default `NoneType`
+        Title of the pie chart.
+    columns : list of string
+        List of column names to analyse in 'data'.
+    figsize : tuple of floats, default `(8, 4)`
+        Figure size in inches.
+    fontsize : float, default 8.0
+        Label font size
+    colors : list of strings, default `NoneType`
+        List of colours to use for pie chart segments.  If not provided, a
+        default set of colours is used.
+    pie_kwargs : dict, default {}
+        Additional keyword arguments for axes.pie
+    annotate_kwargs : dict, default {}
+        Additional keyword arguments for annotations.
+    
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The matplotlib figure containing the pie chart.
+    ax : matplotlib.axes.Axes
+        The axes object of the plot.
+    
+    Example
+    -------
         >>> df = pd.DataFrame(...)
-        >>> pychart(df, 'Sample Title', ['Col1', 'Col2', 'Col3'], pie_kwargs={'startangle': 90}, annotate_kwargs={'fontsize': 10})
+        >>> pychart(df, 'Sample Title', ['Col1', 'Col2', 'Col3'],
+        pie_kwargs={'startangle': 90}, annotate_kwargs={'fontsize': 10})
     """
-
+    
     # Create subplots based on the number of conditions in 'strat'
-    fig, axes = plt.subplots(figsize=(figsize[0] * smaller, figsize[1] * smaller))
-
+    fig, axes = plt.subplots(figsize=(figsize[0], figsize[1]))
+    
     # Adjust horizontal space between subplots
-    plt.subplots_adjust(wspace=0.25 * smaller)
-
+    plt.subplots_adjust(wspace=0.25)
+    
     # Define colors for pie chart segments
-    default_colors = ['#d62728', '#1f77b4', '#ff7f0e', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#bcbd22', '#ff1493']
+    default_colors = ['#d62728', '#1f77b4', '#ff7f0e', '#2ca02c', '#9467bd',
+                      '#8c564b', '#e377c2', '#bcbd22', '#ff1493']
     color_cycle = cycle(colors if colors else default_colors)
     # Filter the DataFrame based on the condition
-
+    
     # Calculate counts for each column in 'columns'
     counts = [data[col].sum() for col in columns]
-
+    
     # Calculate percentages
     total = sum(counts)
     percentages = [(size / total) * 100 for size in counts]
-
+    
     # Create custom labels with percentages
-    labels_with_percentages = [f'{label} ({percentage:.1f}%)' for label, percentage in zip(columns, percentages)]
-
+    labels_with_percentages = [f'{label} ({percentage:.1f}%)' for label,
+                               percentage in zip(columns, percentages)]
+    
     # Create a DataFrame for plotting
     data_for_plot = {'Mutations': columns, 'Count': counts}
     df_for_plot = pd.DataFrame(data_for_plot)
-
+    
     # Remove rows with Count <= 0
     df_for_plot = df_for_plot[df_for_plot['Count'] > 0]
-
+    
     # Filter labels based on the rows in 'df_for_plot'
-    labels_with_percentages = [labels_with_percentages[i] for i in df_for_plot.index]
-
+    labels_with_percentages =\
+        [labels_with_percentages[i] for i in df_for_plot.index]
+    
     # Create a pie chart in the corresponding subplot
-    pie_args = {'autopct': '', 'startangle': 135, 'colors': colors, 'wedgeprops': {'alpha': 0.5, 'edgecolor':'k', 'linewidth':0.5}}
+    pie_args = {'autopct': '', 'startangle': 135, 'colors': colors,
+                'wedgeprops': {'alpha': 0.5, 'edgecolor':'k', 'linewidth':0.5}}
     pie_args.update(pie_kwargs)
     wedges, text, autopct = axes.pie(df_for_plot['Count'], **pie_args)
-
-    axes.set_title(title, **title_kwargs)
-    axes.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
-
+    # set title
+    if title not None:
+        axes.set_title(title, **title_kwargs)
+    # Equal aspect ratio ensures that pie is drawn as a circle
+    axes.axis('equal')
+    
     # Define annotation properties
-    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.0, alpha=0.0)
-    kw = dict(arrowprops=dict(arrowstyle="-", lw=0.4*smaller),
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.0,
+                      alpha=0.0)
+    kw = dict(arrowprops=dict(arrowstyle="-", lw=0.4),
               bbox=bbox_props, zorder=0, va="center", **annotate_kwargs)
-
+    
     # Create a list to store annotations for adjusting labels
     annotations = []
-
+    
     for i, p in enumerate(wedges):
         ang = (p.theta2 - p.theta1) / 2. + p.theta1
         y = np.sin(np.deg2rad(ang))
@@ -85,20 +116,23 @@ def pychart(data, title, columns, figsize=(8, 4), smaller=1, fontsize=8, colors=
         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
         connectionstyle = f"angle,angleA=0,angleB={ang}"
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
-
         # Annotate labels and store them in the list
-        ann = axes.annotate(labels_with_percentages[i], xy=(x, y), xytext=(1.15 * np.sign(x), 1.15 * y),
-                                 horizontalalignment=horizontalalignment, fontsize=fontsize * smaller, **kw)
-
+        ann = axes.annotate(labels_with_percentages[i], xy=(x, y),
+                            xytext=(1.15 * np.sign(x), 1.15 * y),
+                            horizontalalignment=horizontalalignment,
+                            fontsize=fontsize, **kw)
+        
         annotations.append(ann)
+    # end loop
     fix_labels(annotations, axes, min_distance=0.13)
-
+    
     # Adjust the layout and return the figure and axes
-    plt.tight_layout(pad=1.3*smaller)
+    plt.tight_layout(pad=1.3)
     return fig, axes
 
-def pychart_grid(df, strat, columns, num_columns=2, figsize=(8, 4), 
-                 smaller=1, colors=None, pie_kwargs={}, annotate_kwargs={}, 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def pychart_grid(df, strat, columns, num_columns=2, figsize=(8, 4),
+                 smaller=1, colors=None, pie_kwargs={}, annotate_kwargs={},
                  title_kwargs={}, subplots_adjust_kwargs={}
                  ):
     """
