@@ -44,6 +44,8 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-artifacts:
-  reports:
-    sast: gl-sast-report.json
+sast:
+  stage: check
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
