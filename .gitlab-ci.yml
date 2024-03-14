@@ -47,7 +47,8 @@ pages:
 
 sast:
   stage: test
-  image: $CI_REGISTRY_IMAGE/codequality:latest 
+  image: docker:stable
+  # image: $CI_REGISTRY_IMAGE/codequality:latest 
   script:
     - analyze
   allow_failure: true
