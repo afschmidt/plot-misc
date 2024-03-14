@@ -50,7 +50,8 @@ sast:
   image: docker:stable
   # image: $CI_REGISTRY_IMAGE/codequality:latest 
   script:
-    - analyze
+    # - analyze
+    - gitlab-sast-analyze
   allow_failure: true
   artifacts:
     reports:
