@@ -45,6 +45,9 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+include:
+  - template: SAST.gitlab-ci.yml
+
 sast:
   stage: test
   image: docker:stable
