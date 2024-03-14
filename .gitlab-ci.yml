@@ -26,6 +26,9 @@ stages:
   - check
   - deploy
 
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+
 # https://stackoverflow.com/questions/54074433/gitlab-ci-specifying-stages-in-before-script
 .before_script_template: &build_test-integration
   before_script:
