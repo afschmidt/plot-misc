@@ -24,6 +24,7 @@ cache:
 
 stages:
   - check
+  - test
   - deploy
 
 
@@ -45,7 +46,11 @@ pages:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 sast:
-  stage: check
+  stage: test
+  image: $CI_REGISTRY_IMAGE/codequality:latest 
+  script:
+    - analyze
+  allow_failure: true
   artifacts:
     reports:
       sast: gl-sast-report.json
