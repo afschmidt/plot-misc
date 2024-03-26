@@ -8,18 +8,14 @@ from plot_misc.utils.utils import (
 from itertools import cycle
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
-            figsize:Tuple[float, float]=(8, 4),
-            fontsize:float=8, colors:Union[None, List[str]]=None,
-            pie_kwargs:Dict[Any, Any]={},
-            annotate_kwargs:Dict[Any, Any]={},
-            title_kwargs:Dict[Any, Any]={}
-            ):
+def pychart(data: pd.DataFrame, columns: List[str],  
+            title: Union[None, str] = None, ax: plt.Axes = None, figsize: Tuple[float, float] = (8, 4),
+            fontsize: float = 8, colors: Union[None, List[str]] = None, 
+            pie_kwargs: Dict[Any, Any] = {}, 
+            annotate_kwargs: Dict[Any, Any] = {}, 
+            title_kwargs: Dict[Any, Any] = {}):
     """
-    Creates a pie chart.
-    
-    Will internally calulate the percentaes based on  list of `columns`
-    available in `data`.
+    Creates a pie chart on the given Axes object, or a new figure if None.
     
     Parameters
     ----------
@@ -29,6 +25,9 @@ def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
         Title of the pie chart.
     columns : list of string
         List of column names to analyse in 'data'.
+    ax : matplotlib.axes.Axes, optional
+        The axes object on which to plot the pie chart. If None, a new figure
+        and axes are created.
     figsize : tuple of floats, default `(8, 4)`
         Figure size in inches.
     fontsize : float, default 8.0
@@ -55,11 +54,11 @@ def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
         pie_kwargs={'startangle': 90}, annotate_kwargs={'fontsize': 10})
     """
     
-    # Create subplots based on the number of conditions in 'strat'
-    fig, axes = plt.subplots(figsize=(figsize[0], figsize[1]))
-    
-    # Adjust horizontal space between subplots
-    plt.subplots_adjust(wspace=0.25)
+    # Create new ax if not provided
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.figure
     
     # Define colors for pie chart segments
     default_colors = ['#d62728', '#1f77b4', '#ff7f0e', '#2ca02c', '#9467bd',
@@ -93,12 +92,12 @@ def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
     pie_args = {'autopct': '', 'startangle': 135, 'colors': colors,
                 'wedgeprops': {'alpha': 0.5, 'edgecolor':'k', 'linewidth':0.5}}
     pie_args.update(pie_kwargs)
-    wedges, text, autopct = axes.pie(df_for_plot['Count'], **pie_args)
+    wedges, text, autopct = ax.pie(df_for_plot['Count'], **pie_args)
     # set title
     if title is not None:
-        axes.set_title(title, **title_kwargs)
+        ax.set_title(title, **title_kwargs)
     # Equal aspect ratio ensures that pie is drawn as a circle
-    axes.axis('equal')
+    ax.axis('equal')
     
     # Define annotation properties
     bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.0,
@@ -117,18 +116,18 @@ def pychart(data:pd.DataFrame, columns:List[str], title:Union[None,str] = None,
         connectionstyle = f"angle,angleA=0,angleB={ang}"
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
         # Annotate labels and store them in the list
-        ann = axes.annotate(labels_with_percentages[i], xy=(x, y),
+        ann = ax.annotate(labels_with_percentages[i], xy=(x, y),
                             xytext=(1.15 * np.sign(x), 1.15 * y),
                             horizontalalignment=horizontalalignment,
                             fontsize=fontsize, **kw)
         
         annotations.append(ann)
     # end loop
-    fix_labels(annotations, axes, min_distance=0.13)
+    fix_labels(annotations, ax, min_distance=0.13)
     
     # Adjust the layout and return the figure and axes
     plt.tight_layout(pad=1.3)
-    return fig, axes
+    return fig, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def pychart_grid(df, strat, columns, num_columns=2, figsize=(8, 4),
