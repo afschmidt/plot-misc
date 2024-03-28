@@ -388,7 +388,10 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
     # simply stoaring the float matrix
     effect_float = effect.copy()
     # formatting
-    effect = effect.map(dig.format).copy()
+    if pd.__version__ < '2.1.0':
+        effect = effect.applymap(dig.format).copy()
+    else:
+        effect = effect.map(dig.format).copy()
     # scaling
     pval = dir * pval
     # if log == True use larger than
