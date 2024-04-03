@@ -87,8 +87,6 @@ def lollipop(values:as_array, labels:as_array,
     Returns
     -------
     figure: plt.Figure
-        This will default to `NoneType` unless the figure is internally created.
-        That is when an `ax` argument is supplied.
     axes: plt.Axes
     '''
 
@@ -99,7 +97,7 @@ def lollipop(values:as_array, labels:as_array,
     if ax is None:
         f, ax = plt.subplots(figsize=figsize)
     else:
-        f = None
+        f = ax.figure
     # get index index to numeric
     index = range(values.shape[0])
     # ################### plot lines and dots, first updating the kwargs
@@ -226,8 +224,6 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     Returns
     -------
     figure: plt.Figure
-        This will default to `NoneType` unless the figure is internally created.
-        That is when an `ax` argument is supplied.
     ax: plt.Axes
     '''
 
@@ -290,7 +286,7 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     if ax is None:
         f, ax = plt.subplots(figsize=figsize)
     else:
-        f = None
+        f = ax.figure
     # ################### loop over dict
     for idx, (key, val) in enumerate(data.items()):
         # unpack data
@@ -662,8 +658,6 @@ class DecisionCurve(object):
         Returns
         -------
         figure : plt.Figure
-            This will default to `NoneType` unless the figure is internally created.
-            That is when an `ax` argument is supplied.
         axes : plt.Axes
         '''
         
@@ -699,7 +693,7 @@ class DecisionCurve(object):
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
         else:
-            f = None
+            f = ax.figure
         # #### plot stuff
         self.NET_BENEFIT['col'] = pd.Series(col_dict)
         self.NET_BENEFIT['lty'] = pd.Series(line_dict)

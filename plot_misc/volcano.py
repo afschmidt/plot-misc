@@ -85,8 +85,6 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     Returns
     -------
     figure : plt.Figure
-        This will default to `NoneType` unless the figure is internally created.
-        That is when an `ax` argument is supplied.
     axes : plt.Axes
     '''
     
@@ -100,7 +98,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     if ax is None:
         f, ax = plt.subplots(figsize=fsize)
     else:
-        f = None
+        f = ax.figure
     ### significance level
     threshold = -1 * np.log10(alpha)
     ### setting a reference line (zorder=1; behind)

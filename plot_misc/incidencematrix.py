@@ -46,7 +46,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         (<colour>, <upper bound>).
         
         The default: [('grey',0), ('black',1)], colours dots grey for value in
-        (\infinity, 0], and colours dots black for values in (0, 1].
+        (\\infinity, 0], and colours dots black for values in (0, 1].
     dot_size : list
         A list of length equal to `dot_colour`. specifying the size of the dots.
     dot_transparency : list
@@ -78,9 +78,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         
     Returns
     -------
-    f: plt.Figure
-        This will default to `NoneType` unless the figure is internally created.
-        That is when an `ax` argument is supplied.
+    fig: plt.Figure
     ax: plt.Axes
     '''
     
@@ -112,7 +110,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         f, ax = plt.subplots(figsize=(fsize[0] * cmtoinch,
                                       fsize[1] * cmtoinch))
     else:
-        f = None
+        f = ax.figure
     
     # the x and y coordinates
     M, N = data.shape

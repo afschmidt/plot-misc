@@ -331,8 +331,6 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     Returns
     -------
     figure : plt.Figure
-        This will default to `NoneType` unless the figure is internally created.
-        That is when an `ax` argument is supplied.
     axes : plt.Axes
     results : PlotForestResults class
         Unpacks matplotlib figure, axes, class
@@ -451,7 +449,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if ax is None:
         f, ax = plt.subplots(figsize=figsize)
     else:
-        f = None
+        f = ax.figure
     # ################## plot points and errors
     for _, row in df.iterrows():
         # coordinates
@@ -658,7 +656,7 @@ def plot_table(
             kwargs_yticklabel_dict      --> ax.yaxis.set_ticklabels
     Returns
     -------
-    ax : plt.axes,
+    ax : plt.axes
         a matplotlib axes.
     """
     # ################### do check and set defaults
@@ -947,7 +945,8 @@ class EmpericalSupport(object):
         
         Returns
         -------
-        Unpacks a matplotlib figure and axis.
+        ax: plt.Axes
+        fig: plt.Figure
         '''
         # ################## check input
         is_df(data)
@@ -969,7 +968,7 @@ class EmpericalSupport(object):
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
         else:
-            f = None
+            f = ax.figure
         # ################## annotate point
         if estimate is not None:
             # find location where lb == ub
@@ -1085,9 +1084,7 @@ class EmpericalSupport(object):
         
         Returns
         -------
-        f: plt.Figure
-            This will default to `NoneType` unless the figure is internally created.
-            That is when an `ax` argument is supplied.
+        fig: plt.Figure
         axes: plt.Axes
         results: EmpericalSupportPlotResults
         
@@ -1116,7 +1113,7 @@ class EmpericalSupport(object):
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
         else:
-            f = None
+            f = ax.figure
         if support == FNames.EmpericalSupport_Coverage:
             self.support_col = FNames.CI
             self.ylabel = 'Coverage'
