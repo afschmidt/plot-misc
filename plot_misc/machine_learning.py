@@ -408,9 +408,10 @@ class DecisionCurve(object):
         self.NET_BENEFIT = None
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __str__(self):
-        return (
-            "A DecisionCurve class."
-        )
+        return f"DecisionCurve instance with data=\n{self.data.__str__()}"
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __repr__(self):
+        return f"DecisionCurve(data=\n{self.data.__repr__()})"
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     @staticmethod
     def calc_rates(data: pd.DataFrame, outcome:str, model:str,

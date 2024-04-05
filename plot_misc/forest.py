@@ -60,6 +60,9 @@ class PlotForestResults(object):
     # /////////////////////////////////////////////////////////////////////////
     def __str__(self):
         return f"A `PlotForestResults` class."
+    # /////////////////////////////////////////////////////////////////////////
+    def __repr__(self):
+        return f"A `PlotForestResults` class."
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class EmpericalSupportPlotResults(PlotForestResults):
@@ -73,6 +76,9 @@ class EmpericalSupportPlotResults(PlotForestResults):
     ]
     # /////////////////////////////////////////////////////////////////////////
     def __str__(self):
+        return f"An `EmpericalSupport` class."
+    # /////////////////////////////////////////////////////////////////////////
+    def __repr__(self):
         return f"An `EmpericalSupport` class."
 
 # #############################################################################
@@ -808,11 +814,17 @@ class EmpericalSupport(object):
         self.estimate=estimate
         self.standard_error=standard_error
         self.alpha=alpha
-   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __str__(self):
         return (
-            "A class to calculate and plot the parameter space supported "
-            "the available data."
+            "EmpericalSupport instance with estimate={self.estimate}, "
+            "standard_error={self.standard_error}, and alpha={self.alpha}."
+        )
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __repr__(self):
+        return (
+            "EmpericalSupport({self.estimate}, {self.standard_error}, "
+            "{self.alpha}."
         )
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     @staticmethod
