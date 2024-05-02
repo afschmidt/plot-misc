@@ -380,10 +380,12 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
                       "taking the first value".format(len(digits)))
     # taking the log10
     if log == True:
-        pval = _nlog10_func(pval, ptrun)
+        pval_full = _nlog10_func(pval, ptrun)
+    else:
+        pval_full = pval.copy()
     # rounding
     dig = '{:.'+digits+'f}'
-    pval = pval.round(int(float(digits)))
+    pval = pval_full.round(int(float(digits)))
     dir = np.sign(effect)
     # simply stoaring the float matrix
     effect_float = effect.copy()
@@ -397,25 +399,25 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
     # if log == True use larger than
     if log == True:
         # if not significant set to empty
-        effect[np.abs(pval) < sig] = '.'
+        effect[pval_full < sig] = '.'
         effect = effect.astype('str')
         # adding stars
         star = effect.copy()
-        star[np.abs(pval) >= sig] = symbol
+        star[pval_full >= sig] = symbol
         # pvalues
         pvalstring = effect.copy()
-        pvalstring[np.abs(pval) >= sig] = pval[np.abs(pval) >= sig].astype('str')
+        pvalstring[pval_full >= sig] = pval[pval_full >= sig].astype('str')
         # if log != True use smaller than
     else:
         # if not significant set to empty
-        effect[np.abs(pval) > sig] = '.'
+        effect[pval_full > sig] = '.'
         effect = effect.astype('str')
         # adding stars
         star = effect.copy()
-        star[np.abs(pval) <= sig] = symbol
+        star[pval_full <= sig] = symbol
         # pvalues
         pvalstring = effect.copy()
-        pvalstring[np.abs(pval) <= sig] = pval[np.abs(pval) <= sig].astype('str')
+        pvalstring[pval_full <= sig] = pval[pval_full <= sig].astype('str')
     
     # returning
     return pval, effect, star, pvalstring, effect_float
