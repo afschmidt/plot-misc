@@ -8,6 +8,7 @@ from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import (
     is_type,
     is_df,
+    _assign_empty_default,
 )
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
@@ -17,7 +18,7 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
               transparancy:float=0.7, wd:float=1, edgecolor:str='black',
               **kwargs:Optional[Any]) -> plt.Axes:
     '''
-    Function for a bar chart, remove top and left spines.
+    Function for a bar chart, removes top and left spines.
     
     Arguments
     ---------
@@ -41,17 +42,17 @@ def stack_bar(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     
     Returns
     -------
-    plt.Axes
+    plot: plt.Axes
     '''
     # ### check input
     is_df(df)
-    is_type(label, str)
-    is_type(columns, list)
-    is_type(ax, plt.Axes)
-    is_type(colours, list)
-    is_type(transparancy, float)
-    is_type(wd, float)
-    is_type(edgecolor, str)
+    is_type(label, str, 'label')
+    is_type(columns, list, 'columns')
+    is_type(ax, plt.Axes, 'ax')
+    is_type(colours, list, 'colours')
+    is_type(transparancy, float, 'transparancy')
+    is_type(wd, float, 'wd')
+    is_type(edgecolor, str, 'edgecolor')
     # should not be any missings
     # NOTE consider making this into a function
     if any(df.isna().any()):
@@ -116,13 +117,13 @@ def stack_barh(df:pd.DataFrame, label:str, columns:List[str], ax:plt.Axes,
     '''
     # ### check input
     is_df(df)
-    is_type(label, str)
-    is_type(columns, list)
-    is_type(ax, plt.Axes)
-    is_type(colours, list)
-    is_type(transparancy, float)
-    is_type(wd, float)
-    is_type(edgecolor, str)
+    is_type(label, str, 'lable')
+    is_type(columns, list, 'columns')
+    is_type(ax, plt.Axes, 'ax')
+    is_type(colours, list, 'colours')
+    is_type(transparancy, float, 'transparancy')
+    is_type(wd, float, 'wd')
+    is_type(edgecolor, str, 'edgecolor')
     # should not be any missings
     if any(df.isna().any()):
         raise ValueError(Error_MSG.MISSING_DF.format('df'))
@@ -153,8 +154,8 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
               colours:List[str]=['grey', 'tab:blue'],
               transparancy:List[float]=[0.7, 0.9], wd:List[float]=[1, 0.6],
               edgecolor:List[str]=['black', 'black'],
-              total_kwargs_dict:Dict[Any,Any]={},
-              subtotal_kwargs_dict:Dict[Any,Any]={},
+              total_kwargs_dict:Union[Dict[Any,Any],None]=None,
+              subtotal_kwargs_dict:Union[Dict[Any,Any],None]=None,
               ) -> plt.Axes:
     '''
     A bar chart with a total column and overplotted subtotal columns.
@@ -182,7 +183,7 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
         The bar edgecolor.
     ax : plt.Axes
         The pyplot.axes objct.
-    *_kwargs_dict : dict, default empty dict,
+    *_kwargs_dict : dict, default None,
         Optional arguments supplied to the various plotting functions:
             total_kwargs_dict    --> ax.bar
             subtotal_kwargs_dict --> ax.bar
@@ -192,8 +193,23 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
     plt.Axes
     '''
     # ### check input
+    is_df(df)
+    is_type(ax, plt.Axes, 'ax')
+    is_type(label, str, 'label')
+    is_type(subtotal_col, str, 'subtotal_col')
+    is_type(total_col, (str, type(None)), 'total_col')
+    is_type(colours, list, 'colours')
+    is_type(transparancy, list, 'transparancy')
+    is_type(wd, list, 'wd')
+    is_type(edgecolor, list, 'edgecolor')
+    is_type(total_kwargs_dict, (dict,type(None)), 'total_kwargs_dict')
+    is_type(subtotal_kwargs_dict, (dict,type(None)), 'subtotal_kwargs_dict')
     if any(df.isna().any()):
         raise ValueError(Error_MSG.MISSING_DF.format('df'))
+    # mapping None to empty dicts
+    total_kwargs_dict, subtotal_kwargs_dict = _assign_empty_default(
+        [total_kwargs_dict, subtotal_kwargs_dict], dict
+    )
     # get labels
     labels = df[label]
     # counts

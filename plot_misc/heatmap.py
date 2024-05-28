@@ -13,7 +13,11 @@ import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
-from plot_misc.constants import is_type, as_array
+from plot_misc.constants import (
+    is_type,
+    as_array,
+    _assign_empty_default,
+)
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,10 +26,10 @@ def heatmap(data:Union[pd.DataFrame, as_array],
             col_labels:Union[List[str], as_array],
             grid_col:str='white', grid_linestyle:str='-',
             grid_linewidth:float=3,
-            grid_kw:Dict[Any, Any]={},
+            grid_kw:Union[Dict[Any, Any],None]=None,
             cbar_bool:bool=False,
             cbar_label:str="",
-            cbar_kw:Dict[Any, Any]={},
+            cbar_kw:Union[Dict[Any, Any],None]=None,
             ax:Union[plt.Axes, None]=None,
             **kwargs:Optional[Any]) -> Tuple[matplotlib.image.AxesImage,
                                              matplotlib.colorbar.Colorbar]:
@@ -59,7 +63,7 @@ def heatmap(data:Union[pd.DataFrame, as_array],
     ax : plt.Axes, default NoneType
         A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
         not provided, use current axes or create a new one.  Optional.
-    *_kw : dict, default empty dictionary
+    *_kw : dict, default None
         Optional arguments supplied to the various plotting functions:
             grid_kw --> ax.grid
             cbar_kw --> ax.figure.colorbar
@@ -87,6 +91,8 @@ def heatmap(data:Union[pd.DataFrame, as_array],
     is_type(row_lab, (list, np.array))
     is_type(col_lab, (list, np.array))
     is_type(cbar_label, str)
+    # map None to dict
+    grid_kw, cbar_kw = _assign_empty_default([grid_kw, cbar_kw], dict)
     # ### Plot the heatmap
     im = ax.imshow(matrix, **kwargs)
     # Create colorbar
@@ -222,10 +228,10 @@ def clustermap(data:pd.DataFrame,
                clabpos:str='left', clabtsize:float=5,
                xticklabsize:float=8, yticklabsize:float=6,
                yticks:bool=True, xticks:bool=True,
-               cbar_dict_kw:Dict[Any, Any] = {},
-               tree_dict_kw:Dict[Any, Any] = {},
-               annot_dict_kw:Dict[Any, Any] = {},
-               clustermap_dict_kw:Dict[Any, Any] = {},
+               cbar_dict_kw:Union[Dict[Any, Any],None]=None,
+               tree_dict_kw:Union[Dict[Any, Any],None]=None,
+               annot_dict_kw:Union[Dict[Any, Any],None]=None,
+               clustermap_dict_kw:Union[Dict[Any, Any],None]=None,
                ) -> sns.matrix.ClusterGrid:
     '''
     Creates a heatmap where the rows and columns are clustered based on
@@ -268,7 +274,7 @@ def clustermap(data:pd.DataFrame,
         Whether the yticks should be plotted.
     xticks : boolean, default `True`
         Whether the xticks should be plotted.
-    *_kw : dict, default empty dictionary
+    *_kw : dict, default None
         Optional arguments supplied to the various plotting functions:
             cbar_dict_kw        --> matplotlib.figure.Figure.colorbar
             tree_dict_kw        --> matplotlib.collections.LineCollection
@@ -282,6 +288,11 @@ def clustermap(data:pd.DataFrame,
     # #### constants
     # inches to cm's
     FSCALE=0.393700787
+    # map None to dict
+    cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw =\
+        _assign_empty_default(
+            [cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw],
+            dict)
     # update keyword dictionaries
     annot_kw = _update_kwargs(update_dict=annot_dict_kw,
                               size=annotsize,

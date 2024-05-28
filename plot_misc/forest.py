@@ -29,6 +29,7 @@ from plot_misc.constants import (
     are_columns_in_df,
     InputValidationError,
     Error_MSG,
+    _assign_empty_default,
 )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -38,6 +39,11 @@ from plot_misc.constants import (
 class PlotForestResults(object):
     '''
     The results object for `plot_forest`.
+
+    Attributes
+    ----------
+    span: list of floats
+        The span coordinates.
     '''
     SET_ARGS = [
         FNames.span,
@@ -69,6 +75,14 @@ class EmpericalSupportPlotResults(PlotForestResults):
     '''
     Results class for the EmpericalSupport.plot function, inherits from
     the `PlotForestResults` class.
+
+    Attributes
+    ----------
+    estimate: float
+        The point estimate.
+    data_table: pd.DataFrame
+        A table with the lower and upper bounds of the confidence interval,
+        as well as the p-value and confidence interval coverage.
     '''
     SET_ARGS = [
         FNames.ESTIMATE,
@@ -253,10 +267,10 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
                 reverse_y:bool=True,
                 verbose:bool=False,
                 ylim:Union[Tuple[float, float], None]=None,
-                kwargs_scatter_dict:Dict[Any, Any]={},
-                kwargs_plot_ci_dict:Dict[Any, Any]={},
-                kwargs_connect_segments_dict:Dict[Any, Any]={},
-                kwargs_span_dict:Dict[Any, Any]={}
+                kwargs_scatter_dict:Union[Dict[Any, Any],None]=None,
+                kwargs_plot_ci_dict:Union[Dict[Any, Any],None]=None,
+                kwargs_connect_segments_dict:Union[Dict[Any, Any],None]=None,
+                kwargs_span_dict:Union[Dict[Any, Any],None]=None,
                 ) -> Tuple[plt.Figure, plt.Axes, PlotForestResults]:
     """
     Plots points based on their `x_col` and `y_col` values on a Cartesian
@@ -327,7 +341,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         The figure size, when ax is set to None.
     reverse_y : boolean, default `True`
         inverts the y-axis.
-    kwargs_*_dict : dict, default empty dict
+    kwargs_*_dict : dict, default None
         Optional arguments supplied to the various plotting functions:
             kwargs_scatter_dict          --> ax.scatter
             kwargs_plot_ci_dict          --> ax.plot
@@ -395,6 +409,12 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         )
     if (ub_col is not None) and (lb_col is not None):
         is_series_type(df[[ub_col, lb_col]], (float, int))
+    # replace None by empty dict
+    kwargs_scatter_dict, kwargs_plot_ci_dict, kwargs_connect_segments_dict,\
+    kwargs_span_dict = _assign_empty_default(
+        [kwargs_scatter_dict, kwargs_plot_ci_dict,
+         kwargs_connect_segments_dict, kwargs_span_dict],
+        dict)
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
@@ -610,9 +630,9 @@ def plot_table(
     span_start:str='min',
     span_stop:str='max',
     span_kwargs:str='kwargs',
-    kwargs_text_dict:Dict[Any, Any]={},
-    kwargs_header_dict:Dict[Any, Any]={},
-    kwargs_yticklabel_dict:Dict[Any, Any]={},
+    kwargs_text_dict:Union[Dict[Any, Any],None]=None,
+    kwargs_header_dict:Union[Dict[Any, Any],None]=None,
+    kwargs_yticklabel_dict:Union[Dict[Any, Any],None]=None,
 ) -> plt.Axes:
     """
     Plots a side-table using `ax.text` and supplied `plt.Axes`.
@@ -655,7 +675,7 @@ def plot_table(
         `merit_helper.utils.utils.plot_span`.
     ax : plt.axes
             Axes to operate on.
-    kwargs_*_dict : dict, default empty dict
+    kwargs_*_dict : dict, default None
         Optional arguments supplied to the various plotting functions:
             kwargs_text_dict            --> ax.text
             kwargs_header_dict          --> ax.text
@@ -685,6 +705,11 @@ def plot_table(
     is_type(span, (type(None), dict))
     # check if columns are in dataframe
     are_columns_in_df(dataframe, expected_columns=[string_col, y_col])
+    # set None to dict
+    kwargs_text_dict, kwargs_header_dict, kwargs_yticklabel_dict =\
+        _assign_empty_default(
+            [kwargs_text_dict, kwargs_header_dict, kwargs_yticklabel_dict],
+            dict)
     # ################### remove spines
     ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
     # remove lables
@@ -899,9 +924,9 @@ class EmpericalSupport(object):
         area_c:Union[str, None]=None, area_a:float=0.7,
         ax:Union[plt.Axes, None]=None, figsize:Tuple[float, float]=(10, 10),
         reverse_y:bool=False,
-        kwargs_plot:Dict[Any,Any]={},
-        kwargs_dot:Dict[Any,Any]={},
-        kwargs_fill:Dict[Any,Any]={},
+        kwargs_plot:Union[Dict[Any,Any],None]=None,
+        kwargs_dot:Union[Dict[Any,Any],None]=None,
+        kwargs_fill:Union[Dict[Any,Any],None]=None,
     ) -> Tuple[plt.Figure, plt.Axes]:
         '''
         Creates a Empirical support plot, which identifies the parameter space
@@ -949,7 +974,7 @@ class EmpericalSupport(object):
             The figure size, when ax==None.
         reverse_y : boolean, default `True`
             inverts the y-axis.
-        kwargs_*_dict : dict, default empty dict
+        kwargs_*_dict : dict, default None
             Optional arguments supplied to the various plotting functions:
                 kwargs_plot --> ax.plot
                 kwargs_dot  --> ax.scatter
@@ -976,6 +1001,9 @@ class EmpericalSupport(object):
         is_type(ax, (type(None), plt.Axes), 'ax')
         is_type(figsize, tuple, 'figsize')
         is_type(reverse_y, bool, 'reverse_y')
+        # Mapping None to dict
+        kwargs_plot, kwargs_dot, kwargs_fill = _assign_empty_default(
+            [kwargs_plot, kwargs_dot, kwargs_fill], dict)
         # ################## should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
@@ -1034,13 +1062,13 @@ class EmpericalSupport(object):
              reverse_y:Union[None,bool]=None,
              ax:Union[plt.Axes, None]=None,
              figsize:Tuple[float, float]=(10, 10),
-             kwargs_plot:Dict[Any,Any]={},
-             kwargs_dot:Dict[Any,Any]={},
-             kwargs_fill:Dict[Any,Any]={},
-             kwargs_xlabel:Dict[Any,Any]={},
-             kwargs_ylabel:Dict[Any,Any]={},
-             kwargs_segment:Dict[Any,Any]={},
-             kwargs_text:Dict[Any, Any]={},
+             kwargs_plot:Union[Dict[Any,Any],None]=None,
+             kwargs_dot:Union[Dict[Any,Any],None]=None,
+             kwargs_fill:Union[Dict[Any,Any],None]=None,
+             kwargs_xlabel:Union[Dict[Any,Any],None]=None,
+             kwargs_ylabel:Union[Dict[Any,Any],None]=None,
+             kwargs_segment:Union[Dict[Any,Any],None]=None,
+             kwargs_text:Union[Dict[Any, Any],None]=None,
              )-> Tuple[plt.Figure, plt.Axes, EmpericalSupportPlotResults]:
         '''
         Plots an Emperical Support graph based on either `coverage` (iterating
@@ -1084,7 +1112,7 @@ class EmpericalSupport(object):
         reverse_y : boolean, default `NoneType`
             Inverts the y-axis.  Set to `False` or `True` to overwrite internal
             behaviour.
-        kwargs_*_dict : dict, default empty dict
+        kwargs_*_dict : dict, default None
             Optional arguments supplied to the various plotting functions:
                 kwargs_plot    --> ax.plot
                 kwargs_dot     --> ax.scatter
@@ -1115,6 +1143,12 @@ class EmpericalSupport(object):
                     FNames.EmpericalSupport_Compatability
                 )
             )
+        # set None to dict
+        kwargs_plot, kwargs_dot, kwargs_fill, kwargs_xlabel, kwargs_ylabel,\
+        kwargs_segment, kwargs_text = _assign_empty_default(
+            [kwargs_plot, kwargs_dot, kwargs_fill, kwargs_xlabel,
+             kwargs_ylabel, kwargs_segment, kwargs_text], dict
+        )
         # ################### calculate support
         self.table = self.calc_empirical_support(
             estimate=self.estimate, standard_error=self.standard_error,

@@ -5,7 +5,7 @@ import pandas as pd
 import numpy.typing as npt
 import numpy as np
 from packaging import version
-from typing import Any, List, Type, Union, Tuple
+from typing import Any, List, Type, Union, Tuple, Callable
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # NAMES
@@ -26,7 +26,6 @@ class TableNames(object):
     file_name       = 'file_name'
     analysis        = 'analysis'
     index           = 'index'
-    
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Forest plot
@@ -280,6 +279,42 @@ def string_to_list(object:Any) -> Union[Any, List[str]]:
         return list(object)
     else:
         return object
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _assign_empty_default(arguments:List[Any], empty_object:Callable[[],Any],
+                         ) -> List[Any]:
+    '''
+    Takes a list of `arguments`, checks if these are `NoneType` and if so
+    asigns them 'empty_object'.
+    
+    This function helps deal with the pitfall of assigning an empty mutable
+    object as a default function argument, which would persist through multiple
+    function calls, leading to unexpected/undesired behaviours.
+    
+    Parameters
+    ----------
+    arguments: list of arguments
+        A list of arguments which may be set to `NoneType`.
+    empty_object: Callable that returns a mutable object
+        Examples include a `list` or a `dict`.
+    
+    Returns
+    -------
+    new_arguments: list
+        List with `NoneType` replaced by empty mutable object.
+    
+    Examples
+    --------
+    >>> assign_empty_default(['hi', None, 'hello'], empty_object=list)
+    ['hi', [], 'hello']
+    '''
+    # check input
+    is_type(arguments, list, 'arguments')
+    is_type(empty_object, type, 'empty_object')
+    # loop over arguments
+    new_args = [empty_object() if arg is None else arg for arg in arguments]
+    # return
+    return new_args
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # error messages
