@@ -38,3 +38,8 @@ plot-misc.utils.formatting module
 -------------------------------------------
 .. automodule:: plot_misc.utils.formatting
    :members:
+
+plot-misc.utils.colour module
+-------------------------------------------
+.. automodule:: plot_misc.utils.colour
+   :members:

@@ -18,7 +18,9 @@ from plot_misc.constants import (
     same_len,
     InputValidationError,
     string_to_list,
+    _assign_empty_default,
     NamesDecisionCurves as NamesDC,
+    NamesMachineLearnig as NamesML,
 )
 from plot_misc.utils.utils import (
     change_ticks,
@@ -42,8 +44,8 @@ def lollipop(values:as_array, labels:as_array,
              xmargin:Union[float, None]=0, reverse_y:bool=False,
              xlimit:Union[Tuple[float, float], None]=None,
              ax:Union[plt.Axes, None]=None,
-             kwargs_lines_dict:Dict[Any, Any]={},
-             kwargs_plot_dict:Dict[Any, Any]={},
+             kwargs_lines_dict:Union[None,Dict[Any,Any]]=None,
+             kwargs_plot_dict:Union[None,Dict[Any,Any]]=None,
              ) -> Tuple[plt.Axes, plt.Figure]:
     '''
     Essentially a bar chart, where the bar is replaced by a line with a dot for
@@ -79,7 +81,7 @@ def lollipop(values:as_array, labels:as_array,
         The figure size, when ax==None.
     reverse_y : boolean, default `False`
         inverts the y-axis.
-    kwargs_*_dict : dict, default empty dictionaries
+    kwargs_*_dict : dict, default `NoneType`
         Optional arguments supplied to the various plotting functions:
             kwargs_lines_dict -- > ax.hlines
             kwargs_plot_dict  -- > ax.plot
@@ -91,7 +93,17 @@ def lollipop(values:as_array, labels:as_array,
     '''
 
     # ################### Check input
-    
+    is_type(ax, (type(None), plt.Axes), 'ax')
+    is_type(line_color, str, 'line_color')
+    is_type(linewidth, (int, float), 'linewidth')
+    is_type(dot_color, str, 'dot_color')
+    is_type(dot_edge_color, str, 'dot_edge_color')
+    is_type(dot_size, (int, float), 'dot_size')
+    is_type(dot_edge_size, (int, float), 'dot_edge_size')
+    # map None to empty dict
+    kwargs_lines_dict, kwargs_plot_dict = _assign_empty_default(
+        [kwargs_lines_dict, kwargs_plot_dict], dict,
+    )
     # ################### process input
     # create a axes if needed
     if ax is None:
@@ -138,7 +150,6 @@ def lollipop(values:as_array, labels:as_array,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NOTE add LOESS functionality
-# NOTE add strings to constants.py
 def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
                 observed:str, predicted:str,
                 lower_observed:Union[None, str]=None,
@@ -152,14 +163,14 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
                 line_linestyle:Union[str, List[str]]=['--'],
                 figsize:Tuple[float, float]=(6, 6),
                 diagonal_colour:str='black',
-                diagonal_linewdith:float=0.5,
+                diagonal_linewidth:float=0.5,
                 diagonal_linestyle:str='-',
                 margins:Tuple[float, float]=(0.01, 0.01),
                 ax:Union[plt.Axes, None]=None,
-                kwargs_ci_dict:Dict[Any, Any]={},
-                kwargs_dot_dict:Dict[Any, Any]={},
-                kwargs_line_dict:Dict[Any,Any]={},
-                kwargs_diagonal_dict:Dict[Any,Any]={},
+                kwargs_ci_dict:Union[None,Dict[Any,Any]]=None,
+                kwargs_dot_dict:Union[None,Dict[Any,Any]]=None,
+                kwargs_line_dict:Union[None,Dict[Any,Any]]=None,
+                kwargs_diagonal_dict:Union[None,Dict[Any,Any]]=None,
                 ) -> Tuple[plt.Axes, plt.Figure]:
     '''
     Provides a basic template for a calibration plot, comparing the observed
@@ -190,8 +201,8 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         the observed risk.
     ci_colour : string or list of strings
         The colours that the (optional) confidence intervals should have.
-    ci_linewdith : string or list of strings,
-        The linewdith of the (optional) confidence intervals.
+    ci_linewidth : string or list of strings,
+        The linewidth of the (optional) confidence intervals.
     dot_colour : string or list of strings
         The marker colour.
     dot_marker : string or list of strings
@@ -207,14 +218,14 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         The colour of the diagonal line.
     diagonal_linestyle : str
         The linestyle of the diagonal line.
-    diagonal_linewdith : float
+    diagonal_linewidth : float
         The width of the diagonal line.
     ax : plt.Axes, default `NoneType`
         A `matplotlib.axes.Axes` instance to which the figure is plotted. If
         not provided, use current axes or create a new one.  Optional.
     figsize : tuple of two floats, default (6, 6),
         The figure size, when ax==None.
-    kwargs_*_dict : dict, default empty dictionaries
+    kwargs_*_dict : dict, default `NoneType`
         Optional arguments supplied to the various plotting functions:
             kwargs_ci_dict       --> ax.plot
             kwargs_dot_dict      --> ax.scatter
@@ -226,26 +237,32 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     figure: plt.Figure
     ax: plt.Axes
     '''
-
+    
     # ################### check input
-    is_type(data, (dict, pd.DataFrame))
-    is_type(observed, str)
-    is_type(predicted, str)
-    is_type(ax, (plt.Axes, type(None)))
-    is_type(lower_observed, (str, type(None)))
-    is_type(upper_observed, (str, type(None)))
-    is_type(ci_colour, (str,list, type(None)))
-    is_type(ci_linewidth, (str, list, type(None)))
+    is_type(data, (dict, pd.DataFrame), 'data')
+    is_type(observed, str, 'observed')
+    is_type(predicted, str, 'predicted')
+    is_type(ax, (plt.Axes, type(None)), 'ax')
+    is_type(lower_observed, (str, type(None)), 'lower_observed')
+    is_type(upper_observed, (str, type(None)), 'upper_observed')
+    is_type(ci_colour, (str,list, type(None)), 'ci_colour')
+    is_type(ci_linewidth, (str, list, type(None)), 'ci_linewidth')
     is_type(dot_marker,(str, list))
     is_type(dot_colour, (str, list))
     is_type(line_colour, (str, list))
     is_type(line_linewidth, (str, list))
     is_type(line_linestyle, (str, list))
     is_type(figsize, tuple)
-    is_type(diagonal_linewdith, float)
+    is_type(diagonal_linewidth, float)
     is_type(diagonal_colour, str)
     is_type(diagonal_linestyle, str)
     is_type(margins, tuple)
+    # map None to empty dict
+    kwargs_ci_dict, kwargs_dot_dict, kwargs_line_dict,\
+        kwargs_diagonal_dict = _assign_empty_default(
+            [kwargs_ci_dict, kwargs_dot_dict,
+             kwargs_line_dict, kwargs_diagonal_dict], dict,
+        )
     # combined the columns
     columns = [predicted, observed]
     if not lower_observed is None:
@@ -260,19 +277,19 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     # compare plt params to dict len
     # NOTE if None simply repeat for the number of datasets
     if not ci_colour is None:
-        same_len(data, ci_colour, ['data', 'ci_colour'])
+        same_len(data, ci_colour, [NamesML.DATA, NamesML.CI_COLOUR])
     else:
         ci_colour = [None] * len(data)
     # NOTE if None simply repeat for the number of datasets
     if not ci_linewidth is None:
-        same_len(data, ci_linewidth, ['data', 'ci_linewdith'])
+        same_len(data, ci_linewidth, [NamesML.DATA,NamesML.CI_LINEWIDTH])
     else:
         ci_linewidth = [None] * len(data)
-    same_len(data, dot_colour, ['data', 'dot_colour'])
-    same_len(data, dot_marker, ['data', 'dot_marker'])
-    same_len(data, line_colour, ['data', 'line_colour'])
-    same_len(data, line_linewidth, ['data', 'line_linewidth'])
-    same_len(data, line_linestyle, ['data', 'line_linestyle'])
+    same_len(data, dot_colour, [NamesML.DATA,NamesML.DOT_COLOUR])
+    same_len(data, dot_marker, [NamesML.DATA,NamesML.DOT_MARKER])
+    same_len(data, line_colour, [NamesML.DATA,NamesML.LINE_LINESTYLE])
+    same_len(data, line_linewidth, [NamesML.DATA,NamesML.LINE_LINEWIDTH])
+    same_len(data, line_linestyle, [NamesML.DATA,NamesML.LINE_LINESTYLE])
     # ################### making lists
     ci_linewidth = string_to_list(ci_linewidth)
     ci_colour = string_to_list(ci_colour)
@@ -304,7 +321,7 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         x_ci = [x_bin, x_bin]
         # Add the diagonal line, first updating the kwargs
         new_diagonal_dict =\
-            _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewdith,
+            _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewidth,
                            ls=diagonal_linestyle, c=diagonal_colour)
         ax.axline(xy1=(0, 0), slope=1, **new_diagonal_dict,
                   )
@@ -629,8 +646,8 @@ class DecisionCurve(object):
              lowess_frac:Union[float, None]=None,
              linewidth:float=0.8,
              figsize:tuple=(6, 6),
-             kwargs_lowess:Dict[Any,Any]={},
-             kwargs_plot:Dict[Any,Any]={},
+             kwargs_lowess:Union[None,Dict[Any,Any]]=None,
+             kwargs_plot:Union[None,Dict[Any,Any]]=None,
              ) -> Tuple[plt.Figure, plt.Axes]:
         '''
         Plots a decision curve.
@@ -651,7 +668,7 @@ class DecisionCurve(object):
             curve. Set to `NoneType` to use the raw values instead.
         figsize : tuple of two floats, default (6, 6),
             The figure size in inches, when ax==None.
-        kwargs_*_dict : dict, default empty dict
+        kwargs_*_dict : dict, default `NoneType`
             Optional arguments supplied:
                 kwargs_lowess --> statsmodels.nonparametric.smoothers_lowess
                 kwargs_plot   --> ax.plot
@@ -690,14 +707,18 @@ class DecisionCurve(object):
                     self.NUMBER_OF_MODELS, len(col_dict)
                 )
             )
+        # map None to empty dict
+        kwargs_lowess, kwargs_plot = _assign_empty_default(
+            [kwargs_lowess, kwargs_plot], dict,
+        )
         # #### should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
         else:
             f = ax.figure
         # #### plot stuff
-        self.NET_BENEFIT['col'] = pd.Series(col_dict)
-        self.NET_BENEFIT['lty'] = pd.Series(line_dict)
+        self.NET_BENEFIT[NamesDC.COL] = pd.Series(col_dict)
+        self.NET_BENEFIT[NamesDC.LTY] = pd.Series(line_dict)
         # how many models are there?
         modelnames = list(self.NET_BENEFIT.index.unique())
         # plot a line per model
@@ -721,8 +742,8 @@ class DecisionCurve(object):
             # The actual plotting
             new_kwargs_plot = _update_kwargs(
                 update_dict=kwargs_plot,
-                linestyle=single_model_df['lty'].iloc[0],
-                color=single_model_df['col'].iloc[0],
+                linestyle=single_model_df[NamesDC.LTY].iloc[0],
+                color=single_model_df[NamesDC.COL].iloc[0],
                 lw=linewidth,
             )
             ax.plot( X, Y_PLOT,

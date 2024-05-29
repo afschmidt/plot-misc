@@ -91,6 +91,22 @@ class NamesDecisionCurves(object):
     MODEL        = 'model'
     NETBENEFIT   = 'Net benefit'
     HARM         = 'harm'
+    COL          = 'col'
+    LTY          = 'lty'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class NamesMachineLearnig(object):
+    '''
+    Module names for the machine_learning module
+    '''
+    DATA           = 'data'
+    CI_COLOUR      = 'ci_colour'
+    CI_LINEWIDTH   = 'ci_linewidth'
+    DOT_COLOUR     = 'dot_colour'
+    DOT_MARKER     = 'dot_marker'
+    LINE_COLOUR    = 'line_colour'
+    LINE_LINEWIDTH = 'line_linewidth'
+    LINE_LINESTYLE = 'line_linestyle'
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS
