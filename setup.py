@@ -13,8 +13,8 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = 'plot_misc'
-DESCRIPTION = 'Various python plotting modules'
-URL = ''
+DESCRIPTION = 'Various plotting templates build on-top of matplotlib'
+URL = 'https://gitlab.com/SchmidtAF/plot-misc'
 EMAIL = 'amand.schmidt@ucl.ac.uk'
 AUTHOR = 'A Floriaan Schmidt'
 REQUIRES_PYTHON = '>=3.7.0'
