@@ -3,6 +3,7 @@ A collection of various bar chart functions, based on matplotlib.
 """
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 from plot_misc.constants import Error_MSG
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.constants import (
@@ -294,3 +295,83 @@ def bar(df:pd.DataFrame, label:str, column:str, ax:plt.Axes,
     # return
     return ax
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def group_bar(df:pd.DataFrame, label:str, columns:List[str],
+        ax:plt.Axes, errors:List[str]=None, csiz:float=2,
+        colours:List[str]=['tab:blue', 'tab:pink'], transparancy:float=0.7,
+        wd:float=1, edgecolor:str='black', **kwargs:Optional[Any],
+        ) -> plt.Axes:
+    '''
+    Plot a barchart with sequentially coloured bars.
+    
+    Arguments
+    ---------
+    df : pd.DF
+    label : str
+        The column name with the axes labels you want to use.
+    columns : list
+        The column names with the (y-axis) values (floats/int) that need to be
+        plotted.
+    errors : list
+        The column names with the (y-axis) values (floats/int) of the
+        error-bars.
+    colours : list
+        A list of colours, can be a single or multiple values (will get
+        recycled).
+    colours : str
+        A list of colours of the bars.
+    transparancy : str, default 0.7
+        For the alpha of the bars.
+    wd : str, default 1.0
+        A float to specify bar widths.
+    edgecolor : str, default `black`
+        The bar edgecolor.
+    ax : plt.Axes
+        The pyplot.axes objct.
+    kwargs : any
+        Arbitrary keyword arguments for `ax.bar`.
+    
+    Returns
+    -------
+    plt.Axes
+    '''
+    # ### check input
+    if any(df.isna().any()):
+        raise ValueError(Error_MSG.MISSING_DF.format('df'))
+    # get labels
+    labels = df[label]
+    # updating kwargs
+    new_kwargs = _update_kwargs(update_dict=kwargs, edgecolor=edgecolor,
+                                width=wd, alpha=transparancy, capsize=csiz,
+                                )
+    # set x-axis
+    x_ax = np.arange(df.shape[0])
+    xtic = np.arange(df.shape[0])
+    for i in range(len(columns)):
+        # identify column and color
+        column = columns[i]
+        color = colours[i]
+        if errors is not None:
+            error = errors[i]
+            # actual plotting
+            ax.bar(x_ax,height=df[column],color=color,yerr=df[error],
+                    **new_kwargs,
+                   )
+        else:
+            # actual plotting
+            ax.bar(x_ax,height=df[column],color=color,**new_kwargs,
+                   )
+        # update middle of bars
+        if i > 0:
+            xtic = [x + (wd / 2) for x in xtic]
+        # update x-axis
+        x_ax = [x + wd for x in x_ax]
+    # define x-axis ticks in the middle
+    ax.set_xticks(xtic)
+    # add x-axis labels
+    ax.set_xticklabels(labels)
+    # removing spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    # return
+    return ax
