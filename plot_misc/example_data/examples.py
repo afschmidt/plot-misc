@@ -315,6 +315,44 @@ def load_barchart_data(**kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
+def load_groupbar_data(**kwargs):
+    """
+    Loads data representing mean and SD percentage of sarcomere disruption
+    per knockdown gene and control in iPS-CM
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'group_bar.tsv.gz'),
+        sep='\t', index_col=None, **kwargs,
+    )
+    # return
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_barpoints_data(**kwargs):
+    """
+    Loads individual data points representing percentage of sarcomere
+    disruption per knockdown gene and control in iPS-CM
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'bar_points.tsv.gz'),
+        sep='\t', index_col=None, **kwargs,
+    )
+    # return
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
 def load_heatmap_data(**kwargs):
     """
     Loads data representing pvalue times direction of exposures (columns)

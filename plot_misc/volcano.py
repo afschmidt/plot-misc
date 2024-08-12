@@ -27,7 +27,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  point_label:Union[str,None]=None, legend:bool=False,
                  fsize:Union[Tuple[float, float], None]=None,
                  adjust:bool=False, lim:float=1000,
-                 alpha:float=0.00001,
+                 vline:float=0, alpha:float=0.00001,
                  col:Tuple[str, str, str]=('orangered','dimgrey','lightcoral'),
                  xlab:str='Point estimate',
                  ylab:str=r'$-log_{10}(pvalue)$',
@@ -62,6 +62,8 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     lim : float
         The tolerance for overplotting, higher numbers indicate lower tolerance
         and increases the distance between labels; also increasing the run time.
+    vline : float
+        The x-position of the vertical line
     alpha : float
         The significance cut-off used (will be logged, internally).
     col : tuple
@@ -124,7 +126,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ### significance level
     threshold = -1 * np.log10(alpha)
     ### setting a reference line (zorder=1; behind)
-    ax.axvline(x=0, c=col[2], linestyle='--', zorder=1, linewidth=1)
+    ax.axvline(x=vline, c=col[2], linestyle='--', zorder=1, linewidth=1)
     ### getting data above threshold
     above = data[data[y_column] >= threshold]
     xs = above[x_column]
