@@ -36,6 +36,7 @@ class ForestNames(object):
     g_col                          = 'g_col'
     y_col                          = 'y_axis'
     strata_del                     = 'strata_del'
+    group_del                      = 'group_del'
     order_col                      = 'order'
     min                            = 'min'
     max                            = 'max'

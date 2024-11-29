@@ -158,11 +158,12 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     return order_data
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
-                     between_pad:float=4, start:float=1, new_col:str='y_axis',
-                     sort_dict:Union[Dict[str,int], None, str]='skip',
-                     strata:Union[str, None]=None,
-                     ) -> pd.core.frame.DataFrame:
+def assign_distance(df:pd.DataFrame, group:Union[str, None]=None,
+                    within_pad:float=2, between_pad:float=4, start:float=1,
+                    new_col:str='y_axis',
+                    sort_dict:Union[Dict[str,int], None, str]='skip',
+                    strata:Union[str, None]=None,
+                    ) -> pd.core.frame.DataFrame:
     """
     A helper function that adds a `y-axis` column (useful for Cartesian graphs)
     to a dataframe based on group membership. The within_pad arguments
@@ -173,8 +174,9 @@ def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     ---------
     df : pd.DataFrame
         The dataframe that contains the `group` of interest.
-    group : str
-        A string that maps to a column in df.
+    group : str, default `Nonetype`
+        A column in `df` recording the group memberships. If set to `NoneType`
+        will simply assign each row to the same group (i.e. ignoring group).
     strata : str, default `NoneType`
         An optional df column which nests the `group` values.
     within_pad : float, default 2.0
@@ -199,15 +201,16 @@ def assign_distance(df:pd.DataFrame, group:str, within_pad:float=2,
     df = df.copy()
     # check input
     is_type(df, pd.DataFrame)
-    is_type(group, str)
+    is_type(group, (type(None), str))
     is_type(new_col, str)
     is_type(strata, (type(None), str))
     is_type(within_pad, (int, float))
     is_type(between_pad, (int, float))
     is_type(sort_dict, (type(None), dict, str))
+    if group is None:
+        group=FNames.group_del
+        df[group]=1
     are_columns_in_df(df, expected_columns=[group])
-    # if not group in df.columns:
-    #     raise KeyError('`df` does not contain column {0}.'.format(group))
     if strata is None:
         # use a place-holder strata
         strata=FNames.strata_del
@@ -285,63 +288,63 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     
     Parameters
     ----------
-    df : pd.DataFrame
-    x_col : str
+    df : `pd.DataFrame`
+    x_col : `str`
         The column name of the x-axis values (typically point estimates).
-    lb_col : str, default None
+    lb_col : `str`, default None
         The column name of the lower bound of an confidence interval.
-    ub_col : str, default None
+    ub_col : `str`, default None
         The column name of the upper bound of an confidence interval.
-    y_col : str, default `y_axis`
+    y_col : `str`, default `y_axis`
         The column name of the y-axis values used to differentiate
         estimates/studies.Should contain `int` or `float` values representing
         the cartesian y-coordinate for each point.
-    s_col : str, default `o`
+    s_col : `str`, default `o`
         The column name of the shape indicators. If string is not found in `df`
         the string value will be added to an `s_col` column.
-    c_col : str, default `black`
+    c_col : `str`, default `black`
         The column name of the shape colour indicators. If string is not found
         in `df` the string value will be added to an `c_col` column.
     a_col : float or str, default 1
         The column name of the alpha value for each point. If the string is not
         found in `df`, the float will be added to an `a_col` column.
-    g_col : str, default `NoneType`
+    g_col : `str`, default `NoneType`
         The column name of the group indicator; often the outcome or study
         indicators. If None, a column with a unique value for each row will be
         added - so there are no groups. This column will also be used to
         provide y-axis ticklabels.
-    s_size_col : str, float, default 40
+    s_size_col : `str` or `float`, default 40
         The column name of the `shape size` value for each point. Can also
         simply supply a `float` for a uniform shape. Supplying a `NoneType`
         will default to 40.
-    ci_lwd : float, default 1
+    ci_lwd : `float`, default 1
         The line width of the confidence intervals.
-    ci_colour : float, default 'indianred'
+    ci_colour : `float`, default 'indianred'
         The line colour of the confidence intervals
-    connect_shape : boolean, default `False`
+    connect_shape : `bool`, default `False`
         If the point estimates should be connected with a line. Only relevant
         when estimates have the same y-axis.
-    connect_shape_colour : str, default `grey`
+    connect_shape_colour : `str`, default `grey`
         The line colour.
-    connect_shape_lwd : float, default 1.0
+    connect_shape_lwd : `float`, default 1.0
         The line width.
-    span : boolean, default `True`
+    span : `bool`, default `True`
         Whether an colour-interchanging horizontal background segment should
         be added
-    span_return : boolean, default `False`
+    span_return : `bool`, default `False`
         Whether to return a dictionary with the span coordinates and kwargs to
         ``ax.axhspan``.
-    span_colour : list of two string, default ['white', 'lightgrey']
+    span_colour : `list` [`str`, `str`], default ['white', 'lightgrey']
         The colours of the span.
-    ylim : tuple of floats, `NoneType`
+    ylim : `tuple` [`float`, `float]], `NoneType`
         Overwrite the default y-limits if not set to `NoneType`.
-    ax : plt.axes, default `NoneType`
+    ax : `plt.axes`, default `NoneType`
         An optional matplotlib axis. If supplied the function works on the axis.
-    figsize : tuple of two floats, default (10, 10),
+    figsize : `tuple` [`float`, `float], default (10, 10),
         The figure size, when ax is set to None.
-    reverse_y : boolean, default `True`
+    reverse_y : `bool`, default `True`
         inverts the y-axis.
-    kwargs_*_dict : dict, default None
+    kwargs_*_dict : `dict` [`str`, `any`], default None
         Optional arguments supplied to the various plotting functions:
             kwargs_scatter_dict          --> ax.scatter
             kwargs_plot_ci_dict          --> ax.plot
@@ -459,7 +462,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
         df[shape_size_name] = shape_size
     # Use s_size_col
     if isinstance(s_size_col, str):
-        shape_size_name = shape_size
+        shape_size_name = s_size_col
     elif isinstance(s_size_col, (float, int)):
         shape_size_name = 'shape_size'
         df[shape_size_name] = s_size_col
