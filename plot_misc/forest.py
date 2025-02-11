@@ -102,19 +102,21 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
               order_inner:Union[Dict[str, List[str]], None]=None
               ) -> pd.core.frame.DataFrame:
     '''
-    Order a data frame by and outer and inner order, say by study and within
+    Orders a data table by a user provided list, allowing for optional
+    `inner` ordering. For example, a table can be ordered by study and within
     study by outcome.
     
     Parameters
     ----------
     data : pd.DataFrame
-    oder_outer : dict
-        The dictionary key will be used to select the `data` column, and the
-        dictionary value should contain a list of string to order the column.
-    order_inner : dict, default `NoneType`
-        The dictionary key will be used to select the `data` column, and the
-        dictionary value should contain a list of string to order the column.
-        Set to `NoneType` to skip and only order by `oder_outer`.
+    oder_outer : `dict` [`str`, `list` [`str`]]
+        Use the dictionary key to identify the column in `data` by which
+        the table should be ordered. The dictionary value should include
+        a list of strings representing the desired table row order.
+    order_inner : `dict` [`str`, `list` [`str`]], default `NoneType`
+        Use the dictionary key to identify the column in `data` by which
+        the table should be ordered. The dictionary value should include
+        a list of strings representing the desired table row order.
     
     Returns
     -------
