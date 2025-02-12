@@ -233,18 +233,18 @@ def assign_distance(df:pd.DataFrame, group:Union[str, None]=None,
     # number of groups and number of rows
     n_strat = len(df[strata].unique())
     n_group = len(df[group].unique())
-    l_group = df[group].value_counts().unique()/n_strat
-    if l_group.shape[0] != 1:
-        raise ValueError('The number of group elements is not unique: {}.'.\
-                         format(l_group.shape[0]))
-    else:
-        l_group = l_group[0]
+    l_group = df[group].value_counts()/n_strat
+    if l_group.shape[0] != n_group:
+        raise ValueError(f'`n_group`, should equal `l_group`, not: {n_group} '
+                         f'and {l_group}, repsectivly. '
+                         )
     # getting spacing
     y_axis = []
     i = 0
     while i < n_group:
         # within group sequence
-        chunk = np.arange(start, stop=start+within_pad*l_group, step=within_pad)
+        chunk = np.arange(start, stop=start+within_pad*l_group.iloc[i],
+                          step=within_pad)
         y_axis = y_axis + chunk.tolist()
         # between group space
         start = y_axis[-1] + between_pad
