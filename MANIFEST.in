@@ -1,3 +1,5 @@
+include README.md LICENSE
+
 exclude MANIFEST.in
 exclude .*
 
