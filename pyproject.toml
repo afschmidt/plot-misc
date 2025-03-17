@@ -37,8 +37,8 @@ Homepage = "https://gitlab.com/SchmidtAF/plot-misc"
 include = ["plot_misc*"]
 exclude = ["tests", "*.tests", "*.tests.*", "tests.*"]
 
-# [tool.setuptools]
-# include-package-data = true
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools.package-data]
 "plot_misc" = ["*.md", "*.txt", "*.rst"]
