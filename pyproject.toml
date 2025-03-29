@@ -46,15 +46,6 @@ include-package-data = true
 [tool.setuptools.exclude-package-data]
 "*" = ["tests/*"]
 
-# [tool.setuptools.classifiers]
-# values = [
-#     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-#     "Programming Language :: Python",
-#     "Programming Language :: Python :: 3",
-#     "Programming Language :: Python :: 3.12",
-#     "Programming Language :: Python :: Implementation :: PyPy"
-# ]
-
 [tool.pytest.ini_options]
 markers = [
     "datafiles: load datafiles"

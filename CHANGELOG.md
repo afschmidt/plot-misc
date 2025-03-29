@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.1.1 - 29-03-2024
+
+### Fixed
+
+- Bug fixes to pychart. 
+- Bug fixes to utils.utils.calc_matrix.
+
+### Added
+
+- Where relevant add __repr__
+- Added some additional colours. 
+- Added a grouped bar chart. 
+
+### Changed
+
+- Migrated to pyproject.toml instead of setup.py
+- Where relevant ensure all functions return ax.figure if an ax is supplied. 
+This replaces retruning a None value.
+- Document clarifications. 
+- `assign_distance` can now deal with groups of different sizes. 
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+_Nothing_
+
 ## v1.1.0 - 23-02-2024
 
 ### Fixed
