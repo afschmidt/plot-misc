@@ -1,8 +1,6 @@
 '''
-A function to draw incidence matrices.
-
-It will make a n by m grid of lines  populating the intersections with dots.
-important intersection will be highlighted
+A function to draw incidence matrices, creating an n by m grid of lines
+populating the intersections with shapes.
 '''
 
 # importing
@@ -11,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import Any, List, Type, Union, Tuple, Dict
 from plot_misc.utils.utils import _update_kwargs
-from plot_misc.constants import is_type
+from plot_misc.constants import is_type, _assign_empty_default
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
@@ -26,12 +24,13 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
                          margins:Union[List[float], None]=None,
                          ax:Union[plt.Axes, None]=None,
                          break_limits:List[float] = [-np.inf, np.inf],
-                         kwargs_scatter_dict:Dict[Any, Any]={},
-                         kwargs_vline_dict:Dict[Any, Any]={},
-                         kwargs_hline_dict:Dict[Any, Any]={},
-                         ) -> plt.Axes:
+                         kwargs_scatter_dict:Union[Dict[Any, Any],None]=None,
+                         kwargs_vline_dict:Union[Dict[Any, Any],None]=None,
+                         kwargs_hline_dict:Union[Dict[Any, Any],None]=None,
+                         ) -> Tuple[plt.Figure, plt.Axes]:
     '''
-    Creates a `categorical heatmap` = a visualization of an incidence matrix.
+    Creates a `categorical heatmap`, essentially visualising an incidence
+    matrix.
     
     Arguments
     ---------
@@ -41,13 +40,13 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         `dot_colour` breaks and colours, with a specified size and transparency.
     fsize : tuple
         A two element tuple, with the width and height in cm.
-    dot_colour : `list` of `tuple`
+    dot_colour : list of tuples, default `[('grey',0), ('black',1)]`
         A list of arbitrary length, specifying the colour and upper bound
         the colour is applied to. Each tuple should have
         (<colour>, <upper bound>).
         
         The default: [('grey',0), ('black',1)], colours dots grey for value in
-        (\infinity, 0], and colours dots black for values in (0, 1].
+        (\\infinity, 0], and colours dots black for values in (0, 1].
     dot_size : list
         A list of length equal to `dot_colour`. specifying the size of the dots.
     dot_transparency : list
@@ -71,7 +70,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
     break_limits : list
         Currently used to specify the lower bound the first colour is applied
         to. Most likely you will never need to touch this.
-    kwargs_*_dict : dict, default empty dict,
+    kwargs_*_dict : dict, default None
         Optional arguments supplied to the various plotting functions:
             kwargs_scatter_dict        --> ax.scatter
             kwargs_vline_dict          --> ax.vline
@@ -79,14 +78,19 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         
     Returns
     -------
-    Unpacks a matplotlib figure, axes, unless `ax` is supplied an plt.axis,
-    in which case nothing is returned.
+    fig: plt.Figure
+    ax: plt.Axes
     '''
     
     # check inputs
     is_type(dot_size, list)
     is_type(dot_colour, list)
     is_type(dot_transparency, list)
+    # map None to dict
+    kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict =\
+        _assign_empty_default(
+            [kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict],
+            dict)
     # if one value is supplied, multiply the number of dot_colour elements
     ndots = len(dot_colour)
     if len(dot_size) == 1:
@@ -111,7 +115,7 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         f, ax = plt.subplots(figsize=(fsize[0] * cmtoinch,
                                       fsize[1] * cmtoinch))
     else:
-        f = None
+        f = ax.figure
     
     # the x and y coordinates
     M, N = data.shape

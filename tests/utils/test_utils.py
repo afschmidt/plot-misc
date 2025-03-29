@@ -1,7 +1,13 @@
 """
 testing the `utils` module
 """
-from plot_misc.constants import UtilsNames as UNames
+import numpy as np
+import matplotlib.pyplot as plt
+import pytest
+from plot_misc.constants import (
+    UtilsNames as UNames,
+    InputValidationError,
+)
 from plot_misc.example_data import examples
 from plot_misc.utils.utils import (
     _extract,
@@ -9,6 +15,10 @@ from plot_misc.utils.utils import (
     calc_matrices,
     _update_kwargs,
     _dict_string_argument,
+    fix_labels,
+    calc_mid_point,
+    calc_angle_points,
+    segment_labelled,
 )
 
 
@@ -166,5 +176,84 @@ class TestCalcMatrices(object):
         assert res6.curated_matrix_value.iloc[0].to_list() == \
             [0.596, -0.02]
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~----
+class TestFixLabels(object):
+    '''
+    Testing function `fix_labels`.
+    '''
+    def test_fix_labels(self):
+        # Create a mock axis
+        fig, ax = plt.subplots()
+        # Create mock annotations with overlapping positions
+        ann1 = ax.annotate("Annotation 1", xy=(0.5, 0.5), xytext=(0.5, 0.5))
+        ann2 = ax.annotate("Annotation 2", xy=(0.5, 0.55), xytext=(0.5, 0.55))
+        # Call the utility function to fix labels
+        fix_labels([ann1, ann2], ax, min_distance=0.1)
+        # Assert that annotations are adjusted to prevent overlap
+        pos1 = ax.transData.inverted().transform(ax.transData.transform(ann1.get_position()))
+        pos2 = ax.transData.inverted().transform(ax.transData.transform(ann2.get_position()))
+        vertical_distance = abs(pos1[1] - pos2[1])
+        # Floating point precision issue....
+        assert vertical_distance >= 0.1 - 1e-10
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_Calc_Mid_Point(object):
+    '''
+    Testing functions for the `calc_mid_point` function.
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert calc_mid_point(x=[0, 2], y=[2, 2]) == (1, 2)
+        assert calc_mid_point(x=[0, 2], y=[2, 6]) == (1, 4)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_errors(self):
+        # wrong input type
+        with pytest.raises(InputValidationError):
+            calc_mid_point(x=np.array([2,2]), y=[2,2])
+        # wrong length
+        with pytest.raises(InputValidationError):
+            calc_mid_point(x=[1], y=[2,2])
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_Calc_Angle_Points(object):
+    '''
+    Testing functions for the `calc_angle_points` function.
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert calc_angle_points(x=[0, 2], y=[2, 2]) == 0.0
+        assert calc_angle_points(x=[0, 2], y=[2, 4]) == 45.0
+        assert calc_angle_points(x=[2, 0], y=[2, 4]) == 315.0
+        assert calc_angle_points(x=[0, 2], y=[2, 4], radians=True) == np.pi/4
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_errors(self):
+        # wrong input type
+        with pytest.raises(InputValidationError):
+            calc_angle_points(x=np.array([2,2]), y=[2,2])
+        # wrong length
+        with pytest.raises(InputValidationError):
+            calc_angle_points(x=[1], y=[2,2])
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_Segment_Labelled(object):
+    '''
+    Testing functions for the `segment_labelled` function.
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        # test 1
+        _, ax = plt.subplots()
+        segment_labelled(x=[0, 2], y=[2, 2], ax=ax)
+        assert list(ax.get_lines()[0].get_ydata()) == [2,2]
+        # test 2
+        lab='hi'
+        _, ax = plt.subplots()
+        segment_labelled(x=[0, 2], y=[2, 2], ax=ax, label=lab)
+        assert ax.texts[0].get_text() == lab
+        # test 3
+        lab='hi'
+        _, ax = plt.subplots()
+        segment_labelled(x=[0, 2], y=[2, 4], ax=ax, label=lab)
+        assert ax.texts[0].get_position() == (1.0, 3.0)
+        assert np.round(ax.texts[0].get_rotation(), 2) == 36.69

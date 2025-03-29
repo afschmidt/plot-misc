@@ -77,7 +77,7 @@ class TestAssignDistance(object):
         data_in = data1.copy()
         del data_in[FNames.y_col]
         # getting y_axis
-        res = forest._assign_distance(data_in, group=GROUP)
+        res = forest.assign_distance(data_in, group=GROUP)
         # test
         assert FNames.y_col in res.columns
         assert res[FNames.y_col].mean() == 59.0
@@ -91,7 +91,7 @@ class TestAssignDistance(object):
         data_in = data1.copy()
         del data_in[FNames.y_col]
         # getting y_axis
-        res = forest._assign_distance(data_in, group=GROUP, strata='model',
+        res = forest.assign_distance(data_in, group=GROUP, strata='model',
                                       start=2,
                                       sort_dict=SORT_DICT,
                                       )
@@ -113,21 +113,21 @@ class TestPlotForest(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest(self):
         f, ax = plt.subplots(1, figsize=(15, 15))
-        _, ax = forest.plot_forest(df=data2,
-                                   x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME, a_col=ALPHA_NAME,
-                                   c_col=COL_NAME, ci_colour='black',
-                                   g_col='evaluated_outcome', shape_size= 19,
-                                   ci_lwd=2,
-                                   ax=ax,
-                                   kwargs_scatter_dict={'edgecolors':'black',
-                                                        'zorder':1},
-                                   kwargs_plot_ci_dict={'zorder':2,
-                                                        'solid_capstyle':'round',
-                                                        'linestyle':'-.',
-                                                        'alpha':'row[a_col_name]',
-                                                        }
-                                   )
+        _, ax, _ = forest.plot_forest(df=data2,
+                                      x_col=POINT, lb_col=LB, ub_col=UB,
+                                      s_col=SHAPE_NAME, a_col=ALPHA_NAME,
+                                      c_col=COL_NAME, ci_colour='black',
+                                      g_col='evaluated_outcome', s_size_col= 19,
+                                      ci_lwd=2,
+                                      ax=ax,
+                                      kwargs_scatter_dict={'edgecolors':'black',
+                                                           'zorder':1},
+                                      kwargs_plot_ci_dict={'zorder':2,
+                                                           'solid_capstyle':'round',
+                                                           'linestyle':'-.',
+                                                           'alpha':'row[a_col_name]',
+                                                           }
+                                      )
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -135,7 +135,7 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 19
         assert list(data2[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[3].get_xdata()) == \
@@ -145,11 +145,11 @@ class TestPlotForest(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_noci_forest(self):
         f, ax = plt.subplots(1, figsize=(15, 15))
-        _, ax = forest.plot_forest(df=data2,
+        _, ax, _ = forest.plot_forest(df=data2,
                                    x_col=POINT,
                                    s_col=SHAPE_NAME, a_col=ALPHA_NAME,
                                    c_col=COL_NAME, ci_colour='black',
-                                   g_col='evaluated_outcome', shape_size= 19,
+                                   g_col='evaluated_outcome', s_size_col= 19,
                                    ci_lwd=2,
                                    ax=ax,
                                    kwargs_scatter_dict={'edgecolors':'black',
@@ -162,10 +162,10 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 19
         assert list(data2[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest_wo_ax(self):
-        _, ax = forest.plot_forest(df=data2,
+        _, ax, _ = forest.plot_forest(df=data2,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME,
@@ -178,7 +178,7 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 40
         assert list(data2[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[9].get_xdata()) == \
@@ -189,7 +189,7 @@ class TestPlotForest(object):
         assert lines[3].get_color() == 'indianred'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_complex_forest(self):
-        _, ax = forest.plot_forest(df=data1,
+        _, ax, _ = forest.plot_forest(df=data1,
                                    x_col=POINT, lb_col=LB, ub_col=UB,
                                    s_col=SHAPE_NAME, c_col=COL_NAME,
                                    a_col=ALPHA_NAME, ci_colour='black',
@@ -197,7 +197,7 @@ class TestPlotForest(object):
                                    connect_shape=True,
                                    kwargs_scatter_dict={'edgecolors':'black'},
                                    kwargs_connect_segments_dict={'zorder':1},
-                                  )
+                                   )
         # check the points are correct
         assert list(data1[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -205,7 +205,7 @@ class TestPlotForest(object):
         collect=ax.collections
         assert collect[0].get_sizes() == 40
         assert list(data1[ALPHA_NAME]) == \
-                list([al.get_alpha() for al in collect])
+            list([al.get_alpha() for al in collect])
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[9].get_xdata()) == \
@@ -214,6 +214,28 @@ class TestPlotForest(object):
         assert lines[6].get_solid_capstyle() == 'projecting'
         assert lines[3].get_lw() == 2.0
         assert lines[3].get_color() == 'black'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_forest_return_other(self):
+        '''
+        evaluating the returned 'other' tuple
+        '''
+        # not retruning anything
+        _, ax, log = forest.plot_forest(df=data2,
+                                   x_col=POINT, lb_col=LB, ub_col=UB,
+                                   s_col=SHAPE_NAME, c_col=COL_NAME,
+                                   a_col=ALPHA_NAME,
+                                   )
+        assert len(log.__getattribute__(FNames.span)) == 0
+        # retruning something
+        _, ax, log = forest.plot_forest(df=data2,
+                                   x_col=POINT, lb_col=LB, ub_col=UB,
+                                   s_col=SHAPE_NAME, c_col=COL_NAME,
+                                   a_col=ALPHA_NAME,
+                                   span=True, span_return=True,
+                                   )
+        assert len(log.__getattribute__(FNames.span)) != 0
+        assert isinstance(log.__getattribute__(FNames.span), dict)
+        assert isinstance(log.__getattribute__(FNames.span), dict)
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_table
@@ -242,3 +264,53 @@ class TestPlotTable(object):
         assert ax.texts[-1].get_fontsize() == 6
         assert ax.texts[1].get_fontsize() == 5
         assert ax.texts[1].get_horizontalalignment() == 'left'
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# EmpericalSupport
+class EmpericalSupport(object):
+    """
+    Testing the `EmpericalSupport` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_calc_empirical_support(self):
+        table = forest.EmpericalSupport.calc_empirical_support(
+            -2, 0.2, [0.01, 0.2, 0.8])
+        assert table.mean().round(2).to_list() ==\
+            [-2.0, -2.27, -1.73, 0.34, 0.66]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_empirical_support(self):
+        table=pd.DataFrame(
+            {'estimate': {0: -2, 1: -2, 2: -2},
+             'lower_bound': {0: -2.51516586070978, 1: -2.25631031310892,
+                             2: -2.05066942062716},
+             'upper_bound': {0: -1.48483413929022, 1: -1.7436896868910798,
+                             2: -1.9493305793728402},
+             'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
+             'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
+        )
+        _, ax = forest.EmpericalSupport.plot_empirical_support(
+            table, lb_col='lower_bound', ub_col='upper_bound',
+            support_col='confidence_interval',
+            estimate=None)
+        # assert
+        assert len(ax.lines) == 2
+        for i, line in enumerate(ax.get_lines()):
+            assert list(line.get_ydata()) ==\
+                table['confidence_interval'].to_list()
+            # whether to use the lower or upper bound
+            if i == 0:
+                assert list(line.get_xdata()) == table['lower_bound'].to_list()
+            elif i == 1:
+                assert list(line.get_xdata()) == table['upper_bound'].to_list()
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_tree(self):
+        est = 0.2; m=100
+        space=forest.EmpericalSupport(estimate=est, standard_error=0.001,
+                                      alpha=list(np.linspace(1, 0.00001, m))
+                                      )
+        _, ax, results = space.plot_tree()
+        # assert
+        assert len(ax.lines) == 2
+        assert results.estimate == est
+        assert results.data_table.shape == m

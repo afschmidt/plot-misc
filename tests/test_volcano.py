@@ -47,7 +47,7 @@ class TestPlotVolcano(object):
     def test_plot_volcano_wlabels(self):
         # adding label data
         data2 = DATA.copy()
-        data2['label'] = np.nan
+        # data2['label'] = np.nan
         data2.loc['9316_67_3_WFDC1',  'label'] = LABEL
         index = ['9316_67_3_WFDC1']
         # plotting
@@ -64,7 +64,7 @@ class TestPlotVolcano(object):
                             },
                             )
         # check if label is there
-        text = ax.axes.texts.pop()
+        text = ax.axes.texts[-1]
         assert text.get_text() == LABEL
         # check the points are correct
         list(data2['pvalue_log10'])[0] in ax.collections[1].get_offsets().data[:,1]

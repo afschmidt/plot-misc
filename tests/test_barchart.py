@@ -15,6 +15,12 @@ LABELS = 'labels'
 TABLE = examples.load_barchart_data()
 TABLE_T = TABLE.T.copy()
 TABLE_T[LABELS] = TABLE.T.index
+GROUP = examples.load_groupbar_data()
+GR_COL = ['white'] + COLOURS
+GR_LAB = 'Age'
+GENES = ['Control', 'AP4S1', 'LRRC39', 'ZFAND4']
+COLS = [x + '_mean' for x in GENES]
+ERRS = [x + '_std' for x in GENES]
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # stack_bar
@@ -103,7 +109,7 @@ class TestTotalBar(object):
 # bar
 class TestBar(object):
     """
-    Testing functions for the `stack_barh` function.
+    Testing functions for the `bar` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_bar(self):
@@ -122,3 +128,25 @@ class TestBar(object):
         assert patch[1].get_linewidth() == 1.2
         assert len([p.get_y() for p in patch]) == TABLE_T.shape[0]
 
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# bar
+class TestGroupBar(object):
+    """
+    Testing functions for the `group_bar` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_group_bar(self):
+        # supplying external axes
+        fig, ax = plt.subplots(1, figsize=(1, 1))
+        # running the function
+        ax = barchart.group_bar(GROUP, label=GR_LAB,
+                                columns=COLS, errors=ERRS,
+                                wd=0.6, edgecolor=EDGECOLOUR, colours=GR_COL,
+                                ax=ax, **{'linewidth':1},
+                                )
+        # asserting - getting the raw data is more difficult here will confirm
+        # the length instead
+        patch=ax.patches
+        assert patch[0].get_width() == 0.6
+        assert patch[1].get_linewidth() == 1
+        assert len([p.get_y() for p in patch]) == GROUP.shape[0] * len(GENES)

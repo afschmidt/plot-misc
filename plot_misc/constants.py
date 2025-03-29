@@ -1,11 +1,11 @@
 '''
 Constants used throughout the plot-misc package.
 '''
-
 import pandas as pd
 import numpy.typing as npt
 import numpy as np
-from typing import Any, List, Type, Union, Tuple
+from packaging import version
+from typing import Any, List, Type, Union, Tuple, Callable
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # NAMES
@@ -26,46 +26,88 @@ class TableNames(object):
     file_name       = 'file_name'
     analysis        = 'analysis'
     index           = 'index'
-    
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Forest plot
 class ForestNames(object):
-    s_col      = 's_col'
-    c_col      = 'c_col'
-    a_col      = 'a_col'
-    g_col      = 'g_col'
-    y_col      = 'y_axis'
-    strata_del = 'strata_del'
-    order_col  = 'order'
-    min        = 'min'
-    max        = 'max'
-    mean       = 'mean'
-    fontweight = 'bold'
-    
+    s_col                          = 's_col'
+    c_col                          = 'c_col'
+    a_col                          = 'a_col'
+    g_col                          = 'g_col'
+    y_col                          = 'y_axis'
+    strata_del                     = 'strata_del'
+    group_del                      = 'group_del'
+    order_col                      = 'order'
+    min                            = 'min'
+    max                            = 'max'
+    mean                           = 'mean'
+    fontweight                     = 'bold'
+    kwargs                         = 'kwargs'
+    span                           = 'span'
+    ESTIMATE                       = 'estimate'
+    LOWER_BOUND                    = 'lower_bound'
+    UPPER_BOUND                    = 'upper_bound'
+    PVALUE                         = 'p-value'
+    CI                             = 'confidence_interval'
+    data_table                     = 'data_table'
+    EmpericalSupport_Coverage      = 'coverage'
+    EmpericalSupport_Compatability = 'compatibility'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names
 class UtilsNames(object):
-    value_input       = 'curated_matrix_value'
-    annot_input       = 'curated_matrix_annotation'
-    annot_star        = 'matrix_star'
-    annot_pval        = 'matrix_pvalue'
-    annot_effect      = 'matrix_point_estimate'
-    value_point       = 'curated_matrix_point_estimate_value'
-    value_original    = 'crude_point_estimate'
-    source_data       = 'source_data'
-    mat_point         = 'point'
-    mat_pvalue        = 'pvalue'
-    mat_index         = 'id'
-    mat_exposure      = 'exposure'
-    mat_outcome       = 'outcome'
-    mat_exposure_list = ['IL2ra', 'IP10', 'SCF', 'TRAIL']
-    mat_outcome_list  = ['HDL-C', 'LDL-C']
-    mat_annot_star    = 'star'
-    mat_annot_pval    = 'pvalues'
-    mat_annot_point   = 'point_estimates'
-    mat_annot_none    = '`NoneType`'
+    value_input        = 'curated_matrix_value'
+    annot_input        = 'curated_matrix_annotation'
+    annot_star         = 'matrix_star'
+    annot_pval         = 'matrix_pvalue'
+    annot_effect       = 'matrix_point_estimate'
+    value_point        = 'curated_matrix_point_estimate_value'
+    value_original     = 'crude_point_estimate'
+    source_data        = 'source_data'
+    mat_point          = 'point'
+    mat_pvalue         = 'pvalue'
+    mat_index          = 'id'
+    mat_exposure       = 'exposure'
+    mat_outcome        = 'outcome'
+    mat_exposure_list  = ['IL2ra', 'IP10', 'SCF', 'TRAIL']
+    mat_outcome_list   = ['HDL-C', 'LDL-C']
+    mat_annot_star     = 'star'
+    mat_annot_pval     = 'pvalues'
+    mat_annot_point    = 'point_estimates'
+    mat_annot_none     = '`NoneType`'
+    roc_false_positive = 'false_positive'
+    roc_sensitivity    = 'sensitivity'
+    roc_threshold      = 'threshold'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class NamesDecisionCurves(object):
+    '''
+    Module names for the decision_curve model
+    '''
+    TP_RATE      = 'True positive rate'
+    FP_RATE      = 'False positive rate'
+    THRESHOLD    = 'Threshold'
+    ALL_MODEL    = 'All model'
+    NONE_MODEL   = 'None model'
+    MODEL        = 'model'
+    NETBENEFIT   = 'Net benefit'
+    HARM         = 'harm'
+    COL          = 'col'
+    LTY          = 'lty'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class NamesMachineLearnig(object):
+    '''
+    Module names for the machine_learning module
+    '''
+    DATA           = 'data'
+    CI_COLOUR      = 'ci_colour'
+    CI_LINEWIDTH   = 'ci_linewidth'
+    DOT_COLOUR     = 'dot_colour'
+    DOT_MARKER     = 'dot_marker'
+    LINE_COLOUR    = 'line_colour'
+    LINE_LINEWIDTH = 'line_linewidth'
+    LINE_LINESTYLE = 'line_linestyle'
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # CHECKING INPUTS
@@ -80,7 +122,8 @@ class InputValidationError(Exception):
     pass
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def is_type(param: Any, types: Union[Tuple[Type], Type]) -> bool:
+def is_type(param: Any, types: Union[Tuple[Type], Type],
+            param_name: Union[str, None]=None) -> bool:
     """
     Checks if a given parameter matches any of the supplied types
     
@@ -88,14 +131,24 @@ def is_type(param: Any, types: Union[Tuple[Type], Type]) -> bool:
     ----------
     param: object to test
     types: either a single type, or a tuple of types to test against.
+    param_name: an optional string to return the parameter name in the
+        errormessage
     
     Returns
     -------
     True if the parameter is an instance of any of the given types.
-    Raises InputValidationError otherwise.
+    Raises AttributeError otherwise.
     """
     if not isinstance(param, types):
-        raise InputValidationError(f"Expected any of [{types}], got {type(param)}")
+        if param_name is None:
+            raise InputValidationError(
+                f"Expected any of [{types}], got {type(param)}."
+            )
+        else:
+            raise InputValidationError(
+                f"Expected any of [{types}], "
+                f"got {type(param)}; Please see parameter: `{param_name}`."
+            )
     return True
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,8 +183,8 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
     
     Returns
     -------
-    True if the column(s) match(es) the given types.
-    Raises InputValidationError otherwise.
+    True if the column(s) match(es) the given types. Raises
+    InputValidationError otherwise.
     """
     # check input
     is_type(column, (pd.DataFrame, pd.Series))
@@ -139,7 +192,10 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
     if isinstance(column, pd.Series):
         [is_type(col, types) for col in column]
     elif isinstance(column, pd.DataFrame):
-        for _, col in column.iteritems():
+        if version.parse('2.0.3') <= version.parse(pd.__version__):
+            # iteritems got depricated.
+            column.iteritems = column.items
+        for _, col in column.items():
             [is_type(co, types) for co in col]
     # return
     return True
@@ -242,10 +298,48 @@ def string_to_list(object:Any) -> Union[Any, List[str]]:
         return object
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _assign_empty_default(arguments:List[Any], empty_object:Callable[[],Any],
+                         ) -> List[Any]:
+    '''
+    Takes a list of `arguments`, checks if these are `NoneType` and if so
+    asigns them 'empty_object'.
+    
+    This function helps deal with the pitfall of assigning an empty mutable
+    object as a default function argument, which would persist through multiple
+    function calls, leading to unexpected/undesired behaviours.
+    
+    Parameters
+    ----------
+    arguments: list of arguments
+        A list of arguments which may be set to `NoneType`.
+    empty_object: Callable that returns a mutable object
+        Examples include a `list` or a `dict`.
+    
+    Returns
+    -------
+    new_arguments: list
+        List with `NoneType` replaced by empty mutable object.
+    
+    Examples
+    --------
+    >>> assign_empty_default(['hi', None, 'hello'], empty_object=list)
+    ['hi', [], 'hello']
+    '''
+    # check input
+    is_type(arguments, list, 'arguments')
+    is_type(empty_object, type, 'empty_object')
+    # loop over arguments
+    new_args = [empty_object() if arg is None else arg for arg in arguments]
+    # return
+    return new_args
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # error messages
 class Error_MSG(object):
     '''
     A collection of error messages.
     '''
     MISSING_DF = '`{}` contains missing values.'
+    INVALID_STRING = '`{}` should be limited to `{}`.'
+    INVALID_EXACT_LENGTH = '`{}` needs to contain exactly {} elements, not {}.'
 

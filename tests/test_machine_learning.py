@@ -2,9 +2,13 @@
 testing the `machine_learning` module
 """
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import plot_misc.machine_learning as ml
-from plot_misc.constants import UtilsNames as UNames
+from plot_misc.constants import (
+    UtilsNames as UNames,
+    NamesDecisionCurves as NamesDC,
+)
 from plot_misc.example_data import examples
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -14,6 +18,12 @@ VALUES='importance'
 LABELS='name'
 PRED = 'average_predict_risk'
 OBS = 'average_observed_risk'
+DC_OUTCOME='Composite outcome'
+DC_MODELNAMES=['DCM-PROGRESS', 'maggic (3-years risk of death)']
+DC_MODELNAMES2 = DC_MODELNAMES + [NamesDC.NONE_MODEL, NamesDC.ALL_MODEL]
+COL_DICT = {k:j for j, k in zip(['orangered', 'blue', 'pink', 'black'],
+                                DC_MODELNAMES2)}
+LINE_DICT = {k:j for j, k in zip(['--', '--', '-', '-'], DC_MODELNAMES2)}
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing the lollipop function
@@ -102,10 +112,10 @@ class TestLollipop(object):
 # Testing the calibration function
 class TestClibration(object):
     """
-    Testing functions for the `lollipop` function.
+    Testing functions for the `calibration` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_lollipop_supplied_axes(self):
+    def test_calibration_supplied_axes(self):
         # data
         data = examples.load_calibration_bins()
         fig, ax = plt.subplots(1, figsize=(1,1))
@@ -122,7 +132,7 @@ class TestClibration(object):
         # evaluate confidence interval (plot per y and x pairs)
         assert all(lines[2].get_ydata() == data.iloc[0, 2:4].to_numpy())
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_lollipop_without_axes(self):
+    def test_calibration_without_axes(self):
         # data
         data = examples.load_calibration_bins()
         # make plot
@@ -138,7 +148,7 @@ class TestClibration(object):
         # evaluate confidence interval (plot per y and x pairs)
         assert all(lines[2].get_ydata() == data.iloc[0, 2:4].to_numpy())
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_lollipop_multiple_datasets(self):
+    def test_calibration_multiple_lines(self):
         # data
         data = examples.load_calibration_bins()
         data2 = data.copy()
@@ -166,7 +176,7 @@ class TestClibration(object):
         assert lines[9].get_markerfacecolor() == 'lightgreen'
         assert lines[1].get_markerfacecolor() == 'lightcoral'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_lollipop_multiple_datasets(self):
+    def test_calibration_kwargs(self):
         # data
         data = examples.load_calibration_bins()
         # make plot
@@ -203,5 +213,66 @@ class TestClibration(object):
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
         assert lines[0].get_c() == 'red'
 
-
-
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# Testing the Decision Curve class
+class TestDecisionCurve(object):
+    """
+    Testing functions for the `DecisionCurve` class.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_decisioncurve_calc_net_benefit(self):
+        data = examples.load_net_benefit_data()
+        nb_obj = ml.DecisionCurve(data)
+        # basic application
+        nb_obj.calc_net_benefit(
+            outcome=DC_OUTCOME, modelnames=DC_MODELNAMES,
+            thresholds=list(np.linspace(0.0, 0.3, 100))
+        )
+        assert nb_obj.data.shape[1] == 5
+        assert NamesDC.ALL_MODEL in nb_obj.data.columns
+        assert nb_obj.NET_BENEFIT.mean(axis=0).round(2).to_list()  ==\
+            [0.08, 0.46, 0.15, 0.0, 0.01]
+        # with harms and prevalence
+        nb_obj.calc_net_benefit(
+            outcome=DC_OUTCOME, modelnames=DC_MODELNAMES,
+            thresholds=list(np.linspace(0.0, 0.3, 100)),
+            prevalence=0.2,
+            harm={DC_MODELNAMES[0]: 0.05},
+        )
+        assert nb_obj.NET_BENEFIT.shape == (400, 5)
+        assert NamesDC.NONE_MODEL in nb_obj.data.columns
+        assert nb_obj.NET_BENEFIT.mean(axis=0).round(2).to_list()  ==\
+            [0.14, 0.42, 0.15, 0.01, 0.06]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_decisioncurve_plot_without_axes(self):
+        data = examples.load_net_benefit_data()
+        nb_obj = ml.DecisionCurve(data)
+        # basic plot
+        nb_obj.calc_net_benefit(
+            outcome=DC_OUTCOME, modelnames=DC_MODELNAMES,
+            thresholds=list(np.linspace(0.0, 0.3, 100))
+        )
+        f, ax = nb_obj.plot(figsize=(3,3),
+                            col_dict=COL_DICT,
+                            line_dict=LINE_DICT,
+                            linewidth=1, lowess_frac=1/3,
+                            kwargs_lowess={'it':3},
+                            )
+        assert len(ax.lines) == 4
+        assert np.round(np.max(ax.lines[1].get_ydata()), 2) == 0.12
+        assert np.round(np.min(ax.lines[1].get_ydata()), 2) == 0.00
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_decisioncurve_plot_with_axes(self):
+        data = examples.load_net_benefit_data()
+        nb_obj = ml.DecisionCurve(data)
+        # basic plot
+        fig, ax = plt.subplots(1, figsize=(1, 1))
+        nb_obj.calc_net_benefit(
+            outcome=DC_OUTCOME, modelnames=DC_MODELNAMES,
+            thresholds=list(np.linspace(0.0, 0.3, 100))
+        )
+        _, _ = nb_obj.plot(ax=ax)
+        assert len(ax.lines) == 4
+        assert np.round(np.max(ax.lines[1].get_ydata()), 2) == 0.12
+        assert np.round(np.min(ax.lines[1].get_ydata()), 2) == -0.01
+        assert ax.lines[1].get_linewidth() == 0.80

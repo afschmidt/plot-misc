@@ -1,5 +1,85 @@
 # Changelog
 
+## v1.1.1 - 29-03-2024
+
+### Fixed
+
+- Bug fixes to pychart. 
+- Bug fixes to utils.utils.calc_matrix.
+
+### Added
+
+- Where relevant add __repr__
+- Added some additional colours. 
+- Added a grouped bar chart. 
+
+### Changed
+
+- Migrated to pyproject.toml instead of setup.py
+- Where relevant ensure all functions return ax.figure if an ax is supplied. 
+This replaces retruning a None value.
+- Document clarifications. 
+- `assign_distance` can now deal with groups of different sizes. 
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+_Nothing_
+
+## v1.1.0 - 23-02-2024
+
+### Fixed
+
+_Nothing_
+
+### Added
+
+- A DecisionCurve class in the machine_learning.
+
+### Changed
+
+- Updated examples.
+- Changed the default behaviour of assign_distance to not sort rows. 
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+- Removes KD test function.
+- Removes table module.
+
+## v1.0.0 - 15-02-2024
+
+### Fixed
+
+_Nothing_
+
+### Added
+
+- Piechart module `pychart`.
+- A point estimate formatting function in `utils.formatting`.
+- A emperical support class to plot trees. 
+- Pytest for the new functions.
+- Adding sphinx documentation
+- Gitlab CI/CD
+
+### Changed
+
+- Updated the python requirements, currently build for python 3.12.
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+_Nothing_
+
 ## v0.3.0 - 29-06-2023
 
 ### Fixed
