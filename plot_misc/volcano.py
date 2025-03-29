@@ -36,6 +36,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  lsize:float=5,
                  transparency_ns:float=0.6,
                  index_label:Union[List[str],None]=None,
+                 font_label: str | None = None,
                  ax:Union[plt.Axes, None]=None,
                  label_kwargs_dict:Union[None,Dict[Any,Any]]=None,
                  scatter_sig_kwargs_dict:Union[None,Dict[Any,Any]]=None,
@@ -96,14 +97,14 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     figure : plt.Figure
     axes : plt.Axes
     '''
-    
+    FT_FAM = 'font.family'
     # ###### Check input
     is_df(data)
     is_type(y_column, str, 'y_column')
     is_type(x_column, str, 'x_column')
     is_type(point_label, (str, type(None)), 'point_label')
     is_type(legend, bool, 'legend')
-    # TODO
+    is_type(font_label, (type(None), str))
     # map None to dict
     label_kwargs_dict, scatter_sig_kwargs_dict, scatter_nonsig_kwargs_dict =\
         _assign_empty_default(
@@ -165,16 +166,23 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
             above = text_data[text_data[y_column] >= threshold]
             xs = above[x_column]
             ys = above[y_column]
-        # getting the actual labels
-        texts = []
-        for x, y, l in zip(xs, ys, above[point_label]):
-            texts.append(ax.text(x, y, l, size=lsize))
-        if adjust:
-            new_label_kwargs = _update_kwargs(
-                update_dict=label_kwargs_dict,
-                lim=lim, zorder=3, ax=ax,
-                arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
-            )
-            adjust_text(texts, **new_label_kwargs,)
+        try:
+            # NOTE warpping this in try/finally to reset the default font.
+            default_font = plt.rcParams[FT_FAM]
+            if not font_label is None:
+                plt.rcParams[FT_FAM] = font_label
+            # getting the actual labels
+            texts = []
+            for x, y, l in zip(xs, ys, above[point_label]):
+                texts.append(ax.text(x, y, l, size=lsize))
+            if adjust:
+                new_label_kwargs = _update_kwargs(
+                    update_dict=label_kwargs_dict,
+                    lim=lim, zorder=3, ax=ax,
+                    arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
+                )
+                adjust_text(texts, **new_label_kwargs,)
+        finally:
+            plt.rcParams[FT_FAM] = default_font
     # return the figure and axes
     return f, ax
