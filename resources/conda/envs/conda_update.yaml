@@ -33,3 +33,4 @@ dependencies:
   # other
   - bump2version=1.*
   - python-build
+  - conda-build

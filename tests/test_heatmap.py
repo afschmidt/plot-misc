@@ -76,7 +76,7 @@ class TestAnnotateHeatmap(object):
                                          )
         # assert
         assert len(texts) == DATA.shape[0] * DATA.shape[1]
-        assert texts[0].get_text() == '{:.1%}'.format(DATA.iloc[0,0])
+        assert texts[1].get_text() == '{:.1%}'.format(DATA.iloc[0,1])
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # clustermap
 class TestClusterMap(object):
