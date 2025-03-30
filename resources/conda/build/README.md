@@ -56,3 +56,6 @@ The output will note the location, look for something like
 anaconda upload ${HOME}/miniconda/envs/<PACKAGE_NAME>/conda-bld/noarch/<PACKAGE_NAME>-<PACKAGE_VERSION>-py_<BUILD_VERSION>.conda 
 ```
 
+If you want to automatically upload to conda, skipping the step above, please
+add `anaconda_upload: true` to your `~/.condarc`. 
+
