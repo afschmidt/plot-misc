@@ -7,7 +7,7 @@ name = "plot-misc"
 version = "1.1.2"
 description = "Various plotting templates built on top of matplotlib"
 readme = "README.md"
-authors = [{ name = "A Floriaan Schmidt", email = "amand.schmidt@ucl.ac.uk" }]
+authors = [{ name = "A Floriaan Schmidt", email = "floriaanschmidt@gmail.com" }]
 license = { text = "GPLv3+" }
 requires-python = ">=3.10, <3.13"
 dependencies = [
