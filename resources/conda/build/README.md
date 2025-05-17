@@ -31,6 +31,8 @@ package dependencies and Python version.
 
 Additionally, include a `build.sh` file detailing how the package 
 should be installed.
+For example, the following chunk installs the package using the 
+very verbose mode.
 
 ```sh
 set -ex

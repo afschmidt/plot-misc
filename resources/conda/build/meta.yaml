@@ -4,7 +4,6 @@ package:
 
 source:
   git_url: https://gitlab.com/SchmidtAF/plot-misc.git
-  git_tag: v1.1.2 
 
 build:
   noarch: python
@@ -41,13 +40,24 @@ test:
 
 about:
   home: "https://gitlab.com/SchmidtAF/plot-misc"
-  summary: "Various plotting templates built on top of matplotlib"
-  license: GPLv3+
-  license_file: LICENSE
   authors:
     - name: "A Floriaan Schmidt"
       email: "amand.schmidt@ucl.ac.uk"
+  summary: >
+    A collection of Python-based plotting templates for medical, epidemiological,
+    genetic, and machine learning visualisations.
+  description: |
+    plot-misc provides a suite of reusable plotting templates designed to
+    streamline the creation of common visualisations in medical, epidemiological,
+    genetic, and machine learning contexts. These templates facilitate consistent
+    and efficient generation of plots, aiding researchers and analysts in
+    presenting their data effectively. 
+  license: GPL-3.0-or-later
+  license_family: GPL
+  license_file: LICENSE
+  dev_url: https://gitlab.com/SchmidtAF/plot-misc
+  doc_url: https://plot-misc-schmidtaf-6fe7fe661165600d9bcec51453cda9ae221ca6d696.gitlab.io/
 
 extra:
   recipe-maintainers:
-    - afschmidt
+    - SchmidtAF

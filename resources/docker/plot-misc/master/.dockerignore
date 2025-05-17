@@ -1,0 +1,9 @@
+# Ignore backup files
+*.un~
+
+# Ignore build scripts
+build.sh
+
+# Ignore documentation
+README.md
+
