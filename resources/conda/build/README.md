@@ -41,10 +41,10 @@ $PYTHON -m pip install . -vv
 
 ## Build the conda package locally
 
-Ensure the package environment is active, then run:
+Ensure the package environment is active, then from the build directory run:
 
 ```sh
-conda build build/
+conda build .
 ```
 
 This will build your package locally. 

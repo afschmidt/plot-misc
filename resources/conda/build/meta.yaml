@@ -4,6 +4,7 @@ package:
 
 source:
   git_url: https://gitlab.com/SchmidtAF/plot-misc.git
+  git_tag: v1.1.2 
 
 build:
   noarch: python

@@ -12,7 +12,7 @@ The documentation for plot-misc can be found [here](https://SchmidtAF.gitlab.io/
 
 
 ## Installation 
-At present, this package is undergoing development and no packages exist yet on PyPi.
+At present, this package is undergoing development and no packages exist yet on PyPI.
 Therefore it is recommended that you install in either of the two ways below.
 
 ### Installation using conda
