@@ -1,10 +1,12 @@
+{% set version = "1.1.2" %}
+
 package:
   name: plot-misc
-  version: 1.1.2
+  version: {{ version }}
 
 source:
   git_url: https://gitlab.com/SchmidtAF/plot-misc.git
-  git_tag: v1.1.2 
+  git_tag: v{{ version }}
 
 build:
   noarch: python
