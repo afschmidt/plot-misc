@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
-    is_type,
     UtilsNames,
+)
+from plot_misc.errors import (
+    is_type,
     InputValidationError,
     Error_MSG,
 )

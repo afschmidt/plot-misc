@@ -9,6 +9,8 @@ from scipy.stats import norm
 from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
 from plot_misc.constants import (
     UtilsNames,
+)
+from plot_misc.errors import (
     is_type,
     as_array,
     same_len,
