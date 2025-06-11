@@ -33,11 +33,11 @@ class TestStackBar(object):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
-        ax = barchart.stack_bar(TABLE_T, label=LABELS,
-                                columns=TABLE_T.columns[:-1].to_list(),
-                                wd=0.6, edgecolor=EDGECOLOUR, colours=COLOURS,
-                                ax=ax, **{'linewidth':2},
-                                )
+        _, ax = barchart.stack_bar(TABLE_T, label=LABELS,
+                                   columns=TABLE_T.columns[:-1].to_list(),
+                                   wd=0.6, edgecolor=EDGECOLOUR, colours=COLOURS,
+                                   ax=ax, **{'linewidth':2},
+                                   )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead
         patch=ax.patches
@@ -57,12 +57,12 @@ class TestStackBarH(object):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
-        ax = barchart.stack_bar(TABLE_T, label=LABELS,
-                                columns=TABLE_T.columns[:-1].to_list(),
-                                wd=0.6, edgecolor=EDGECOLOUR, colours=COLOURS,
-                                horizontal=True,
-                                ax=ax, **{'linewidth':2},
-                                )
+        _, ax = barchart.stack_bar(TABLE_T, label=LABELS,
+                                   columns=TABLE_T.columns[:-1].to_list(),
+                                   wd=0.6, edgecolor=EDGECOLOUR, colours=COLOURS,
+                                   horizontal=True,
+                                   ax=ax, **{'linewidth':2},
+                                   )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead
         patch=ax.patches
@@ -117,10 +117,10 @@ class TestBar(object):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
-        ax = barchart.bar(TABLE_T, label=LABELS,
+        _, ax = barchart.bar(TABLE_T, label=LABELS,
                                 column=TABLE_T.columns.to_list()[0],
                                 wd=0.2, edgecolor=EDGECOLOUR, colours=COLOURS,
-                                ax=ax, **{'linewidth':1.2},
+                                ax=ax, kwargs_bar={'linewidth':1.2},
                                 )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead

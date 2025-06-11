@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pytest
 from plot_misc.constants import (
     UtilsNames as UNames,
+)
+from plot_misc.errors import (
     InputValidationError,
 )
 from plot_misc.example_data import examples

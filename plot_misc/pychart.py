@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
-from plot_misc.constants import (
-    _assign_empty_default,
-)
+# from plot_misc.constants import (
+#     _assign_empty_default,
+# )
 from plot_misc.utils.utils import (
     fix_labels
 )
@@ -59,8 +59,10 @@ def pychart(data: pd.DataFrame, columns: List[str],
     """
     
     # map None to dict
-    pie_kwargs, annotate_kwargs = _assign_empty_default(
-        [pie_kwargs, annotate_kwargs], dict)
+    pie_kwargs = pie_kwargs or {}
+    annotate_kwargs = annotate_kwargs or {}
+    # pie_kwargs, annotate_kwargs = _assign_empty_default(
+    #     [pie_kwargs, annotate_kwargs], dict)
     # Create new ax if not provided
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -182,10 +184,14 @@ def pychart_grid(df, strat, columns, num_columns=2, figsize=(8, 4),
     """
     
     # map None to dict
-    pie_kwargs, annotate_kwargs, title_kwargs, subplots_adjust_kwargs =\
-        _assign_empty_default(
-            [pie_kwargs, annotate_kwargs, title_kwargs, subplots_adjust_kwargs],
-            dict)
+    pie_kwargs = pie_kwargs or {}
+    annotate_kwargs = annotate_kwargs or {}
+    title_kwargs = title_kwargs or {}
+    subplots_adjust_kwargs = subplots_adjust_kwargs or {}
+    # pie_kwargs, annotate_kwargs, title_kwargs, subplots_adjust_kwargs =\
+    #     _assign_empty_default(
+    #         [pie_kwargs, annotate_kwargs, title_kwargs, subplots_adjust_kwargs],
+    #         dict)
     # plot dims
     num_plots = len(strat)
     num_rows = (num_plots + num_columns - 1) // num_columns

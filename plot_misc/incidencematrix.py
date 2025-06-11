@@ -9,7 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import Any, List, Type, Union, Tuple, Dict
 from plot_misc.utils.utils import _update_kwargs
-from plot_misc.constants import is_type, _assign_empty_default
+from plot_misc.errors import (
+    is_type,
+    # _assign_empty_default,
+)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
@@ -87,10 +90,13 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
     is_type(dot_colour, list)
     is_type(dot_transparency, list)
     # map None to dict
-    kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict =\
-        _assign_empty_default(
-            [kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict],
-            dict)
+    kwargs_scatter_dict = kwargs_scatter_dict or {}
+    kwargs_vline_dict = kwargs_vline_dict or {}
+    kwargs_hline_dict = kwargs_hline_dict or {}
+    # kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict =\
+    #     _assign_empty_default(
+    #         [kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict],
+    #         dict)
     # if one value is supplied, multiply the number of dot_colour elements
     ndots = len(dot_colour)
     if len(dot_size) == 1:

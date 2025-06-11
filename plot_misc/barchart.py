@@ -221,7 +221,8 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
     for idx, name in enumerate(fields):
         if horizontal == False:
             # plotting vertical bar chart
-            new_kwargs = _update_kwargs(update_dict=kwargs, edgecolor=edgecolor,
+            new_kwargs = _update_kwargs(update_dict=kwargs,
+                                        edgecolor=edgecolor,
                                         width=wd, color=colours[idx],
                                         alpha=transparancy,
                                         )

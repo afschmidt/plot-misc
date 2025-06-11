@@ -13,10 +13,10 @@ import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
-from plot_misc.constants import (
+from plot_misc.errors import (
     is_type,
     as_array,
-    _assign_empty_default,
+    # _assign_empty_default,
 )
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
@@ -92,7 +92,9 @@ def heatmap(data:Union[pd.DataFrame, as_array],
     is_type(col_lab, (list, np.array))
     is_type(cbar_label, str)
     # map None to dict
-    grid_kw, cbar_kw = _assign_empty_default([grid_kw, cbar_kw], dict)
+    grid_kw = grid_kw or {}
+    cbar_kw = cbar_kw or {}
+    # grid_kw, cbar_kw = _assign_empty_default([grid_kw, cbar_kw], dict)
     # ### Plot the heatmap
     im = ax.imshow(matrix, **kwargs)
     # Create colorbar
@@ -289,10 +291,14 @@ def clustermap(data:pd.DataFrame,
     # inches to cm's
     FSCALE=0.393700787
     # map None to dict
-    cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw =\
-        _assign_empty_default(
-            [cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw],
-            dict)
+    cbar_dict_kw = cbar_dict_kw or {}
+    tree_dict_kw = tree_dict_kw or {}
+    annot_dict_kw = annot_dict_kw or {}
+    clustermap_dict_kw = clustermap_dict_kw or {}
+    # cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw =\
+    #     _assign_empty_default(
+    #         [cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw],
+    #         dict)
     # update keyword dictionaries
     annot_kw = _update_kwargs(update_dict=annot_dict_kw,
                               size=annotsize,

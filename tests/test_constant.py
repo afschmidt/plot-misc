@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import pandas as pd
-from plot_misc.constants import (
+from plot_misc.errors import (
     is_series_type,
     is_type,
 )

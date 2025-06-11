@@ -22,14 +22,14 @@ from plot_misc.utils.utils import (
     segment_labelled,
 )
 from plot_misc.constants import ForestNames as FNames
-from plot_misc.constants import (
+from plot_misc.errors import (
     is_type,
     is_df,
     is_series_type,
     are_columns_in_df,
     InputValidationError,
     Error_MSG,
-    _assign_empty_default,
+    # _assign_empty_default,
 )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -415,11 +415,15 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
     if (ub_col is not None) and (lb_col is not None):
         is_series_type(df[[ub_col, lb_col]], (float, int))
     # replace None by empty dict
-    kwargs_scatter_dict, kwargs_plot_ci_dict, kwargs_connect_segments_dict,\
-    kwargs_span_dict = _assign_empty_default(
-        [kwargs_scatter_dict, kwargs_plot_ci_dict,
-         kwargs_connect_segments_dict, kwargs_span_dict],
-        dict)
+    kwargs_scatter_dict = kwargs_scatter_dict or {}
+    kwargs_plot_ci_dict = kwargs_plot_ci_dict or {}
+    kwargs_connect_segments_dict = kwargs_connect_segments_dict or {}
+    kwargs_span_dict = kwargs_span_dict or {}
+    # kwargs_scatter_dict, kwargs_plot_ci_dict, kwargs_connect_segments_dict,\
+    # kwargs_span_dict = _assign_empty_default(
+    #     [kwargs_scatter_dict, kwargs_plot_ci_dict,
+    #      kwargs_connect_segments_dict, kwargs_span_dict],
+    #     dict)
     # set default shape and colour and alpha
     s_col_name = s_col
     c_col_name = c_col
@@ -711,10 +715,13 @@ def plot_table(
     # check if columns are in dataframe
     are_columns_in_df(dataframe, expected_columns=[string_col, y_col])
     # set None to dict
-    kwargs_text_dict, kwargs_header_dict, kwargs_yticklabel_dict =\
-        _assign_empty_default(
-            [kwargs_text_dict, kwargs_header_dict, kwargs_yticklabel_dict],
-            dict)
+    kwargs_text_dict = kwargs_text_dict or {}
+    kwargs_header_dict = kwargs_header_dict or {}
+    kwargs_yticklabel_dict = kwargs_yticklabel_dict or {}
+    # kwargs_text_dict, kwargs_header_dict, kwargs_yticklabel_dict =\
+    #     _assign_empty_default(
+    #         [kwargs_text_dict, kwargs_header_dict, kwargs_yticklabel_dict],
+    #         dict)
     # ################### remove spines
     ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
     # remove lables
@@ -1007,8 +1014,11 @@ class EmpericalSupport(object):
         is_type(figsize, tuple, 'figsize')
         is_type(reverse_y, bool, 'reverse_y')
         # Mapping None to dict
-        kwargs_plot, kwargs_dot, kwargs_fill = _assign_empty_default(
-            [kwargs_plot, kwargs_dot, kwargs_fill], dict)
+        kwargs_plot = kwargs_plot or {}
+        kwargs_dot = kwargs_dot or {}
+        kwargs_fill = kwargs_fill or {}
+        # kwargs_plot, kwargs_dot, kwargs_fill = _assign_empty_default(
+        #     [kwargs_plot, kwargs_dot, kwargs_fill], dict)
         # ################## should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
@@ -1149,11 +1159,18 @@ class EmpericalSupport(object):
                 )
             )
         # set None to dict
-        kwargs_plot, kwargs_dot, kwargs_fill, kwargs_xlabel, kwargs_ylabel,\
-        kwargs_segment, kwargs_text = _assign_empty_default(
-            [kwargs_plot, kwargs_dot, kwargs_fill, kwargs_xlabel,
-             kwargs_ylabel, kwargs_segment, kwargs_text], dict
-        )
+        kwargs_plot = kwargs_plot or {}
+        kwargs_dot = kwargs_dot or {}
+        kwargs_fill = kwargs_fill or {}
+        kwargs_xlabel = kwargs_xlabel or {}
+        kwargs_ylabel = kwargs_ylabel or {}
+        kwargs_segment = kwargs_segment or {}
+        kwargs_text = kwargs_text or {}
+        # kwargs_plot, kwargs_dot, kwargs_fill, kwargs_xlabel, kwargs_ylabel,\
+        # kwargs_segment, kwargs_text = _assign_empty_default(
+        #     [kwargs_plot, kwargs_dot, kwargs_fill, kwargs_xlabel,
+        #      kwargs_ylabel, kwargs_segment, kwargs_text], dict
+        # )
         # ################### calculate support
         self.table = self.calc_empirical_support(
             estimate=self.estimate, standard_error=self.standard_error,

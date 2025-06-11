@@ -11,6 +11,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from plot_misc.constants import (
+    NamesDecisionCurves as NamesDC,
+    NamesMachineLearnig as NamesML,
+)
+from plot_misc.errors import (
     as_array,
     is_type,
     is_df,
@@ -18,9 +22,7 @@ from plot_misc.constants import (
     same_len,
     InputValidationError,
     string_to_list,
-    _assign_empty_default,
-    NamesDecisionCurves as NamesDC,
-    NamesMachineLearnig as NamesML,
+    # _assign_empty_default,
 )
 from plot_misc.utils.utils import (
     change_ticks,
@@ -101,9 +103,11 @@ def lollipop(values:as_array, labels:as_array,
     is_type(dot_size, (int, float), 'dot_size')
     is_type(dot_edge_size, (int, float), 'dot_edge_size')
     # map None to empty dict
-    kwargs_lines_dict, kwargs_plot_dict = _assign_empty_default(
-        [kwargs_lines_dict, kwargs_plot_dict], dict,
-    )
+    kwargs_lines_dict = kwargs_lines_dict or {}
+    kwargs_plot_dict = kwargs_plot_dict or {}
+    # kwargs_lines_dict, kwargs_plot_dict = _assign_empty_default(
+    #     [kwargs_lines_dict, kwargs_plot_dict], dict,
+    # )
     # ################### process input
     # create a axes if needed
     if ax is None:
@@ -258,11 +262,15 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     is_type(diagonal_linestyle, str)
     is_type(margins, tuple)
     # map None to empty dict
-    kwargs_ci_dict, kwargs_dot_dict, kwargs_line_dict,\
-        kwargs_diagonal_dict = _assign_empty_default(
-            [kwargs_ci_dict, kwargs_dot_dict,
-             kwargs_line_dict, kwargs_diagonal_dict], dict,
-        )
+    kwargs_ci_dict = kwargs_ci_dict or {}
+    kwargs_dot_dict = kwargs_dot_dict or {}
+    kwargs_line_dict = kwargs_line_dict or {}
+    kwargs_diagonal_dict = kwargs_diagonal_dict or {}
+    # kwargs_ci_dict, kwargs_dot_dict, kwargs_line_dict,\
+    #     kwargs_diagonal_dict = _assign_empty_default(
+    #         [kwargs_ci_dict, kwargs_dot_dict,
+    #          kwargs_line_dict, kwargs_diagonal_dict], dict,
+    #     )
     # combined the columns
     columns = [predicted, observed]
     if not lower_observed is None:
@@ -708,9 +716,11 @@ class DecisionCurve(object):
                 )
             )
         # map None to empty dict
-        kwargs_lowess, kwargs_plot = _assign_empty_default(
-            [kwargs_lowess, kwargs_plot], dict,
-        )
+        kwargs_lowess = kwargs_lowess or {}
+        kwargs_plot = kwargs_plot or {}
+        # kwargs_lowess, kwargs_plot = _assign_empty_default(
+        #     [kwargs_lowess, kwargs_plot], dict,
+        # )
         # #### should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)

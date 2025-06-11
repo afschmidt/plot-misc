@@ -14,8 +14,8 @@ from pandas.core.frame import DataFrame
 from plot_misc.utils.utils import(
     _update_kwargs,
 )
-from plot_misc.constants import(
-    _assign_empty_default,
+from plot_misc.errors import(
+    # _assign_empty_default,
     is_type,
     is_df,
 )
@@ -106,14 +106,17 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     is_type(legend, bool, 'legend')
     is_type(font_label, (type(None), str))
     # map None to dict
-    label_kwargs_dict, scatter_sig_kwargs_dict, scatter_nonsig_kwargs_dict =\
-        _assign_empty_default(
-            [label_kwargs_dict,
-             scatter_sig_kwargs_dict,
-             scatter_nonsig_kwargs_dict,
-             ],
-            dict,
-        )
+    label_kwargs_dict = label_kwargs_dict or {}
+    scatter_sig_kwargs_dict = scatter_sig_kwargs_dict or {}
+    scatter_nonsig_kwargs_dict = scatter_nonsig_kwargs_dict or {}
+    # label_kwargs_dict, scatter_sig_kwargs_dict, scatter_nonsig_kwargs_dict =\
+    #     _assign_empty_default(
+    #         [label_kwargs_dict,
+    #          scatter_sig_kwargs_dict,
+    #          scatter_nonsig_kwargs_dict,
+    #          ],
+    #         dict,
+    #     )
     # raise warning
     if (adjust == True and point_label == None):
         warnings.warn('`adjust` is ignored if `point_label` is None',
