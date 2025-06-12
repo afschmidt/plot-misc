@@ -39,7 +39,7 @@ from plot_misc.errors import (
 class PlotForestResults(object):
     '''
     The results object for `plot_forest`.
-
+    
     Attributes
     ----------
     span: list of floats
@@ -75,7 +75,7 @@ class EmpericalSupportPlotResults(PlotForestResults):
     '''
     Results class for the EmpericalSupport.plot function, inherits from
     the `PlotForestResults` class.
-
+    
     Attributes
     ----------
     estimate: float
@@ -254,6 +254,11 @@ def assign_distance(df:pd.DataFrame, group:Union[str, None]=None,
     df[new_col] = np.nan
     for strat in df[strata].unique():
         df.loc[df[strata] == strat, new_col] = y_axis
+    # clean up
+    if FNames.group_del in df.columns:
+        df.drop(columns=[FNames.group_del], inplace=True)
+    if FNames.group_del in df.columns:
+        df.drop(columns=[FNames.group_del], inplace=True)
     # return stuff
     return df
 

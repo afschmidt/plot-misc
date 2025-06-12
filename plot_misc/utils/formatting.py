@@ -150,3 +150,63 @@ def format_roc(observed:as_array, predicted:as_array,
     # return
     return results
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _superscriptinate(number:str) -> str:
+    '''
+    Will replace any number (0-9), seperators, and addition substraction
+    sumbols with a superscript equivalent expression.
+    
+    Parameters
+    ----------
+    number : `str`
+    
+    Returns
+    -------
+    number : `str`
+        A string with superscript numbers.
+    '''
+    return number.replace('0','⁰').replace('1','¹').replace('2','²').\
+        replace('3','³').replace('4','⁴').replace('5','⁵').replace('6','⁶')\
+        .replace('7','⁷').replace('8','⁸').replace('9','⁹').replace('-','⁻')\
+        .replace('+', '⁺').replace('.','·').replace(',','˒')
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def sci_notation(number:float, sig_fig:int=2,
+                 max:float=np.float_power(10, -100)) -> str:
+    """
+    Returns a number in scientific notation with the lead numbers to  a
+    specific significant number `sig_fig`
+    
+    Automatically truncates values if too small to print.
+
+    Parameters
+    ----------
+    number : `float`
+        A number as float or integer.
+    sig_fig : `int`
+        The number of significant numbers after the decimial point.
+    max `float`
+        the float value above which values get truncated to the max
+        (i.e., winsorised)
+    
+    Returns
+    -------
+    number: str
+        A number in scientific notation.
+    
+    Examples
+    --------
+    >>> sci_notation(2465640, sig_fig=4)
+    '2.4656×10⁶
+    """
+    if number < max:
+        number = max
+    # getting string
+    ret_string = "{0:.{1:d}e}".format(number, sig_fig)
+    try:
+        a,b = ret_string.split("e")
+        # removed leading "+" and strips leading zeros too.
+        b = int(b)
+        return a + "×10" + _superscriptinate(str(b))
+    except ValueError or TypeError:
+        return str(np.nan)

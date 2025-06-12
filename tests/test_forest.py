@@ -31,6 +31,12 @@ MODEL='model'
 ORDER_OUTER ={GROUP: ['CVD', 'AF', 'HF', 'Ischaemic Stroke', 'CVD + AF + HF']}
 ORDER_INNER ={MODEL: ['PGS only', 'PGS extended', 'PGS plus']}
 
+DATA_ASSIGN_DISTANCE = pd.DataFrame({
+    'group': ['A', 'A', 'A', 'B', 'B', 'C', 'C'],
+    'subgroup': ['x', 'y', 'z', 'x', 'y', 'x', 'y'],
+    'value': [10, 20, 30, 40, 50, 60, 70]
+})
+
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # DATA
 data1 = examples.load_forest_data()
@@ -42,7 +48,6 @@ data1[ALPHA_NAME] = data1.subgroup_name.map(ALPHA_DICT)
 data2 = data1[data1.model=='PGS only'].copy()
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# assign_distance
 class TestOrderRow(object):
     '''
     Test the `order_row` function
@@ -74,10 +79,9 @@ class TestAssignDistance(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_assign_distance_default(self):
         # removing y_axis
-        data_in = data1.copy()
-        del data_in[FNames.y_col]
+        data = DATA_ASSIGN_DISTANCE.copy()
         # getting y_axis
-        res = forest.assign_distance(data_in, group=GROUP)
+        res = forest.assign_distance(data)
         # test
         assert FNames.y_col in res.columns
         assert res[FNames.y_col].mean() == 59.0
