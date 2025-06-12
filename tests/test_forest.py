@@ -31,12 +31,6 @@ MODEL='model'
 ORDER_OUTER ={GROUP: ['CVD', 'AF', 'HF', 'Ischaemic Stroke', 'CVD + AF + HF']}
 ORDER_INNER ={MODEL: ['PGS only', 'PGS extended', 'PGS plus']}
 
-DATA_ASSIGN_DISTANCE = pd.DataFrame({
-    'group': ['A', 'A', 'A', 'B', 'B', 'C', 'C'],
-    'subgroup': ['x', 'y', 'z', 'x', 'y', 'x', 'y'],
-    'value': [10, 20, 30, 40, 50, 60, 70]
-})
-
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # DATA
 data1 = examples.load_forest_data()
@@ -46,6 +40,12 @@ data1[SHAPE_NAME] = data1.model.map(SHAPE_DICT)
 data1[ALPHA_NAME] = data1.subgroup_name.map(ALPHA_DICT)
 # select a single 'study'
 data2 = data1[data1.model=='PGS only'].copy()
+# y-coordinates data
+DATA_SET_Y_COORD = pd.DataFrame({
+    'group': ['A', 'A', 'A', 'C', 'B', 'B', 'B', 'C', 'C', 'C'],
+    'subgroup': ['x', 'y', 'x', 'z', 'x', 'y', 'z', 'x', 'y', 'z'],
+    'value': [10, 20, 15, 30, 40, 50, 60, 70, 75, 80]
+})
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 class TestOrderRow(object):
@@ -70,6 +70,49 @@ class TestOrderRow(object):
         assert list(res2[GROUP].unique()) == list(ORDER_OUTER.values())[0]
         assert list(res2[MODEL].unique()) != list(ORDER_INNER.values())[0]
 
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# assign_distance
+class TestSetYCoordinates(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_set_y_coordinates_default(self):
+        data = DATA_SET_Y_COORD.copy()
+        data_out = forest.set_y_coordinates(data)
+        assert data_out['y_axis'].to_list() ==\
+            [1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0, 17.0, 19.0]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_set_y_coordinates_group(self):
+        data = DATA_SET_Y_COORD.copy()
+        data_out = forest.set_y_coordinates(data, group='group', between_pad=3)
+        # sort by group to confirm y_axis values are actually grouped
+        # NOTE the values are grouped, but probably not the way the user
+        # intends it, by A, B, C - see next test.
+        data_out = data_out.sort_values('group')
+        assert data_out['y_axis'].to_list() ==\
+            [1.0, 3.0, 5.0, 17.0, 19.0, 21.0, 8.0, 10.0, 12.0, 14.0]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_set_y_coordinates_sort(self):
+        data = DATA_SET_Y_COORD.copy()
+        data_out = forest.set_y_coordinates(data, group='group', between_pad=3,
+                                            sort_dict=None,)
+        # now the dataframe is internally sorted by alphabet prior to
+        # setting the y_coordinates
+        assert data_out['y_axis'].to_list() ==\
+            [1.0, 3.0, 5.0, 8.0, 10.0, 12.0, 15.0, 17.0, 19.0, 21.0]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_set_y_coordinates_strata(self):
+        data = DATA_SET_Y_COORD.copy()
+        data_out = forest.set_y_coordinates(
+            data, group='group', group_by_strata='subgroup', between_pad=3,
+            sub_within_pad=False
+        )
+        # sort by group to confirm y_axis values are actually grouped
+        data_out = data_out.sort_values('group')
+        print(data_out)
+        assert data_out['y_axis'].to_list() ==\
+            [1.0, 1.0, 3.0, 6.0, 6.0, 6.0, 11.0, 11.0, 11.0, 13.0]
+
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # assign_distance
 class TestAssignDistance(object):
@@ -79,9 +122,10 @@ class TestAssignDistance(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_assign_distance_default(self):
         # removing y_axis
-        data = DATA_ASSIGN_DISTANCE.copy()
+        data_in = data1.copy()
+        del data_in[FNames.y_col]
         # getting y_axis
-        res = forest.assign_distance(data)
+        res = forest.assign_distance(data_in, group=GROUP)
         # test
         assert FNames.y_col in res.columns
         assert res[FNames.y_col].mean() == 59.0

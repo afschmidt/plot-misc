@@ -160,11 +160,11 @@ def order_row(data:pd.DataFrame, order_outer:Dict[str, List[str]],
     return order_data
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def assign_distance(df:pd.DataFrame, group:Union[str, None]=None,
-                    within_pad:float=2, between_pad:float=4, start:float=1,
-                    new_col:str='y_axis',
-                    sort_dict:Union[Dict[str,int], None, str]='skip',
-                    strata:Union[str, None]=None,
+def assign_distance(df:pd.DataFrame, group: str | None = None,
+                    within_pad:int | float=2, between_pad:int | float=4,
+                    start:int | float=1, new_col:str='y_axis',
+                    sort_dict: str | dict[str, int] | None ='skip',
+                    strata: str | None = None,
                     ) -> pd.core.frame.DataFrame:
     """
     A helper function that adds a `y-axis` column (useful for Cartesian graphs)
@@ -200,6 +200,9 @@ def assign_distance(df:pd.DataFrame, group:Union[str, None]=None,
     -------
     df : pd.DataFrame
     """
+    warnings.warn("`assign_distance` is deprecated, please use "
+                  "`set_y_coordinates` instead.", DeprecationWarning,
+                  stacklevel=2)
     df = df.copy()
     # check input
     is_type(df, pd.DataFrame)
@@ -254,11 +257,165 @@ def assign_distance(df:pd.DataFrame, group:Union[str, None]=None,
     df[new_col] = np.nan
     for strat in df[strata].unique():
         df.loc[df[strata] == strat, new_col] = y_axis
-    # clean up
-    if FNames.group_del in df.columns:
-        df.drop(columns=[FNames.group_del], inplace=True)
-    if FNames.group_del in df.columns:
-        df.drop(columns=[FNames.group_del], inplace=True)
+    # return stuff
+    return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def set_y_coordinates(data:pd.DataFrame, group: str | None = None,
+                      group_by_strata: str | None = None,
+                      within_pad:int | float=2, between_pad:float| int = 4,
+                      start:int | float=1, new_col:str='y_axis',
+                      sort_dict: str | dict[str, int] | None = 'skip',
+                      sub_within_pad:bool=True,
+                      ) -> pd.DataFrame:
+    """
+    Adds a y-coordinates to the supplied data frame, optionally accounting for
+    group membership.
+    
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        The dataframe to which you want to add y-coordinates.
+    group : `str`, default `Nonetype`
+        A column in `data` recording the group memberships. Will assign
+        `within_pad` to rows that have the same group membership, and
+        `between_pad` between distinct group values.
+        
+        >>> for within_pad = 2; between_pad = 4; start = 1
+        >>> group   y
+            x       1
+            x       3
+            y       7
+            y       9
+            
+    group_by_strata : `str`, default `NoneType`
+        A column in `data` providing additional grouping information.
+        Will assign the same y-coordinate value for rows with the same
+        group by group_by_strata combination.
+        
+        >>> for within_pad = 2; between_pad = 4; start = 1
+        >>> group       group_by_strata     y
+            x           a                   1
+            x           a                   3
+            x           b                   1
+            x           b                   3
+            y           a                   7
+            y           a                   9
+            y           b                   7
+            y           b                   9
+        
+    within_pad : `float`, default 2.0
+        The distance between point estimates.
+    between_pad : `float`, default 4.0
+        The distance between groups of point estimates. This is the y-axis
+        distance that will be skipped between the last y-axis coordinate in the
+        previous group and the starting y-axis coordinate of the current group.
+    start : `float` or `int`, default 1
+        The starting position of the sequence.
+    new_col : `str`, default `y_axis`
+        The name of the column that will be added to `data`.
+    sort_dict : `dict`, `str`, `None`, default `skip`
+        Supply a key:value-float combination dictionary to sort the rows on
+        `group` membership. Set to `NoneType` to order rows by
+        `[order, strata]`. Set to `skip` to not sort.
+    
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe with a float `new_col` column.
+    """
+    df = data.copy()
+    # check input
+    is_df(df)
+    is_type(group, (type(None), str))
+    is_type(group_by_strata, (type(None), str))
+    is_type(new_col, str)
+    is_type(start, (int, float))
+    is_type(within_pad, (int, float))
+    is_type(between_pad, (int, float))
+    is_type(sort_dict, (type(None), dict, str))
+    cols = []
+    if isinstance(sort_dict, str) and sort_dict != 'skip':
+        raise ValueError('`sort_dict` string values is restricted to `skip`.')
+    # raise warning if duplicate index
+    if df.index.has_duplicates:
+        raise KeyError('`data.index` contains duplicate values, please '
+                       'ensure the index is unique: `data.reset_index`.')
+    
+    # check group and group_by_strata
+    if group is not None:
+        cols = [group]
+    if (group_by_strata is not None) & (group is None):
+        raise ValueError('please also provide `group` when using '
+                         '`group_by_strata`.')
+    if group_by_strata is not None:
+        cols = cols + [group_by_strata]
+    are_columns_in_df(df, expected_columns=cols)
+    # sort index to group column values together
+    if sort_dict is None:
+        # sort by group value
+        df.sort_values(by=cols, inplace=True)
+    elif sort_dict == 'skip':
+        # do nothing
+        pass
+    else:
+        # sort by custom order
+        order=FNames.order_col
+        df[order] = df[group].map(sort_dict)
+        df.sort_values(by=[order, group_by_strata], inplace=True)
+        del df[order]
+    # ### setting the y_coordinates
+    y_coords = pd.Series(index=df.index, dtype=float)
+    current_y = start
+    if group is None:
+        for idx in df.index:
+            y_coords[idx] = current_y
+            current_y +=within_pad
+    elif group_by_strata is None:
+        for g in df[group].unique():
+            sub = df[df[group] == g]
+            for idx in sub.index:
+                y_coords[idx] =  current_y
+                current_y +=within_pad
+            # update after the group - within_pad has been applied one times
+            # too many.
+            current_y += between_pad - within_pad
+    else:
+        # temporarily order if needed.
+        if isinstance(sort_dict, dict) == False:
+            ORG_ORDER = '_original_order'
+            df[ORG_ORDER] = range(len(df))
+            df.sort_values(by=cols, inplace=True)
+        # get y-coordinates
+        y_coords = pd.Series(index=df.index, dtype=float)
+        current_y = start
+        for g in df[group].unique():
+            sub = df[df[group] == g]
+            for s in sub[group_by_strata].unique():
+                strat = sub[sub[group_by_strata] == s]
+                # update start after each strata itt.
+                start = current_y
+                max_y = current_y
+                for idx in strat.index:
+                    y_coords[idx] =  current_y
+                    current_y +=within_pad
+                    # record the maximum value
+                    if max_y < current_y:
+                        max_y = current_y
+                # reset after strata finished
+                current_y = start
+            # update after the group
+            current_y = max_y + between_pad
+            # NOTE this is a hack, if have not figured out the logic
+            # when the strata and/or groups are not balanced.
+            if sub_within_pad:
+                current_y = max_y + between_pad - within_pad
+        # revert original order
+        if isinstance(sort_dict, dict) == False:
+            df.sort_values(by=ORG_ORDER, inplace=True)
+            df.drop(columns=[ORG_ORDER], inplace=True)
+    # ### add to df
+    df[new_col] = y_coords
     # return stuff
     return df
 
