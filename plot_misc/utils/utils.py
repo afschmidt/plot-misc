@@ -9,7 +9,13 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
-from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
+from typing import (
+    Any,
+    Literal,
+    Optional,
+    Union, Tuple, Dict, List,
+)
+
 from plot_misc.constants import (
     UtilsNames,
 )
@@ -79,8 +85,8 @@ class MidpointNormalize(mpl.colors.Normalize):
 # Functions
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
-            ) -> Dict[Any, Any]:
+def _update_kwargs(update_dict:dict[Any, Any], **kwargs:Optional[Any],
+            ) -> dict[Any, Any]:
     '''
     This function will take any number of `kwargs` and add them to an
     `update_dict`. If there are any duplicate values in the `kwargs` and the
@@ -88,10 +94,10 @@ def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
     
     Parameters
     ----------
-    update_dict : dict
+    update_dict : `dict` [`any`, `any`]
         A dictionary with key - value pairs that should be combined with any
         of the supplied kwargs.
-    kwargs : Any
+    kwargs : `Any`
         Arbitrary keyword arguments.
     
     Returns
@@ -102,8 +108,8 @@ def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
     
     Examples
     --------
-        The function is particularly useful to overwrite `kwargs` that are
-        supplied to a nested function say
+    The function is particularly useful to overwrite `kwargs` that are
+    supplied to a nested function, say:
         
         >>> _update_kwargs(update_dict={'c': 'black'}, c='red',
                          alpha = 0.5)
@@ -114,9 +120,9 @@ def _update_kwargs(update_dict:Dict[Any, Any], **kwargs:Optional[Any],
     return new_dict
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _dict_string_argument(partial_match:str, dict_string:Dict[Any, str],
-                          context=Dict[Any,Any],
-                          ) -> Dict[Any,Any]:
+def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
+                          context=dict[Any,Any],
+                          ) -> dict[Any,Any]:
     '''
     Will perform an `re.match(dict_string, value)` on all the values of
     `dict_string`. If a match is found it will evaluate the value and asign
@@ -788,4 +794,155 @@ def segment_labelled(
                 )
     # ################### return
     return ax
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _extract_text_props(text_obj):
+    """
+    Extracts visible properties from a matplotlib.text.Text object
+    by calling all safe `get_*` methods.
+    
+    Parameters
+    ----------
+    text_obj : `matplotlib.text.Text`
+        The tick label from which to extract visual properties.
+    
+    Returns
+    -------
+    dict
+        Dictionary of properties suitable for ax.text().
+    """
+    props = {}
+    for name in dir(text_obj):
+        if not name.startswith("get_"):
+            continue
+        method = getattr(text_obj, name)
+        if not callable(method):
+            continue
+        try:
+            props[name[4:]] = method()
+        except TypeError:
+            # Method requires an argument (e.g., get_window_extent)
+            continue
+        except (AttributeError, ValueError):
+            # If there is not getter (AttributeError), or there is an internal
+            # issue with the returned value (ValueError).
+            continue
+    return props
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE Update the calls to ax.text to simply accept a **kwargs
+# NOTE depending on axis = x or y update the kwargs using _update_kwargs,
+def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
+                            axis:Literal['x','y']='y',
+                            gap:int | float=6,
+                            offset:float | None = None,
+                            start_label:dict[str, float] | None = None,
+                            end_label:dict[str, float] | None = None,
+                            extra_text_props:dict[str, any] | None = None,
+                            ):
+    """
+    Identifies gaps between axes label positions and annotates the midpoints
+    with user supplied labels.
+    
+    Parameters
+    ----------
+    ax : `plt.Axes`
+        The axis to annotate.
+    labels : `list` [`str`]
+        A list of labels for each midpoint.
+    axis : {'x', 'y'}, default 'y'
+        Which axis to analyse and annotate.
+    gap : `int` or `float`, default 6
+        The exact space between tick values to trigger annotation.
+    offset : float, default `NoneType`
+        The position of the label **orthogonal to the axis**, given in **axes
+        coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
+        place the label outside the axis bounds. Defaults to:
+            - -0.01 for `axis='y'` (left of y-axis)
+            - -0.02 for `axis='x'` (below x-axis)
+    start_label : `dict` [`str`, `float`], default `NoneType`
+        Optional label before the first detected gap. Format should be:
+        `{"label text": position}` where position is the coordinate orthogonal
+        to the axis (in axes coordinates).
+    end_label : `dict` [`str`, `float`], default `NoneType`
+        Optional label after the last detected gap. Same format as `start_label`.
+    extra_text_props : `dict` [`str`, `any`]
+        Extra keyword arguments for `ax.text()` (e.g. fontweight).
+    """
+    # ### check input
+    is_type(ax, plt.Axes)
+    is_type(axis, str)
+    is_type(labels, list)
+    is_type(gap, (int, float))
+    is_type(offset, (type(None), int, float))
+    is_type(start_label, (type(None), dict))
+    is_type(end_label, (type(None), dict))
+    if axis in ['y', 'x'] == False:
+        raise ValueError('`axis` is limited to `x` or `y`.')
+    # setting defaults
+    if offset is None:
+        offset = -0.01 if axis == 'y' else -0.02
+    # initialise empty dict
+    extra_text_props = extra_text_props or {}
+    # #### Extract tick positions and labels from the chosen axis, and define
+    # a label placement function with appropriate axis transform
+    if axis == 'y':
+        ticks = ax.get_yticks()
+        ticklabels = ax.get_yticklabels()
+        # make sure the axis y-axis is mapped to 0-1 range instead of the
+        # original units, the x-axis is unaffected..
+        transform = ax.get_yaxis_transform()
+        place_text = lambda pos, spine_coord, label, props: ax.text(
+            x=spine_coord, y=pos, s=label, transform=transform,
+            ha='right',
+            **props
+        )
+    else:
+        ticks = ax.get_xticks()
+        ticklabels = ax.get_xticklabels()
+        # same as above.
+        transform = ax.get_xaxis_transform()
+        place_text = lambda pos, spine_coord, label, props: ax.text(
+            x=pos, y=spine_coord, s=label, transform=transform,
+            va='top',
+            **props
+        )
+    #  #### Identify exact-sized gaps
+    gap_indices = [
+        i for i in range(len(ticks) - 1)
+        if abs(ticks[i + 1] - ticks[i]) == gap
+    ]
+    n_expected = len(gap_indices)
+    if isinstance(labels, list) and len(labels) != n_expected:
+        raise IndexError(
+            f"Expected {n_expected} labels for gaps == {gap}, "
+            f"but received {len(labels)}."
+        )
+    # #### Base label style, extracted from the current tick labels.
+    # NOTE this is rather fragile - leading to multiple KeyError/TypeError
+    # first_label = next((lbl for lbl in ticklabels if lbl.get_text().strip()),
+    #                    ticklabels[0])
+    # base_props = _extract_text_props(first_label)
+    # base_props.update(extra_text_props)
+    # # to prevent TypeError if it is already present
+    # for key in ("transform", "text", "x", "y", "font", "font_properties"):
+    #     base_props.pop(key, None)
+    base_props = extra_text_props.copy()
+    # #### Adding optional start label
+    if start_label and gap_indices:
+        i = gap_indices[0]
+        mid = (ticks[0] + ticks[i]) / 2
+        label_str, spine_coord = list(start_label.items())[0]
+        place_text(mid, spine_coord, label_str, base_props)
+    # ##### Midpoint labels
+    for j, i in enumerate(gap_indices):
+        mid = (ticks[i] + ticks[i + 1]) / 2
+        label_text = labels(j) if callable(labels) else labels[j]
+        place_text(mid, offset, label_text, base_props)
+    # #### Adding optional end label
+    if end_label and gap_indices:
+        i = gap_indices[-1]
+        mid = (ticks[i + 1] + ticks[-1]) / 2
+        label_str, spine_coord = list(end_label.items())[0]
+        place_text(mid, spine_coord, label_str, base_props)
 

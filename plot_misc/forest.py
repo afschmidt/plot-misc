@@ -266,7 +266,6 @@ def set_y_coordinates(data:pd.DataFrame, group: str | None = None,
                       within_pad:int | float=2, between_pad:float| int = 4,
                       start:int | float=1, new_col:str='y_axis',
                       sort_dict: str | dict[str, int] | None = 'skip',
-                      sub_within_pad:bool=True,
                       ) -> pd.DataFrame:
     """
     Adds a y-coordinates to the supplied data frame, optionally accounting for
@@ -281,7 +280,7 @@ def set_y_coordinates(data:pd.DataFrame, group: str | None = None,
         `within_pad` to rows that have the same group membership, and
         `between_pad` between distinct group values.
         
-        >>> for within_pad = 2; between_pad = 4; start = 1
+        >>> `for within_pad = 2; between_pad = 4; start = 1`
         >>> group   y
             x       1
             x       3
@@ -290,10 +289,10 @@ def set_y_coordinates(data:pd.DataFrame, group: str | None = None,
             
     group_by_strata : `str`, default `NoneType`
         A column in `data` providing additional grouping information.
-        Will assign the same y-coordinate value for rows with the same
-        group by group_by_strata combination.
+        Use this to ensure that rows with distinct strata values but the same
+        group value receive the same y-coordinate.
         
-        >>> for within_pad = 2; between_pad = 4; start = 1
+        >>> `for within_pad = 2; between_pad = 4; start = 1`
         >>> group       group_by_strata     y
             x           a                   1
             x           a                   3
@@ -368,19 +367,21 @@ def set_y_coordinates(data:pd.DataFrame, group: str | None = None,
     y_coords = pd.Series(index=df.index, dtype=float)
     current_y = start
     if group is None:
+        # NO group
         for idx in df.index:
             y_coords[idx] = current_y
             current_y +=within_pad
     elif group_by_strata is None:
+        # ONLY GROUP, NO STRATA
         for g in df[group].unique():
             sub = df[df[group] == g]
             for idx in sub.index:
                 y_coords[idx] =  current_y
                 current_y +=within_pad
-            # update after the group - within_pad has been applied one times
-            # too many.
-            current_y += between_pad - within_pad
+            # update after group finished
+            current_y = y_coords.max() + between_pad
     else:
+        # GROUP AND STRATA
         # temporarily order if needed.
         if isinstance(sort_dict, dict) == False:
             ORG_ORDER = '_original_order'
@@ -395,21 +396,15 @@ def set_y_coordinates(data:pd.DataFrame, group: str | None = None,
                 strat = sub[sub[group_by_strata] == s]
                 # update start after each strata itt.
                 start = current_y
-                max_y = current_y
                 for idx in strat.index:
                     y_coords[idx] =  current_y
                     current_y +=within_pad
                     # record the maximum value
-                    if max_y < current_y:
-                        max_y = current_y
                 # reset after strata finished
                 current_y = start
             # update after the group
-            current_y = max_y + between_pad
-            # NOTE this is a hack, if have not figured out the logic
-            # when the strata and/or groups are not balanced.
-            if sub_within_pad:
-                current_y = max_y + between_pad - within_pad
+            # NOTE simply taking the max value of the recorded y_coords
+            current_y = y_coords.max() + between_pad
         # revert original order
         if isinstance(sort_dict, dict) == False:
             df.sort_values(by=ORG_ORDER, inplace=True)

@@ -105,13 +105,12 @@ class TestSetYCoordinates(object):
         data = DATA_SET_Y_COORD.copy()
         data_out = forest.set_y_coordinates(
             data, group='group', group_by_strata='subgroup', between_pad=3,
-            sub_within_pad=False
         )
         # sort by group to confirm y_axis values are actually grouped
         data_out = data_out.sort_values('group')
         print(data_out)
         assert data_out['y_axis'].to_list() ==\
-            [1.0, 1.0, 3.0, 6.0, 6.0, 6.0, 11.0, 11.0, 11.0, 13.0]
+            [1.0, 1.0, 3.0, 6.0, 6.0, 6.0, 9.0, 9.0, 9.0, 11.0]
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # assign_distance
