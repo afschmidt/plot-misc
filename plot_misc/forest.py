@@ -918,7 +918,9 @@ def plot_table(
         ax.set_yticks([])
     # ################### plot string column
     # mapping the x-axis to the 0 and 1 range.
-    transform = ax.get_xaxis_transform()
+    # NOTE get_yaxis_transform maps the x-axis to [0, 1] and the
+    # y-axis to the data coordinate system.
+    transform = ax.get_yaxis_transform()
     # tick labels
     for _, row in dataframe.iterrows():
         yticklabel1 = row[y_col]
