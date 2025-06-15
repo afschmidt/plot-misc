@@ -23,7 +23,6 @@ from plot_misc.utils.utils import (
     _extract,
     _format_matrices,
     _update_kwargs,
-    _extract_text_props,
 )
 
 
@@ -264,53 +263,36 @@ class Test_Segment_Labelled(object):
         assert np.round(ax.texts[0].get_rotation(), 2) == 36.69
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class Test_Extract_Text_Props(object):
+class Test_Annotate_axis_midpoints(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_extract_text_props(self):
-        # Create a dummy text object
-        fig, ax = plt.subplots()
-        txt = ax.text(0.5, 0.5, 'Test Label',
-                      fontsize=12,
-                      color='red',
-                      ha='center',
-                      va='bottom',
-                      fontweight='bold',
-                      fontfamily='monospace')
-        # Run function
-        props = _extract_text_props(txt)
-        # Check for expected keys and values
-        assert isinstance(props, dict)
-        assert props.get('text') == 'Test Label'
-        assert props.get('fontsize') == 12
-        assert props.get('color') == 'red'
-        assert props.get('ha') == 'center'
-        assert props.get('va') == 'bottom'
-        assert props.get('fontweight') == 'bold'
-        assert props.get('fontfamily') in (['monospace'], 'monospace')
-        # clean-up
-        plt.close(fig)
+    def test_annotate_axis_midpoints_y_axis(self):
+        _, ax = plt.subplots()
+        ax.set_yticks([0, 1, 2, 4, 5])
+        labels = "Label 1"
+        result_ax = annotate_axis_midpoints(ax=ax, labels=[labels],
+                                            axis='y', gap=2)
+        texts = [t.get_text() for t in result_ax.texts]
+        assert labels in texts
+        assert len(texts) == 1
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_annotate_axis_midpoints_x_axis_with_start_and_end(self):
+        _, ax = plt.subplots()
+        ax.set_xticks([0, 2, 4, 6, 9])
+        labels = ["One", "Two", "Three"]
+        start_label = {"Start": -0.05}
+        end_label = {"End": -0.05}
+        result_ax = annotate_axis_midpoints(ax=ax, labels=labels,
+                                            axis='x', gap=2,
+                                            start_label=start_label,
+                                            end_label=end_label)
+        texts = [t.get_text() for t in result_ax.texts]
+        assert set(texts) == {"Start", "One", "Two", "Three", "End"}
+        assert len(texts) == 5
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_annotate_axis_midpoints_invalid_label_count(self):
+        _, ax = plt.subplots()
+        ax.set_xticks([0, 2, 4, 6])  # 3 gaps of size 2
+        with pytest.raises(IndexError, match="Expected 3 labels.*"):
+            annotate_axis_midpoints(ax=ax, labels=["Too few"],
+                                    axis='x', gap=2)
 
-
-# plt.ion()
-# # Sample figure
-# fig, ax = plt.subplots(figsize=(4, 6))
-
-# # Create spaced y-ticks with gaps
-# y_ticks = [1, 2, 3, 9, 10, 11, 17]
-# y_labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-
-# ax.set_yticks(y_ticks)
-# ax.set_yticklabels(y_labels)
-# ax.set_xticks([])  # hide x-axis for clarity
-
-# # Add midpoint labels for gaps of exactly 6 units
-# annotate_axis_midpoints(
-#     ax=ax,
-#     axis='y',
-#     gap=6,
-#     # offset=-.2,
-#     labels=["Group 1", "Group 2"],
-#     start_label={"All Ages": -0.04},
-#     end_label={"Oldest": 0.04},
-#     extra_text_props={"fontweight": "bold", "fontsize": 10}
-# )

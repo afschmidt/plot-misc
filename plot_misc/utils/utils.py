@@ -796,50 +796,14 @@ def segment_labelled(
     return ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _extract_text_props(text_obj):
-    """
-    Extracts visible properties from a matplotlib.text.Text object
-    by calling all safe `get_*` methods.
-    
-    Parameters
-    ----------
-    text_obj : `matplotlib.text.Text`
-        The tick label from which to extract visual properties.
-    
-    Returns
-    -------
-    dict
-        Dictionary of properties suitable for ax.text().
-    """
-    props = {}
-    for name in dir(text_obj):
-        if not name.startswith("get_"):
-            continue
-        method = getattr(text_obj, name)
-        if not callable(method):
-            continue
-        try:
-            props[name[4:]] = method()
-        except TypeError:
-            # Method requires an argument (e.g., get_window_extent)
-            continue
-        except (AttributeError, ValueError):
-            # If there is not getter (AttributeError), or there is an internal
-            # issue with the returned value (ValueError).
-            continue
-    return props
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE Update the calls to ax.text to simply accept a **kwargs
-# NOTE depending on axis = x or y update the kwargs using _update_kwargs,
 def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
                             axis:Literal['x','y']='y',
                             gap:int | float=6,
                             offset:float | None = None,
                             start_label:dict[str, float] | None = None,
                             end_label:dict[str, float] | None = None,
-                            extra_text_props:dict[str, any] | None = None,
-                            ):
+                            text_kwargs:dict[str, any] | None = None,
+                            ) -> plt.Axes:
     """
     Identifies gaps between axes label positions and annotates the midpoints
     with user supplied labels.
@@ -866,8 +830,13 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         to the axis (in axes coordinates).
     end_label : `dict` [`str`, `float`], default `NoneType`
         Optional label after the last detected gap. Same format as `start_label`.
-    extra_text_props : `dict` [`str`, `any`]
+    text_kwargs : `dict` [`str`, `any`]
         Extra keyword arguments for `ax.text()` (e.g. fontweight).
+    
+    Returns
+    -------
+    plt.Axes:
+        The updated axes object.
     """
     # ### check input
     is_type(ax, plt.Axes)
@@ -883,30 +852,30 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
     if offset is None:
         offset = -0.01 if axis == 'y' else -0.02
     # initialise empty dict
-    extra_text_props = extra_text_props or {}
+    text_kwargs = text_kwargs or {}
     # #### Extract tick positions and labels from the chosen axis, and define
     # a label placement function with appropriate axis transform
     if axis == 'y':
         ticks = ax.get_yticks()
-        ticklabels = ax.get_yticklabels()
         # make sure the axis y-axis is mapped to 0-1 range instead of the
         # original units, the x-axis is unaffected..
         transform = ax.get_yaxis_transform()
-        place_text = lambda pos, spine_coord, label, props: ax.text(
-            x=spine_coord, y=pos, s=label, transform=transform,
-            ha='right',
-            **props
-        )
+        # updating kwargs
+        new_kwargs = _update_kwargs(
+            update_dict=text_kwargs, ha='right', transform=transform)
+        # the actual function
+        place_text = lambda pos, spine_coord, label, kwargs: ax.text(
+            x=spine_coord, y=pos, s=label, **kwargs)
     else:
         ticks = ax.get_xticks()
-        ticklabels = ax.get_xticklabels()
         # same as above.
         transform = ax.get_xaxis_transform()
-        place_text = lambda pos, spine_coord, label, props: ax.text(
-            x=pos, y=spine_coord, s=label, transform=transform,
-            va='top',
-            **props
-        )
+        # updating kwargs
+        new_kwargs = _update_kwargs(
+            update_dict=text_kwargs, va='top', transform=transform)
+        # the actual function
+        place_text = lambda pos, spine_coord, label, kwargs: ax.text(
+            x=pos, y=spine_coord, s=label, **kwargs)
     #  #### Identify exact-sized gaps
     gap_indices = [
         i for i in range(len(ticks) - 1)
@@ -915,34 +884,26 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
     n_expected = len(gap_indices)
     if isinstance(labels, list) and len(labels) != n_expected:
         raise IndexError(
-            f"Expected {n_expected} labels for gaps == {gap}, "
+            f"Expected {n_expected} labels for gap = {gap}, "
             f"but received {len(labels)}."
         )
-    # #### Base label style, extracted from the current tick labels.
-    # NOTE this is rather fragile - leading to multiple KeyError/TypeError
-    # first_label = next((lbl for lbl in ticklabels if lbl.get_text().strip()),
-    #                    ticklabels[0])
-    # base_props = _extract_text_props(first_label)
-    # base_props.update(extra_text_props)
-    # # to prevent TypeError if it is already present
-    # for key in ("transform", "text", "x", "y", "font", "font_properties"):
-    #     base_props.pop(key, None)
-    base_props = extra_text_props.copy()
     # #### Adding optional start label
     if start_label and gap_indices:
         i = gap_indices[0]
-        mid = (ticks[0] + ticks[i]) / 2
-        label_str, spine_coord = list(start_label.items())[0]
-        place_text(mid, spine_coord, label_str, base_props)
+        mid_s = (ticks[0] + ticks[i]) / 2
+        label_s, spine_coord_s = list(start_label.items())[0]
+        place_text(mid_s, spine_coord_s, label_s, new_kwargs)
     # ##### Midpoint labels
     for j, i in enumerate(gap_indices):
         mid = (ticks[i] + ticks[i + 1]) / 2
         label_text = labels(j) if callable(labels) else labels[j]
-        place_text(mid, offset, label_text, base_props)
+        place_text(mid, offset, label_text, new_kwargs)
     # #### Adding optional end label
     if end_label and gap_indices:
         i = gap_indices[-1]
-        mid = (ticks[i + 1] + ticks[-1]) / 2
-        label_str, spine_coord = list(end_label.items())[0]
-        place_text(mid, spine_coord, label_str, base_props)
+        mid_e = (ticks[i + 1] + ticks[-1]) / 2
+        label_e, spine_coord_e = list(end_label.items())[0]
+        place_text(mid_e, spine_coord_e, label_e, new_kwargs)
+    # #### return
+    return ax
 

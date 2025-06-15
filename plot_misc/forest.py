@@ -29,7 +29,6 @@ from plot_misc.errors import (
     are_columns_in_df,
     InputValidationError,
     Error_MSG,
-    # _assign_empty_default,
 )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -782,7 +781,7 @@ def plot_forest(df:pd.DataFrame, x_col:str, lb_col:Union[str, None]=None,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_table(
     dataframe: pd.core.frame.DataFrame,
-    ax: plt.Axes, string_col: str, pad:float=1.0, pad_header:float=1.0,
+    ax: plt.Axes, string_col: str, xloc:float=0.5, xloc_header:float=0.5,
     halignment_text:str="center", halignment_header:str="center",
     valignment_text:str="center", valignment_header:str="center",
     negative_padding:float=1.0, size_text:float=10,
@@ -815,11 +814,12 @@ def plot_table(
             `string` value.
     annoteheaders : str, default `NoneType`
         string to annotate the table column.
-    pad: float, default 1.0
-        Multiplication factor for the x-coordinate location:
-        `mean(ax.get_xlim())`.
-    pad_header: float, default 1.0
-        Same as `pad`.
+    xloc: float, default 0.5
+        The position of the text **orthogonal to the axis**, given in **axes
+        coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
+        place the label outside the axis bounds.
+    xloc_header: float, 0.5
+        Same as `xloc`.
     negative_padding : float, default 1.0
         determines the y-coordinate of the table header as:
         `ax.get_ylim()[1] - ngative_padding`
@@ -855,7 +855,8 @@ def plot_table(
     is_type(y_col, str)
     is_type(ax, plt.Axes)
     is_type(string_col, str)
-    is_type(pad, (float, int))
+    is_type(xloc, (float, int))
+    is_type(xloc_header, (float, int))
     is_type(annoteheader, (type(None), str))
     is_type(halignment_text, str)
     is_type(valignment_text, str)
@@ -916,9 +917,8 @@ def plot_table(
         ax.yaxis.set_ticklabels([])
         ax.set_yticks([])
     # ################### plot string column
-    # x location
-    xloc = np.mean(ax.get_xlim()) * pad
-    xloc_header = np.mean(ax.get_xlim()) * pad_header
+    # mapping the x-axis to the 0 and 1 range.
+    transform = ax.get_xaxis_transform()
     # tick labels
     for _, row in dataframe.iterrows():
         yticklabel1 = row[y_col]
@@ -937,6 +937,7 @@ def plot_table(
             x=xloc,
             y=yticklabel1,
             s=yticklabel2,
+            transform=transform,
             **new_text_kwargs,
         )
     # ################### add header
@@ -949,10 +950,11 @@ def plot_table(
             verticalalignment=valignment_header,
             fontweight=FNames.fontweight,
         )
-        t = ax.text(
+        ax.text(
             x=xloc_header,
             y=ax.get_ylim()[1] - negative_padding,
             s=annoteheader,
+            transform=transform,
             **new_header_kwargs,
         )
     # ################### add optional span
