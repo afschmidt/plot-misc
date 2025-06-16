@@ -800,9 +800,12 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
                             axis:Literal['x','y']='y',
                             gap:int | float=6,
                             offset:float | None = None,
+                            padding:float = 0.0,
                             start_label:dict[str, float] | None = None,
                             end_label:dict[str, float] | None = None,
                             text_kwargs:dict[str, any] | None = None,
+                            text_kwargs_start:dict[str, any] | None = None,
+                            text_kwargs_end:dict[str, any] | None = None,
                             ) -> plt.Axes:
     """
     Identifies gaps between axes label positions and annotates the midpoints
@@ -824,6 +827,9 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         place the label outside the axis bounds. Defaults to:
             - -0.01 for `axis='y'` (left of y-axis)
             - -0.02 for `axis='x'` (below x-axis)
+    padding : float, default 0.0
+        The padding on the requested axis in original units. Only applied to
+        `labels` supplied strings.
     start_label : `dict` [`str`, `float`], default `NoneType`
         Optional label before the first detected gap. Format should be:
         `{"label text": position}` where position is the coordinate orthogonal
@@ -853,6 +859,8 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         offset = -0.01 if axis == 'y' else -0.02
     # initialise empty dict
     text_kwargs = text_kwargs or {}
+    text_kwargs_start = text_kwargs_start or {}
+    text_kwargs_end = text_kwargs_end or {}
     # #### Extract tick positions and labels from the chosen axis, and define
     # a label placement function with appropriate axis transform
     if axis == 'y':
@@ -862,7 +870,14 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         transform = ax.get_yaxis_transform()
         # updating kwargs
         new_kwargs = _update_kwargs(
-            update_dict=text_kwargs, ha='right', transform=transform)
+            update_dict=text_kwargs, ha='right', va='center',
+            transform=transform)
+        new_kwargs_start = _update_kwargs(
+            update_dict=text_kwargs_start, ha='right', va='top',
+            transform=transform)
+        new_kwargs_end = _update_kwargs(
+            update_dict=text_kwargs_end, ha='right', va='bottom',
+            transform=transform)
         # the actual function
         place_text = lambda pos, spine_coord, label, kwargs: ax.text(
             x=spine_coord, y=pos, s=label, **kwargs)
@@ -872,7 +887,13 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         transform = ax.get_xaxis_transform()
         # updating kwargs
         new_kwargs = _update_kwargs(
-            update_dict=text_kwargs, va='top', transform=transform)
+            update_dict=text_kwargs, va='top', ha='center', transform=transform)
+        new_kwargs_start = _update_kwargs(
+            update_dict=text_kwargs_start, va='top', ha='left',
+            transform=transform)
+        new_kwargs_end = _update_kwargs(
+            update_dict=text_kwargs_end, va='top', ha='right',
+            transform=transform)
         # the actual function
         place_text = lambda pos, spine_coord, label, kwargs: ax.text(
             x=pos, y=spine_coord, s=label, **kwargs)
@@ -888,22 +909,19 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
             f"but received {len(labels)}."
         )
     # #### Adding optional start label
-    if start_label and gap_indices:
-        i = gap_indices[0]
-        mid_s = (ticks[0] + ticks[i]) / 2
+    if start_label:
         label_s, spine_coord_s = list(start_label.items())[0]
-        place_text(mid_s, spine_coord_s, label_s, new_kwargs)
+        place_text(spine_coord_s, offset, label_s, new_kwargs_start)
     # ##### Midpoint labels
     for j, i in enumerate(gap_indices):
         mid = (ticks[i] + ticks[i + 1]) / 2
         label_text = labels(j) if callable(labels) else labels[j]
-        place_text(mid, offset, label_text, new_kwargs)
+        place_text(mid+padding, offset, label_text, new_kwargs)
     # #### Adding optional end label
-    if end_label and gap_indices:
-        i = gap_indices[-1]
-        mid_e = (ticks[i + 1] + ticks[-1]) / 2
+    if end_label:
+        # mid_e = (ticks[i + 1] + ticks[-1]) / 2
         label_e, spine_coord_e = list(end_label.items())[0]
-        place_text(mid_e, spine_coord_e, label_e, new_kwargs)
+        place_text(spine_coord_e, offset, label_e, new_kwargs_end)
     # #### return
     return ax
 

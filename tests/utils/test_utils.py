@@ -279,8 +279,8 @@ class Test_Annotate_axis_midpoints(object):
         _, ax = plt.subplots()
         ax.set_xticks([0, 2, 4, 6, 9])
         labels = ["One", "Two", "Three"]
-        start_label = {"Start": -0.05}
-        end_label = {"End": -0.05}
+        start_label = {"Start": -1.0}
+        end_label = {"End": 10.0}
         result_ax = annotate_axis_midpoints(ax=ax, labels=labels,
                                             axis='x', gap=2,
                                             start_label=start_label,
