@@ -1,7 +1,51 @@
-'''
-A collection of general utility functions not belonging to a single type of
-plot.
-'''
+"""
+General utilities for figure formatting and annotation.
+
+This module provides a set of utilities to support custom figure creation,
+axis annotation, matrix formatting, and heatmap generation. It includes
+helpers for label placement, axis tick control, annotation styling, and
+matrix-based effect/p-value processing for visualisation.
+
+Classes
+-------
+MatrixHeatmapResults
+    A results container for curated matrices used in annotated heatmaps.
+
+MidpointNormalize
+    A custom normalisation class that centres colour maps on a specified
+    midpoint, useful for diverging data.
+
+Functions
+---------
+annotate_axis_midpoints(ax, labels, axis='y', gap=6, offset=None, ...)
+    Annotates midpoints between tick marks on an axis when regular gaps
+    are detected.
+    
+calc_angle_points(x, y, radians=False)
+    Calculates the angle between two points in degrees or radians.
+    
+calc_matrices(data, exposure_col, outcome_col, point_col='point',
+    pvalue_col='pvalue', ...)
+    Creates effect and p-value matrices for heatmap plotting, including
+    optional annotation styles and NA masking.
+    
+calc_mid_point(x, y)
+    Computes the midpoint between two Cartesian coordinates.
+    
+change_ticks(ax, ticks, labels=None, axis='x', log=False)
+    Updates axis tick locations and labels, with optional log scaling.
+    
+fix_labels(annotations, axis, min_distance=0.1)
+    Adjusts overlapping annotation text to improve legibility.
+    
+plot_span(start_span, stop_span, ax, horizontal=True, **kwargs)
+    Adds a vertical or horizontal span to a matplotlib axis.
+    
+segment_labelled(x, y, ax, label=None, ...)
+    Plots a line segment with optional endpoints and midpoint label,
+    aligned to segment orientation.
+    
+"""
 
 import re
 import numpy as np
@@ -13,7 +57,6 @@ from typing import (
     Any,
     Literal,
     Optional,
-    Union, Tuple, Dict, List,
 )
 
 from plot_misc.constants import (
@@ -32,7 +75,37 @@ from plot_misc.utils.formatting import _nlog10_func
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MatrixHeatmapResults(object):
     '''
-    The `calc_matrices` results objects.
+    Results container for annotated heatmap matrices returned by
+    `calc_matrices`.
+    
+    This object holds curated and raw matrix representations of effect
+    estimates and p-values, along with their corresponding annotation layers
+    (e.g. stars, point estimates, or p-values). It is designed for flexible
+    visualisation and post-processing in heatmap plots.
+    
+    Attributes
+    ----------
+    crude_point_estimate : `pd.DataFrame`
+        The raw matrix of point estimates without formatting or masking.
+    curated_matrix_annotation : `pd.DataFrame`
+        The corresponding annotation matrix (e.g. stars or point estimates),
+        suitable for overlaying on the heatmap (strings).
+    curated_matrix_point_estimate_value : `pd.DataFrame`
+        The same shape as `curated_matrix_value`, but containing the original
+        (unlogged) point estimates, masked where needed.
+    curated_matrix_value : `pd.DataFrame`
+        The final heatmap matrix with signed -log10(p-values), possibly NA-masked
+        and suitable for plotting (numeric).
+    matrix_point_estimate : `pd.DataFrame`
+        A matrix of formatted point estimates as strings, with non-significant
+        values masked.
+    matrix_pvalue : `pd.DataFrame`
+      A matrix of signed -log10(p-values), unmasked (floats).
+    matrix_star : `pd.DataFrame`
+      A matrix showing stars for significant values and empty strings otherwise.
+    source_data : `pd.DataFrame`
+        The input dataframe passed to `calc_matrices`, stored for provenance
+        or further post hoc checks.
     '''
     SET_ARGS = [
         UtilsNames.value_input,
@@ -53,6 +126,7 @@ class MatrixHeatmapResults(object):
             if k not in self.__class__.SET_ARGS:
                 raise AttributeError("unrecognised argument '{0}'".format(k))
         # Loops over `SET_ARGS`, assigns the kwargs content to name `s`.
+        # if argument is missing in kwargs, print a warning.
         for s in self.__class__.SET_ARGS:
             try:
                 setattr(self, s, kwargs[s])
@@ -62,17 +136,52 @@ class MatrixHeatmapResults(object):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MidpointNormalize(mpl.colors.Normalize):
-    '''
-    Class to help renomralize the color scale.
-    '''
-    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+    """
+    Normalise colour values around a central midpoint.
+    
+    This custom normalisation class is useful for diverging colour maps where
+    the colour scale should be centred around a meaningful reference point
+    (e.g., zero or no effect). It maps the midpoint to 0.5 in the [0, 1]
+    normalised scale and interpolates values linearly between vmin, vcenter,
+    and vmax.
+    
+    Useful for visualising signed values (e.g., log-fold changes, residuals,
+    differences) with symmetric colour gradients.
+    
+    Parameters
+    ----------
+    vmin : `float` or `NoneType`
+        Minimum data value that maps to 0.0 on the colour scale.
+    vmax : `float` or `NoneType`
+        Maximum data value that maps to 1.0 on the colour scale.
+    vcenter : `float` or `NoneType`
+        Central value that maps to 0.5 on the colour scale.
+    clip : `bool`, default False
+        If True, data outside vmin/vmax is clipped to the endpoints.
+
+    Methods
+    -------
+    inverse(value)
+        Inverts a normalised value from the [0, 1] scale back to the original
+        data scale.
+    """
+    def __init__(self, vmin:float | None = None, vmax:float | None = None,
+                 vcenter:float | None = None, clip:bool=False):
+        # check input
+        is_type(clip, (type(None), bool))
+        # assign to self
         self.vcenter = vcenter
         super().__init__(vmin, vmax, clip)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __call__(self, value, clip=None):
+    def __call__(self, value:float, clip:bool | None = None):
+        is_type(clip, (type(None), bool))
         # I'm ignoring masked values and all kinds of edge cases to make a
         # simple example...
         # Note also that we must extrapolate beyond vmin/vmax
+        if clip is None:
+            clip = self.clip  # honour the value passed to __init__
+        else:
+            value = np.clip(value, self.vmin, self.vmax)
         x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.]
         return np.ma.masked_array(np.interp(value, x, y,
                                             left=-np.inf, right=np.inf))
@@ -87,114 +196,101 @@ class MidpointNormalize(mpl.colors.Normalize):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _update_kwargs(update_dict:dict[Any, Any], **kwargs:Optional[Any],
             ) -> dict[Any, Any]:
-    '''
-    This function will take any number of `kwargs` and add them to an
-    `update_dict`. If there are any duplicate values in the `kwargs` and the
-    `update_dict`, the entries in the `update_dict` will take precedence.
+    """
+    Merge keyword arguments with override priority.
+    
+    Updates a dictionary of keyword arguments, giving precedence to entries
+    in `update_dict` over any duplicates in `kwargs`.
     
     Parameters
     ----------
     update_dict : `dict` [`any`, `any`]
-        A dictionary with key - value pairs that should be combined with any
-        of the supplied kwargs.
-    kwargs : `Any`
+        Dictionary of key-value pairs that take precedence.
+    **kwargs
         Arbitrary keyword arguments.
     
     Returns
     -------
-    dict:
-        A dictionary with the update_dict and kwargs combined, where duplicate
-        entries from update_dict overwrite those in kwargs.
+    dict
+        A merged dictionary where keys in `update_dict` override those in
+        `kwargs`.
     
     Examples
     --------
-    The function is particularly useful to overwrite `kwargs` that are
-    supplied to a nested function, say:
-        
-        >>> _update_kwargs(update_dict={'c': 'black'}, c='red',
-                         alpha = 0.5)
-        >>> {'c': 'black', 'alpha': 0.5}
-    '''
+    >>> _update_kwargs(update_dict={'c': 'black'}, c='red', alpha = 0.5)
+    {'c': 'black', 'alpha': 0.5}
+    """
     new_dict = {**kwargs, **update_dict}
     # returns
     return new_dict
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
-                          context=dict[Any,Any],
+                          context:dict[Any,Any],
                           ) -> dict[Any,Any]:
-    '''
-    Will perform an `re.match(dict_string, value)` on all the values of
-    `dict_string`. If a match is found it will evaluate the value and asign
-    it to the correct dictionary key: `dict_string[key] = eval(value)`.
-    This function is handy if an object is only internally defined after a
-    function is innitiated.
+    """
+    Evaluate matching string values in a dictionary using runtime context.
+    
+    For each string value in `dict_string` that matches `partial_match`,
+    evaluate the string in the given `context` and assign the result back
+    to the corresponding key.
     
     Parameters
     ----------
-    partial_match : str
-        A regex string which will be used to find partial matches in the values
-        of `dict_string`.
-    dict_string : dict
-        A dictionary with some string values which one wants to evaluate and
-        asign back to the correct dictionary key entry.
-    context : dict
-        The environment to look for `value` - should contain values as a
-        dictionary containing the string key word, with assigned objects.
+    partial_match : `str`
+        Regex pattern to match string values.
+    dict_string : `dict` ['any', 'str']
+        Dictionary with values to evaluate conditionally.
+    context : `dict` ['any', 'any']
+        Dictionary providing variable context for evaluation.
     
     Returns
     -------
-    dict:
-        A dictionary with the update_dict and kwargs combined, where duplicate
-        entries from update_dict overwrite those in kwargs.
+    dict
+        Dictionary with evaluated values substituted in place.
     
     Examples
     --------
-        >>> row=[1, 2]
-        >>> dict_string={'obj1': 'row[0]', 'obj2' : 2}
-        >>> new_dict = _dict_string_argument('row', dict_string,
-                                             context={'row':row})
-        >>> # returns
-        >>> {'obj1': 1, 'obj2': 2}
-    '''
+    >>> row=[1, 2]
+    >>> dict_string={'obj1': 'row[0]', 'obj2' : 2}
+    >>> new_dict = _dict_string_argument('row', dict_string,
+                                         context={'row':row})
+    {'obj1': 1, 'obj2': 2}
+    """
     # testing input
     is_type(partial_match, str)
     is_type(dict_string, dict)
     # evaluting object
     for key, value in dict_string.items():
-        if isinstance(value, str):
-            if re.match(partial_match, value):
-                dict_string[key] = eval(value, context)
+        if isinstance(value, str) and re.match(partial_match, value):
+            dict_string[key] = eval(value, context)
     # return stuf
     return dict_string
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def plot_span(start_span:float, stop_span:float, ax: plt.Axes,
+def plot_span(start_span:float, stop_span:float, ax:plt.Axes,
               horizontal:bool=True, **kwargs:Optional[Any],
               ):
-    '''
-    Adds an horizontal or vertical span to an `ax` supplied `plt.Axes` object.
+    """
+    Add a horizontal or vertical span to a matplotlib axis.
     
     Parameters
     ----------
-    start_span: float
-        The y-coordinate to start the span. Represents the x-axis coordinates
-        when horizontal is `False`.
-    stop_span: float
-        The y-coordinate to end the span. Represents the x-axis coordinates
-        when horizontal is `False`.
-    ax : plt.Axes
-            Axes to operate on.
-    horizontal : Boolean, default `True`
+    start_span: `float`
+        The coordinate to start the span.
+    stop_span: `float`
+        The coordinate to end the span.
+    ax : `plt.Axes`
+            Axes object to annotate.
+    horizontal : `bool`, default `True`
         Whether to use axhspan or axvspan.
-    **kwargs : Any
-        Optional arguments supplied to axhspan or axvspan depending on
-        `horizontal`
+    **kwargs
+        Additional keyword arguments passed to `ax.axhspan` or `ax.axvspan`.
     
     Returns
     -------
-    `NoneType`
-    '''
+    None
+    """
     is_type(start_span, (int, float))
     is_type(stop_span, (int, float))
     is_type(ax, plt.Axes)
@@ -210,36 +306,41 @@ def plot_span(start_span:float, stop_span:float, ax: plt.Axes,
     return None
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None,
-                 axis:str='x', log:bool=False):
+def change_ticks(ax:plt.Axes, ticks:list[str], labels:list[str] | None = None,
+                 axis:Literal['x','y']='x', log:bool=False):
     '''
+    Update tick locations and labels for a given axis.
+    
     Takes an axis and changes the ticks labels and location. If `labels` is
     set to `None`, it will use `ticks` for both the location and the labels.
     
-    Can internally log-transformed `ticks`, and plot the `labels` at these
-    locations.
-    
     Parameters
     ----------
-    ax : plt.Axes
-    ticks : list
+    ax : `plt.Axes`
+        The axis to modify.
+    ticks : `list` [`float` | `int`]
         A list of ticks marks which will be used for the position and labels
-    labels : list
-        If supplied use these labels instead of re-using `ticks`, need to check
-        for len(ticks) == len(labels)
-    log: bool, default `False`
-        Should the `ticks` locations be np.log transformed. Does not affect the
-        `ticklabels`.
+    labels : `list` [`str`]
+        If supplied use these labels instead of re-using `ticks`.
+    log: `bool`, default `False`
+        If True, apply `np.log` to the tick locations before placing.
     
     Returns
     -------
-    `NoneType`
-    '''
+    None
+    
+    Raises
+    ------
+    ValueError
+        If `labels` is provided and its length differs from `ticks`, or if
+        `axis` is not one of {'x', 'y'}.'''
     # check input
     is_type(ticks, list)
     is_type(labels, (list, type(None)))
     is_type(axis, str)
     is_type(log, bool)
+    if axis in ['y', 'x'] == False:
+        raise ValueError('`axis` is limited to `x` or `y`.')
     # set labels
     if isinstance(labels, list):
         if not len(labels) == len(ticks):
@@ -271,35 +372,43 @@ def change_ticks(ax:plt.Axes, ticks:List[str], labels:Union[List[str],None]=None
     # done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _extract(data:pd.DataFrame,
-            exposure_col:str,
-            outcome_col:str,
-            point_col:str,
-            pvalue_col:str,
-            dropna:bool=False,
+def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
+            point_col:str, pvalue_col:str, dropna:bool=False,
             **kwargs:Optional[Any],
-            ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+            ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Will extract p-values, and point-estimates from a `data` pd.DataFrame, and
-    create matrices with the exposure and outcome value on the margings.
+    Extract point estimate and p-value matrices from long-format data.
+    
+    This function takes a long-format DataFrame and returns two pivot tables:
+    one for point estimates and one for p-values. These are indexed by
+    outcome and columned by exposure.
     
     Parameters
     ----------
-    data: pd.DataFrame
-        with columns that map to the `.*_col`.
-    *_col: str
-        The column names for `data`.
-    dropna: bool, default `False`
+    data : `pd.DataFrame`
+        Input data in long format with the required columns.
+    exposure_col : `str`
+        Name of the column representing exposure variables.
+    outcome_col : `str`
+        Name of the column representing outcome variables.
+    point_col : `str`
+        Name of the column containing point estimates.
+    pvalue_col : `str`
+        Name of the column containing p-values.
+    dropna : `bool`, default `False`
         Set to `True` to remove columns with any missing data.
-    **kwargs: any
-        All other arguments are forwarded to `pivot_table`.
         
     Returns
     -------
     point_mat : pd.DataFrame
-        Table with point estimates.
+        Matrix with point estimates.
     pvalue_mat : pd.DataFrame
-        Table with p-values.
+        Matrix with p-values.
+    
+    Raises
+    ------
+    ValueError
+        If the point and p-value matrices have mismatched shapes.
     """
     ### subsetting
     # making sure we do not change the original `data`
@@ -329,63 +438,55 @@ def _extract(data:pd.DataFrame,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
-                    log:bool=True, ptrun:float=16, digits:str='3',
-                    symbol:str='★') -> Tuple[  pd.DataFrame,
-                                               pd.DataFrame,
-                                               pd.DataFrame,
-                                               pd.DataFrame,
-                                               pd.DataFrame,
-                                               ]:
+                     log:bool=True, ptrun:float=16, digits:str='3',
+                     symbol:str='★') -> tuple[pd.DataFrame,
+                                                pd.DataFrame,
+                                                pd.DataFrame,
+                                                pd.DataFrame,
+                                                pd.DataFrame,
+                                                ]:
     """
-    Takes two matrices of point-estimates and p-values to:
-        - log10s the p-values
-        - rounds to `digits` dp
-        - scales p-values times direction
-        - masks non-significant point estimates
-    
-    The function will return multiple matrices either as floats or as strings.
-    The float matrices can be used to colour matplotlib figures for example.
-    The string matrices can be used to annotate figures, for example to
-    indicate significances.
+    Format effect and p-value matrices for heatmap visualisation.
+
+    Applies masking, rounding, annotation, and -log10 transformation to p-values,
+    returning both numeric and string matrices for plotting.
     
     Parameters
     ----------
-    effect, p-value: pd.DataFrame
-        Matrices of the same size with the effect estimates and p-values as
-        floats.
-    sig: float
+    effect : `pd.DataFrame`
+        Matrix of effect estimates as floats.
+    pval : `pd.DataFrame`
+        Matrix of p-values as floats.
+    sig : `float`
         The significance p-value cut-off either bounded between 0 and 1,
         or -log10 transformed.
-    log: Boolean
-        should the `pval` matrix be -log10 transformed; default=True.
-    ptrun: float
-        the p-value truncation value.
-    digits: str
-        the number of significant digits the effect matrix should be rounded;
-        default = '3'.
-    symbol: str
-        the unicode symbol used to flag significant findings; default = '★'.
+    log : `bool`, default is `True`
+        should the `pval` matrix be -log10 transformed.
+    ptrun : `float`, default 16
+        Truncation threshold for p-values.
+    digits : `str`, default `3`
+        the number of significant digits the effect matrix should be rounded.
+    symbol : `str`, default `★`
+        the unicode symbol used to flag significant findings.
     
     Returns
     -------
     pval : pd.DataFrame
-        Direction times pvalue matrix; floats
+        Signed p-value matrix (numeric).
     effect : pd.DataFrame
-        An effect estimate matrix masking non-significant results; str
+        Masked effect matrix with rounded string entries.
     star : pd.DataFrame
-        An star matrix masking non-significant results; str
+        Star annotation matrix for significant results.
     pvalstring : pd.DataFrame
-        P-value matrix masking non-significant results; str
+        Masked p-value string matrix for annotation.
     effect_float : pd.DataFrame
-        An effect esimate matrix without masking: floats
+        Raw effect matrix without masking.
     """
     
     # checking input
     if len(digits) > 1:
-        digits=digits[0]
-        # warnings
-        warnings.warn("`digits` has length '{0}' "
-                      "taking the first value".format(len(digits)))
+        raise ValueError("`digits` must be interpretable as a single integer, "
+                         f"got: {digits}.")
     # taking the log10
     if log == True:
         pval_full = _nlog10_func(pval, ptrun)
@@ -439,57 +540,60 @@ def calc_matrices(data:pd.DataFrame,
                   alpha:float=-1*np.log10(0.05),
                   sig_numbers:int=2,
                   ptrun:float=16,
-                  annotate:Union[str,None]='star',
+                  annotate:str | None='star',
                   without_log:bool=False,
                   mask_na:bool=True,
                   **kwargs:Optional[Any],
                   ) -> MatrixHeatmapResults:
     """
-    Getting matrices for the cluster heatmap. Note the p-values are expected
-    to range between 0 and 1.
+    Generate value and annotation matrices for clustered heatmap visualisation.
     
-    Will return two matrices: a value matrix with the -log_10(p-values) multiplied
-    by the effect direction (e.g. based on the sign of `point`), and an
-    annotation matrix, where significant finding are annotated as by
-    `annotate`.
+    This function transforms a long-format DataFrame into heatmap-ready matrices
+    based on statistical results. The output includes both numeric matrices
+    (e.g. signed -log10(p-values)) and string annotations (e.g. significance
+    stars, p-values, or effect sizes).
     
     Arguments
     ---------
-    data: pd.DataFrame
-    exposure_col: str
-        Column names in `data`
-    outcome_col: str
-        Column names in `data`
-    point_col: str
-        Column names in `data`
-    alpha: float, default 0.05
+    data : `pd.DataFrame`
+        Long-format dataframe containing exposure, outcome, point estimate,
+        and p-value columns.
+    exposure_col : `str`
+        Column name indicating the exposure variable.
+    outcome_col : `str`
+        Column name indicating the outcome variable.
+    point_col : `str`, default `point`
+        Column name with point estimates.
+    pvalue_col : `str`, default 'pvalue'
+        Column name with p-values. Note p-values are expected to range between
+        0 and 1.
+    alpha : `float`, default `-1*np.log(0.05)`
         The significance cut-off.
-    sig_numbers: int, default 2
+    sig_numbers : `int`, default 2
         The number of significant numbers the cell annotations should have.
-    ptrun: float, default 16
-        P-values above this value will be truncated.
-    annotate: str, default 'star'
-        The cell annotation: 'star', 'pvalues', 'pointestimates',
-        'None'. Set to `NoneType` to simply return the
-        -log10(p-values) times effect direction
-    without_log: boolean, default `False`
+    ptrun : `float`, default 16
+        P-values smaller than 10^(-ptrun) are truncated.
+    annotate : `str`, default 'star'
+        Annotation style to return. Options:
+        - 'star': significance stars
+        - 'pvalues': raw or transformed p-values
+        - 'pointestimates': formatted effect estimates
+        - None: returns only numeric matrix without annotations
+    without_log : `bool`, default `False`
         If the p-value should `NOT` be -log10 converted.
-    mask_na: boolean, default `True`
+    mask_na : `bool`, default `True`
         If you want to mask missing results (e.g., replacing NAs by 0 or 1)
-    **kwargs: any
+    **kwargs
         All other arguments are forwarded to `_extract`.
     
     Returns
     -------
-    results: MatrixHeatmapResults
-        Includes two `curated` matrix ready to use in a plotting function
-        with exact content dependent on the `annotate` argument.
-        
-        Additionally, returns matrices useful for custom jobs or checking
-        output.
-        
-        The objects are pd.DataFrame with values as `floats` for plotting
-        or, as `strings` for annotations.
+    MatrixHeatmapResults
+    
+    Raises
+    ------
+    ValueError
+        If `annotate` is not one of the supported values.
     """
     #### check input
     is_type(data, pd.DataFrame)
@@ -564,25 +668,31 @@ def calc_matrices(data:pd.DataFrame,
     return MatrixHeatmapResults(**res)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def fix_labels(annotations:List, axis:plt.Axes,
+# NOTE see if this can be used for volcano as well
+def fix_labels(annotations:list, axis:plt.Axes,
                min_distance:float=0.1):
     """
-    Adjust the positions of annotations to prevent overlap.
+    Adjust positions of overlapping annotations to prevent collision.
+    
+    Iteratively checks all pairs of annotation objects and shifts them apart
+    if their positions are within `min_distance` of one another.
     
     Parameters
     ----------
-    annotations: list
+    annotations : `list` [`mpl.text.Annotation`]
         List of matplotlib ax.annotate objects.
-    axis: matplotlib.axes.Axes
-        The axis where the annotations are displayed.
-    min_distance: float, default 0.1
-        Minimum vertical distance between annotations.
+    axis : `plt.Axes`
+        The axis where annotations are drawn.
+    min_distance : `float`, default 0.1
+        Minimum allowable distance between annotations in data coordinates.
     
     Returns
     -------
-    `NoneType`
+    None
     """
-    
+    # type checking
+    is_type(min_distance, (int, float))
+    # plotting
     for i, ann1 in enumerate(annotations):
         for j, ann2 in enumerate(annotations):
             if i != j:
@@ -607,25 +717,30 @@ def fix_labels(annotations:List, axis:plt.Axes,
                     ann2.set_position(pos2)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def calc_mid_point(x:Union[List[float],Tuple[float, float]],
-                   y:Union[List[float],Tuple[float, float]],
-                   ) -> Tuple[float, float]:
-    '''
+def calc_mid_point(x:list[float] | tuple[float, float],
+                   y:list[float] | tuple[float, float],
+                   ) -> tuple[float, float]:
+    """
     Takes two points and returns the Cartesian coordinates of the point in
     the middle of these two points.
     
     Parameters
     ----------
-    x: list or tuple of two floats
+    x: `list` or `tuple` of two floats
         The x-coordinates of the two points.
-    y: list or tuple of two floats
+    y: `list` or `tuple` of two floats
         The y-coordinates of the two points.
     
     Returns
     -------
-    mid_point: tuple of two floats
+    tuple of two floats
         returns coordinate of the point between `x` and `y`.
-    '''
+    
+    Raises
+    ------
+    InputValidationError
+        If either `x` or `y` do not contain exactly two elements.
+    """
     # input
     is_type(x, (list,tuple))
     is_type(y, (list,tuple))
@@ -642,8 +757,8 @@ def calc_mid_point(x:Union[List[float],Tuple[float, float]],
     return x_mid, y_mid
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def calc_angle_points(x:Union[List[float],Tuple[float, float]],
-                      y:Union[List[float],Tuple[float, float]],
+def calc_angle_points(x:list[float] | tuple[float, float],
+                      y:list[float] | tuple[float, float],
                       radians:bool=False,
                       ) -> float:
     '''
@@ -652,17 +767,22 @@ def calc_angle_points(x:Union[List[float],Tuple[float, float]],
     
     Parameters
     ----------
-    x: list or tuple of two floats
+    x : `list` or `tuple` of two floats
         The x-coordinates of the two points.
-    y: list or tuple of two floats
+    y : `list` or `tuple` of two floats
         The y-coordinates of the two points.
-    radians:bool, default `False`
-        set to `True` to return the angle in radians, instead of degrees.
+    radians : `bool`, default `False`
+        returns the angle in radians instead of degrees.
     
     Returns
     -------
-    angle: float
-        returns an angle between 0 and 360 degrees.
+    float
+        Angle in degrees (0–360) or radians.
+    
+    Raises
+    ------
+    InputValidationError
+        If either `x` or `y` do not contain exactly two elements.
     '''
     # input
     is_type(radians, bool)
@@ -691,54 +811,59 @@ def calc_angle_points(x:Union[List[float],Tuple[float, float]],
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def segment_labelled(
-    x:Tuple[float, float], y:Tuple[float, float], ax:plt.Axes,
-    label:Union[None,str]=None,
-    endpoints_marker:Union[mpath.Path,str]=mpath.Path.unit_circle(),
+    x:tuple[float, float], y:tuple[float, float], ax:plt.Axes,
+    label: str | None = None,
+    endpoints_marker: str | mpath.Path=mpath.Path.unit_circle(),
     endpoints_size:float=8, endpoints_c:str='orangered', segment_c='black',
     label_fontsize:float=10, label_background_c='white',
-    overrule_angle:Union[None, float]=None,
+    overrule_angle: float | None = None,
     calc_angle_after_trans:bool=True,
-    kwargs_segment:Dict[Any, Any]={},
-    kwargs_text:Dict[Any, Any]={},
+    kwargs_segment:dict[Any, Any]={},
+    kwargs_text:dict[Any, Any]={},
 ) -> plt.Axes:
-    '''
-    Plots a line segment between two points, and annotates the middle point
-    with a `label` string.
+    """
+    Plots a line segment between two points, and optionally annotates the
+    midpoint with a `label` string.
     
     Parameters
     ----------
-    x: list or tuple of two floats
+    x : `list` or `tuple` of two floats
         The x-coordinates of the two points.
-    y: list or tuple of two floats
+    y : `list` or `tuple` of two floats
         The y-coordinates of the two points.
-    label: str
+    label : `str`
         The string which be plotted on top of the line segment. Set to
         `NoneType` to not plot anything.
-    endpoints_marker: str, default `unit_circle`
+    ax : `plt.axes`
+        The matplotlib axis.
+    endpoints_marker : `str`, default `unit_circle`
         The marker of the line segment endpoints.
-    endpoints_size: float, default 30
+    endpoints_size : `float`, default 30
         The marker size.
-    endpoints_c: str, default `orangered`
+    endpoints_c : `str`, default `orangered`
         The marker colour.
-    segment_c: str, default `black`
+    segment_c : `str`, default `black`
         The segment line colour
-    label_fontsize: float, default 20
+    label_fontsize : `float`, default 20
         The label font size.
-    label_background_c: str, default `white`
+    label_background_c : `str`, default `white`
         The label background colour.
-    overrule_angle: float, default `NoneType`
+    overrule_angle : `float`, default `NoneType`
         Use this to overrule the internally calculated angle against which the
         label will be plotted.
-    calc_angle_after_trans: bool, default `True`
+    calc_angle_after_trans : `bool`, default `True`
         Whether to apply a `ax.transData.transform_point` transformation before
         calculating the angle the text needs to be plotted on.
-    ax: plt.axes,
-        The matplotlib axis.
-    kwargs_*_dict : dict, default empty dict
+    kwargs_*_dict : `dict`, default empty dict
         Optional arguments supplied to the various plotting functions:
             kwargs_segment --> ax.plot
             kwargs_text    --> ax.text
-    '''
+    
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The modified axis with the line segment.
+    """
     # ################### input
     is_type(x, (list,tuple))
     is_type(y, (list,tuple))
@@ -841,8 +966,15 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
     
     Returns
     -------
-    plt.Axes:
-        The updated axes object.
+    plt.Axes
+        The updated axis with added midpoint annotations.
+    
+    Raises
+    ------
+    IndexError
+        If number of `labels` does not match the number of detected gaps.
+    ValueError
+        If `axis` is not either 'x' or 'y'.
     """
     # ### check input
     is_type(ax, plt.Axes)
