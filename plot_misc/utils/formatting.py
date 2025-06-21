@@ -22,6 +22,7 @@ from sklearn.metrics import (
 # constants
 MAXLOG10=20
 
+# NOTE add more pytests
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def _nlog10_func(p, max=MAXLOG10):
     """

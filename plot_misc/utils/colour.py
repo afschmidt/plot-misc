@@ -1,21 +1,49 @@
-'''
-Basic collection of colours.
-'''
+"""
+Curated colour palettes for data visualisation.
+
+This module provides a collection of predefined colour palettes for use in
+matplotlib plots and other visualisations. The palettes are designed to cover
+a variety of use cases, including high-contrast schemes, pastel tones, and
+domain-specific colours inspired by resources such as the GWAS catalog or the
+British National Formulary (BNF).
+
+Classes
+-------
+Colours
+    A container for commonly used colour palettes, exposed as read-only
+    properties.
+    
+Palettes include:
+    - `diverse20`: 20 high-contrast colours
+    - `sweetie`: rich, stylised palette with dark background tones
+    - `pico8`: retro palette based on the Pico-8 fantasy console
+    - `vanilamilkshake`: soft pastel shades
+    - `chembl_red`, `chembl_green`: ChEMBL-inspired scientific tones
+    - `gwas_catalog`: muted and earthy tones
+    - `bnf`: strong hues matching British National Formulary colours
+    - `distinct8`: eight distinguishable primary colours
+"""
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Colours(object):
     """
-    Contains collections of frequently used color palettes.
+    Container for curated colour palettes used in visualisation.
+    
+    Provides access to a variety of named colour palettes, each returned as a
+    list of hexadecimal colour codes. These palettes can be used in matplotlib
+    or other plotting libraries to ensure consistent, visually distinct styles.
+    
+    All palettes are exposed as read-only propertie
     """
     # /////////////////////////////////////////////////////////////////////////
     @property
-    def col_20(self):
+    def diverse20(self):
         """
         A palette of 20 diverse colors.
         
         Returns
         -------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return [
@@ -26,13 +54,14 @@ class Colours(object):
         ]
     # /////////////////////////////////////////////////////////////////////////
     @property
-    def colsweetie(self):
+    def sweetie(self):
         """
         Sweetie color palette with contrasting tones.
         
         Returns
 		-------
-            list: Hex color codes.
+        list of str
+            Hex color codes.
         """
         return [
             '#1a1c2c', '#5d275d', '#b13e53', '#ef7d57', '#ffcd75', '#a7f070',
@@ -41,13 +70,13 @@ class Colours(object):
         ]
     # /////////////////////////////////////////////////////////////////////////
     @property
-    def colpico8(self):
+    def pico8(self):
         """
         Pico-8 color palette for retro-inspired visuals.
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return [
@@ -57,13 +86,13 @@ class Colours(object):
         ]
     # /////////////////////////////////////////////////////////////////////////
     @property
-    def colvanilamilkshake(self):
+    def vanilamilkshake(self):
         """
         Vanilla milkshake color palette with soft pastels.
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return [
@@ -79,7 +108,7 @@ class Colours(object):
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return ['#E485A0', '#B83C5F', '#82203B']
@@ -91,7 +120,7 @@ class Colours(object):
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return ['#9BD8D5', '#64A0A4', '#395F65', '#224044']
@@ -103,7 +132,7 @@ class Colours(object):
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return ['#C4C4C4', '#8AA19C', '#A8B486', '#D0C290', '#D1AD8F',
@@ -117,7 +146,7 @@ class Colours(object):
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return [
@@ -126,13 +155,13 @@ class Colours(object):
         ]
     # /////////////////////////////////////////////////////////////////////////
     @property
-    def distinct_8(self):
+    def distinct8(self):
         """
         Eight distinct colours.
         
         Returns
 		-------
-        colour : `list`
+        list of str
             Hex color codes.
         """
         return [
