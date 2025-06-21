@@ -49,9 +49,7 @@ from sklearn.metrics import (
 # constants
 MAXLOG10=20
 
-# NOTE add more pytests
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# NOTE Add pytest also when input is zero
 def _nlog10_func(p:pd.Series, max:float | int=MAXLOG10):
     """
     Compute -log10(p-values), with truncation.
@@ -148,7 +146,7 @@ def format_estimates(point:float, se: float | None=None,
 def format_roc(observed:np.ndarray, predicted:np.ndarray,
                **kwargs:Optional[Any],
                ) -> pd.DataFrame:
-    '''
+    """
     Takes a binary `observed` column vector and a continuous `predicted`
     column vector, and returns a pd.DataFrame with the columns
     `false_positive`, `sensitivity` and `threshold`.
@@ -172,7 +170,7 @@ def format_roc(observed:np.ndarray, predicted:np.ndarray,
     ------
     ValueError
         If observed and predicted lengths differ.
-    '''
+    """
     # check input
     is_type(observed, np.ndarray)
     is_type(predicted, np.ndarray)
@@ -195,7 +193,7 @@ def format_roc(observed:np.ndarray, predicted:np.ndarray,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _superscriptinate(number:str) -> str:
-    '''
+    """
     Will replace any number (0-9), separators, and addition subtraction
     symbols with a superscript equivalent expression.
     
@@ -208,7 +206,7 @@ def _superscriptinate(number:str) -> str:
     -------
     str
         A string with superscript numbers.
-    '''
+    """
     return number.replace('0','⁰').replace('1','¹').replace('2','²').\
         replace('3','³').replace('4','⁴').replace('5','⁵').replace('6','⁶')\
         .replace('7','⁷').replace('8','⁸').replace('9','⁹').replace('-','⁻')\
@@ -255,3 +253,4 @@ def sci_notation(number:float | int, sig_fig:int=2,
         return a + "×10" + _superscriptinate(str(b))
     except ValueError or TypeError:
         return str(np.nan)
+

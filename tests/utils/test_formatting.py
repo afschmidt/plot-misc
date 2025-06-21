@@ -1,9 +1,42 @@
-#!/usr/bin/env python3
-
 import numpy as np
 from plot_misc.utils.formatting import(
     format_roc,
+    format_estimates,
+    sci_notation,
+    _nlog10_func,
+    _superscriptinate,
 )
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_nlog10_func(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert all(
+            np.round(_nlog10_func(np.array([0.1, 0.2])), 4) ==\
+            np.array([1.     , 0.699])
+        )
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_zeros(self):
+        assert all(
+            np.round(_nlog10_func(np.array([1.0, 0.1, 0.2])), 4) ==\
+            np.array([0.0, 1.     , 0.699])
+        )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_nlog10_func(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert format_estimates(0.2, 0.01) == '0.20 (0.18; 0.22)'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_params(self):
+        assert format_estimates(0.2, 0.01, round=3) == '0.200 (0.180; 0.220)'
+        assert format_estimates(0.2, 0.01, round=3) == '0.200 (0.180; 0.220)'
+        assert format_estimates(0.2, 0.01, alpha=0.2) == '0.20 (0.19; 0.21)'
+        assert format_estimates(0.2, 0.01, exp=True) == '1.22 (1.20; 1.25)'
+        assert format_estimates(0.2, lower=0.15, upper=0.35123) ==\
+            '0.20 (0.15; 0.35)'
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Test_format_roc(object):
     '''
@@ -20,4 +53,22 @@ class Test_format_roc(object):
         # assert
         assert res1.mean().round(2).tolist() == [0.33, 0.5, np.inf]
         assert res2.mean().round(2).tolist() == [0.39, 0.7, np.inf]
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_superscriptinate(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert _superscriptinate('4') == '⁴'
+        assert _superscriptinate('-5') == '⁻⁵'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_sci_notation(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert sci_notation(1256) == '1.26×10³'
+        assert sci_notation(0.00125) == '1.25×10⁻³'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_params(self):
+        assert sci_notation(0.0012545, sig_fig=4) == '1.2545×10⁻³'
+        assert sci_notation(0.0012545, max=0.01) == '1.00×10⁻²'
 

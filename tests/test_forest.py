@@ -113,43 +113,44 @@ class TestSetYCoordinates(object):
             [1.0, 1.0, 3.0, 6.0, 6.0, 6.0, 9.0, 9.0, 9.0, 11.0]
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# assign_distance
-class TestAssignDistance(object):
-    '''
-    Test the `_assign_distance` function
-    '''
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_assign_distance_default(self):
-        # removing y_axis
-        data_in = data1.copy()
-        del data_in[FNames.y_col]
-        # getting y_axis
-        res = forest.assign_distance(data_in, group=GROUP)
-        # test
-        assert FNames.y_col in res.columns
-        assert res[FNames.y_col].mean() == 59.0
-        assert sum(res[FNames.y_col].isnull()) == 0
-        # testing if the y-axis values are the distinct per model
-        assert list(res[res['model'] == 'PGS only'][FNames.y_col]) != \
-            list(res[res['model'] == 'PGS plus'][FNames.y_col])
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_assign_distance_custom(self):
-        # removing y_axis
-        data_in = data1.copy()
-        del data_in[FNames.y_col]
-        # getting y_axis
-        res = forest.assign_distance(data_in, group=GROUP, strata='model',
-                                      start=2,
-                                      sort_dict=SORT_DICT,
-                                      )
-        # test
-        assert list(res[GROUP].unique()) == list(SORT_DICT.keys())
-        # testing if the y-axis values are the same per model
-        assert list(res[res['model'] == 'PGS only'][FNames.y_col]) == \
-            list(res[res['model'] == 'PGS plus'][FNames.y_col])
-        assert res[FNames.y_col].mean() == 24.0
-        assert res[FNames.y_col].min() == 2
-        assert sum(res[FNames.y_col].isnull()) == 0
+# NOTE the function has been depricated - remove tests
+# # assign_distance
+# class TestAssignDistance(object):
+#     '''
+#     Test the `_assign_distance` function
+#     '''
+#     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def test_assign_distance_default(self):
+#         # removing y_axis
+#         data_in = data1.copy()
+#         del data_in[FNames.y_col]
+#         # getting y_axis
+#         res = forest.assign_distance(data_in, group=GROUP)
+#         # test
+#         assert FNames.y_col in res.columns
+#         assert res[FNames.y_col].mean() == 59.0
+#         assert sum(res[FNames.y_col].isnull()) == 0
+#         # testing if the y-axis values are the distinct per model
+#         assert list(res[res['model'] == 'PGS only'][FNames.y_col]) != \
+#             list(res[res['model'] == 'PGS plus'][FNames.y_col])
+#     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def test_assign_distance_custom(self):
+#         # removing y_axis
+#         data_in = data1.copy()
+#         del data_in[FNames.y_col]
+#         # getting y_axis
+#         res = forest.assign_distance(data_in, group=GROUP, strata='model',
+#                                       start=2,
+#                                       sort_dict=SORT_DICT,
+#                                       )
+#         # test
+#         assert list(res[GROUP].unique()) == list(SORT_DICT.keys())
+#         # testing if the y-axis values are the same per model
+#         assert list(res[res['model'] == 'PGS only'][FNames.y_col]) == \
+#             list(res[res['model'] == 'PGS plus'][FNames.y_col])
+#         assert res[FNames.y_col].mean() == 24.0
+#         assert res[FNames.y_col].min() == 2
+#         assert sum(res[FNames.y_col].isnull()) == 0
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_forest
