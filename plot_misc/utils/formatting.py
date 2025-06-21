@@ -1,18 +1,45 @@
-#!/usr/bin/env python3
-'''
-A module packaging various (string) formatting functions.
-'''
+"""
+String and numeric formatting utilities for statistical output.
+
+This module provides functions for transforming numerical results into
+formatted strings for reporting and visualisation. It includes tools for
+generating confidence intervals, scientific notation with superscript
+exponents, and -log10 transformations of p-values for significance plotting.
+Additionally, ROC curves can be formatted into structured DataFrames for
+performance evaluation plots.
+
+Functions
+---------
+format_estimates(point, se=None, lower=None, upper=None, alpha=0.05,
+                 round=2, exp=False)
+    Formats a point estimate and confidence interval into a compact string.
+
+sci_notation(number, sig_fig=2, max=1e-100)
+    Converts a float into scientific notation with superscript exponents.
+
+format_roc(observed, predicted, **kwargs)
+    Computes ROC curve data and returns it as a tidy DataFrame.
+
+Constants
+---------
+MAXLOG10 : int
+    Maximum -log10(p) value used for truncation of very small p-values.
+
+"""
+
 import numpy as np
 import pandas as pd
 import warnings
 from scipy.stats import norm
-from typing import Any, List, Type, Union, Tuple, Dict, ClassVar, Optional
+from typing import (
+    Any,
+    Optional,
+)
 from plot_misc.constants import (
     UtilsNames,
 )
 from plot_misc.errors import (
     is_type,
-    as_array,
     same_len,
 )
 from sklearn.metrics import (
@@ -24,21 +51,22 @@ MAXLOG10=20
 
 # NOTE add more pytests
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def _nlog10_func(p, max=MAXLOG10):
+# NOTE Add pytest also when input is zero
+def _nlog10_func(p:pd.Series, max:float | int=MAXLOG10):
     """
-    computes negative log10 p-value
+    Compute -log10(p-values), with truncation.
     
     Parameters
     ----------
-    p : pandas.Series
+    p : `pd.Series`
         p-values.
-    max : int, optional
-        cutoff which replaces 0. The default is 16.
+    max : `int` or `float`, default 20
+        truncate larger values to this constant.
     
     Returns
     -------
-    pandas.Series
-    
+    pd.Series
+        Transformed p-values with capped maximum.
     """
     # which values are rounded to zero
     notzero = p == 0
@@ -48,36 +76,45 @@ def _nlog10_func(p, max=MAXLOG10):
     nlog10[notzero] = max
     # truncating
     nlog10[nlog10 > max] = max
-    # removing sign
+    # removing sign - note these are np.log(1) pvalues.
     nlog10[nlog10 == -0] = 0
     # returning
-    return(nlog10)
+    return nlog10
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def format_estimates(point:float, se:Union[float,None]=None,
-                      lower:Union[float, None]=None,
-                      upper:Union[float, None]=None, alpha:float=0.05,
-                      round:int=2, exp:bool=False
+def format_estimates(point:float, se: float | None=None,
+                     lower: float | None=None, upper: float | None=None,
+                     alpha:float=0.05, round:int=2, exp:bool=False
                       ) -> str:
     """
-    Formats point estimates with confidence intervals
+    Format point estimates with confidence intervals into a string.
     
-    Arguments
-    ---------
-    point, se, lower, upper : float
-        Please supply either the `se` or (`lower` and `upper`) as floats.
-    alpha : float, default 0.05
-        The desired type 1 error rate
-    round : integer, default 2
-        The desired number of significant figures
-    exp : boolean, default False
-        Should the point estimates, lower and upper bounds be exponentiated
-        with base `e`
+    Parameters
+    ----------
+    point : `float`
+        Point estimate.
+    se : `float` or `None`, default `NoneType`
+        Standard error of the point estimate.
+    lower : `float` or `None`, default `NoneType`
+        Lower bound of the confidence interval.
+    upper : `float` or `None`, default `NoneType`
+        Upper bound of the confidence interval.
+    alpha : `float`, default 0.05
+        Significance level used to compute confidence interval if `se` is given.
+    round : `int`, default 2
+        Number of decimal places to round, retaining trialing zeros.
+    exp : `bool`, default `False`
+        If True, exponentiate the values with base e.
     
     Returns
     -------
-    format_string : str
-        `point (lower; upper)` formatted string with appropriate rounding
+    str
+        Formatted string: "point (lower; upper)".
+    
+    Raises
+    ------
+    TypeError
+        If required inputs are not supplied correctly.
     """
     # check input
     is_type(round, int)
@@ -108,7 +145,7 @@ def format_estimates(point:float, se:Union[float,None]=None,
     return format_string
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def format_roc(observed:as_array, predicted:as_array,
+def format_roc(observed:np.ndarray, predicted:np.ndarray,
                **kwargs:Optional[Any],
                ) -> pd.DataFrame:
     '''
@@ -118,18 +155,23 @@ def format_roc(observed:as_array, predicted:as_array,
     
     Arguments
     ---------
-    observed: numpy array
+    observed : `np.ndarray`
         A column vector of the observed binary outcomes.
-    predicted: numpy array
+    predicted : `np.ndarray`
         A column vector of the predicted outcome (should be continuous), e.g.,
         representing the predicted probability.
-    kwargs: Any
+    **kwargs
         Supplied to `sklearn.metrics.roc_curve`.
     
     Returns
     -------
-    results: pd.DataFrame,
-        With columns: `false_positive`, `sensitivity` and `threshold`.
+    pd.DataFrame
+        ROC curve with columns: false_positive, sensitivity, threshold.
+    
+    Raises
+    ------
+    ValueError
+        If observed and predicted lengths differ.
     '''
     # check input
     is_type(observed, np.ndarray)
@@ -154,16 +196,17 @@ def format_roc(observed:as_array, predicted:as_array,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _superscriptinate(number:str) -> str:
     '''
-    Will replace any number (0-9), seperators, and addition substraction
-    sumbols with a superscript equivalent expression.
+    Will replace any number (0-9), separators, and addition subtraction
+    symbols with a superscript equivalent expression.
     
     Parameters
     ----------
     number : `str`
+        String of digits and symbols
     
     Returns
     -------
-    number : `str`
+    str
         A string with superscript numbers.
     '''
     return number.replace('0','⁰').replace('1','¹').replace('2','²').\
@@ -172,28 +215,29 @@ def _superscriptinate(number:str) -> str:
         .replace('+', '⁺').replace('.','·').replace(',','˒')
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def sci_notation(number:float, sig_fig:int=2,
+def sci_notation(number:float | int, sig_fig:int=2,
                  max:float=np.float_power(10, -100)) -> str:
     """
-    Returns a number in scientific notation with the lead numbers to  a
-    specific significant number `sig_fig`
+    Convert a number to scientific notation with superscript exponent.
     
-    Automatically truncates values if too small to print.
-
     Parameters
     ----------
-    number : `float`
-        A number as float or integer.
-    sig_fig : `int`
-        The number of significant numbers after the decimial point.
-    max `float`
-        the float value above which values get truncated to the max
+    number : `float` or `int`
+        A number.
+    sig_fig : `int`, default 2
+        The number of significant digits after the decimal point.
+    max `float`, default 10^{-100}
+        the float value below which values get truncated to the max
         (i.e., winsorised)
     
     Returns
     -------
-    number: str
-        A number in scientific notation.
+    str
+        The number in scientific notation.
+    
+    Notes
+    -----
+    Will automatically truncates values if too small to print.
     
     Examples
     --------
