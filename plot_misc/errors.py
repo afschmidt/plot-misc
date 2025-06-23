@@ -36,8 +36,6 @@ string_to_list(object)
 import inspect
 import warnings
 import pandas as pd
-import numpy as np
-from numpy.typing import ArrayLike
 from typing import (
     Any,
     Type,
