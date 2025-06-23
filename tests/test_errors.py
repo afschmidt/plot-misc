@@ -1,6 +1,5 @@
 import pytest
 import pandas as pd
-from types import SimpleNamespace
 from plot_misc.errors import (
     is_type, is_df, are_columns_in_df,
     is_series_type, same_len, string_to_list,
