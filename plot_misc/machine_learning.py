@@ -15,7 +15,7 @@ from plot_misc.constants import (
     NamesMachineLearnig as NamesML,
 )
 from plot_misc.errors import (
-    as_array,
+    # as_array,
     is_type,
     is_df,
     are_columns_in_df,
@@ -39,7 +39,7 @@ else:
 # #############################################################################
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def lollipop(values:as_array, labels:as_array,
+def lollipop(values:np.ndarray, labels:np.ndarray,
              line_color:str='tab:orange', dot_color:str='deeppink',
              linewidth:float=1, dot_edge_color:str='black', dot_size:float=4,
              dot_edge_size:float=0.5, figsize:tuple=(6, 6),

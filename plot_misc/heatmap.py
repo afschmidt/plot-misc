@@ -15,15 +15,15 @@ import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
-    as_array,
+    # as_array,
     # _assign_empty_default,
 )
 from typing import Any, List, Type, Union, Tuple, Optional, Dict
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def heatmap(data:Union[pd.DataFrame, as_array],
-            row_labels:Union[List[str], as_array],
-            col_labels:Union[List[str], as_array],
+def heatmap(data:Union[pd.DataFrame, np.ndarray],
+            row_labels:Union[List[str], np.ndarray],
+            col_labels:Union[List[str], np.ndarray],
             grid_col:str='white', grid_linestyle:str='-',
             grid_linewidth:float=3,
             grid_kw:Union[Dict[Any, Any],None]=None,
@@ -135,7 +135,7 @@ def heatmap(data:Union[pd.DataFrame, as_array],
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def annotate_heatmap(im:plt.Axes.imshow,
-                     data:Union[pd.DataFrame, as_array, None]=None,
+                     data:Union[pd.DataFrame, np.ndarray, None]=None,
                      valfmt:Union[str, matplotlib.ticker.Formatter, None]=None,
                      textcolors:Union[Tuple[str], List[str]]=("black", "white"),
                      threshold:Union[float,None]=None,

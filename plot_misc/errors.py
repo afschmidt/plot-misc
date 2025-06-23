@@ -1,64 +1,116 @@
 """
-Error handling for plot-misc.
+This module provides utility functions and error classes to support safe and
+consistent handling of inputs throughout the plot-misc codebase. It includes
+mechanisms for enforcing type constraints, checking object shapes and content,
+and raising informative exceptions when expectations are not met.
+
+Classes
+-------
+InputValidationError
+    A custom exception raised when validation of a parameter fails.
+
+Error_MSG
+    A container of templated error messages for validation routines.
+
+Functions
+---------
+is_type(param, types, param_name=None)
+    Verifies that a parameter is an instance of a given type or set of types.
+
+is_df(df)
+    Confirms whether an object is a pandas DataFrame.
+
+are_columns_in_df(df, expected_columns, warning=False)
+    Checks that specific column names exist in a DataFrame.
+
+is_series_type(column, types)
+    Confirms all elements of a Series or DataFrame match a specified type.
+
+same_len(object1, object2, object_names=None)
+    Validates that two objects have the same length.
+
+string_to_list(object)
+    Wraps strings in a list; leaves other objects unchanged.
+
 """
 import inspect
 import warnings
 import pandas as pd
 import numpy as np
 from numpy.typing import ArrayLike
-from typing import Any, List, Type, Union, Tuple, Callable
+from typing import (
+    Any,
+    Type,
+    Set,
+)
 from packaging import version
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# numpy typing
-def as_array(a: ArrayLike) -> np.ndarray:
-    return np.array(a)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class InputValidationError(Exception):
+    """
+    Custom exception for signalling input validation failures.
+    """
     pass
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # error messages
 class Error_MSG(object):
-    '''
-    A collection of error messages.
-    '''
+    """
+    Container for predefined error message templates.
+    
+    Attributes
+    ----------
+    MISSING_DF : str
+        Message template for missing values in a DataFrame.
+    INVALID_STRING : str
+        Message for invalid string values.
+    INVALID_EXACT_LENGTH : str
+        Message for enforcing exact list or array length.
+    """
     MISSING_DF = '`{}` contains missing values.'
     INVALID_STRING = '`{}` should be limited to `{}`.'
     INVALID_EXACT_LENGTH = '`{}` needs to contain exactly {} elements, not {}.'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def get_param_name(param:Any) -> str | None:
-    '''
-    Gets the name of `param` or otherwise return a None.
-    '''
+def _get_param_name(param:Any) -> str | None:
+    """
+    Attempt to infer the variable name of a parameter from the caller's scope.
+    """
     frame = inspect.currentframe().f_back.f_back
     param_names =\
         [name for name, value in frame.f_locals.items() if value is param]
     return param_names[0] if param_names else None
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def is_type(param: Any, types: Union[Tuple[Type], Type],
-            param_name: Union[str, None]=None) -> bool:
+def is_type(param: Any, types: tuple[Type] | Type,
+            param_name: str | None = None,) -> bool:
     """
     Checks if a given parameter matches any of the supplied types
     
     Parameters
     ----------
-    param: Any
+    param : `any`
         Object to test.
-    types: Type
-        Either a single type, or a tuple of types to test against.
+    types: `type` or `tuple` [`type`]
+        Expected type(s) of the object.
+    param_name : `str` or `None`
+        Name of the parameter. Will attempt to infer the parameter name if set
+        to `NoneType`.
     
     Returns
     -------
-    True if the parameter is an instance of any of the given types.
-    Raises AttributeError otherwise.
+    bool
+        True if type matches.
+    
+    Raises
+    ------
+    InputValidationError
+        If the parameter does not match any of the expected types.
     """
     if not isinstance(param, types):
         if param_name is None:
-            param_name = get_param_name(param)
+            param_name = _get_param_name(param)
         else:
             warnings.warn('`param_name` will be depricated.',
                           DeprecationWarning,
@@ -73,36 +125,50 @@ def is_type(param: Any, types: Union[Tuple[Type], Type],
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def is_df(df: Any) -> bool:
     """
-    Checks if objects is a pd.DataFrame.
+    Check if objects is a pd.DataFrame.
     
     Parameters
     ----------
-    df: object
+    df : `Any`
+        Object to test.
     
     Returns
     -------
-    True if the df is a pd.DataFrame. Raises InputValidationError otherwise.
+    bool
+        True if the object is a DataFrame.
+    
+    Raises
+    ------
+    InputValidationError
+        If the object is not a DataFrame.
     """
     return is_type(df, pd.DataFrame)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def are_columns_in_df(
-    df: pd.DataFrame, expected_columns: Union[List[str], str],
-    warning: bool=False) -> bool:
+    df: pd.DataFrame, expected_columns: list[str] | str, warning: bool=False,
+) -> bool:
     """
-    Checks if all expected columns are present in a given pandas.DataFrame.
+    Check if all expected columns are present in a given pandas.DataFrame.
     
     Parameters
     ----------
-    df: pandas.DataFrame
-    expected_columns: either a single column name or a list of column names to test
+    df : `pandas.DataFrame`
+        DataFrame to test.
+    expected_columns: `str` or `list` [`str`]
+        Expected column name(s).
     warning : bool, default False
         raises a warning instead of an error.
     
-    
     Returns
     -------
-    True if all expected_columns are in the df. Raises InputValidationError otherwise.
+    bool
+        True if all columns are present, False if missing and `warning=True`.
+    
+    Raises
+    ------
+    InputValidationError
+        If any columns are missing and `warning=False`.
     """
     # constant
     message = "The following columns are missing from the pandas.DataFrame: {}"
@@ -111,7 +177,6 @@ def are_columns_in_df(
     expected_columns_set: Set[str] = set(expected_columns) if isinstance(
         expected_columns, list
     ) else set([expected_columns])
-    
     missing_columns = expected_columns_set - set(df.columns)
     # return
     if missing_columns:
@@ -128,24 +193,32 @@ def are_columns_in_df(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def is_series_type(column: Union[pd.Series, pd.DataFrame],
-                   types: Union[Tuple[Type], Type],
+def is_series_type(column: pd.Series | pd.DataFrame, types: tuple[Type] | Type,
                    ) -> bool:
     """
-    Checks if a pd.DataFrame or pd.Series contest has the supplied type.
-    
-    _Note_: instead of testing the dtypes, the function will look over each
-        element and test this individually.
+    Check whether each element of a Series or DataFrame matches a given type.
     
     Parameters
     ----------
-    column: pd.Series or pd.DataFrame,
-    types: a single type.
+    column : `pd.Series` or `pd.DataFrame`
+        Data structure to validate.
+    types : `type` or `tuple` [`tupe`]
+        Allowed types for individual elements.
     
     Returns
     -------
-    True if the column(s) match(es) the given types. Raises
-    InputValidationError otherwise.
+    bool
+        True if all elements match given types.
+    
+    Raises
+    ------
+    InputValidationError
+        If any element fails the type check.
+    
+    Notes
+    -----
+    Instead of testing the dtypes, the function will look over each
+        element and test these individually.
     """
     # check input
     is_type(column, (pd.DataFrame, pd.Series))
@@ -162,24 +235,29 @@ def is_series_type(column: Union[pd.Series, pd.DataFrame],
     return True
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def same_len(object1: Any, object2: Any,
-             object_names:Union[List[str], None]=None,
+def same_len(object1: Any, object2: Any, object_names: list[str] | None = None,
              ) -> bool:
     """
-    Check if two object's have the same length, and otherwise raise
-    `ValueError`.
+    Assert that two objects have the same length.
     
-    Arguments
-    ---------
-    object1, object2 : Any
-        Any type of object.
-    objects_names : list of strings
-        The two objects the series our sourced from. Will be returned in any
-        potential `IndexError` message.
-        
+    Parameters
+    ----------
+    object1 : Any
+        First object.
+    object2 : Any
+        Second object.
+    object_names : list of str, optional
+        Names of the two objects (for error message).
+    
     Returns
     -------
-    True if all OK. Raises a ValueError otherwise.
+    bool
+        True if lengths match.
+    
+    Raises
+    ------
+    ValueError
+        If lengths do not match or `object_names` is invalid.
     """
     n1 = len(object1)
     n2 = len(object2)
@@ -198,20 +276,21 @@ def same_len(object1: Any, object2: Any,
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def string_to_list(object:Any) -> Union[Any, List[str]]:
-    '''
+def string_to_list(object:Any) -> Any | list[str]:
+    """
     Checks if `object` is a string and wraps this in a list, returns the
     original object if it is not a string.
     
     Parameters
     ----------
     object : Any
-        Any object that might be a string.
+        Object to check.
     
     Returns
     -------
-    string wrapped in a list or the original object type.
-    '''
+    list[str] or Any
+        List if input is string; otherwise the input unchanged.
+    """
     if isinstance(object, str):
         return list(object)
     else:

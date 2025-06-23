@@ -1,3 +1,4 @@
+# yaml-jinja
 {% set version = "1.1.2" %}
 
 package:
@@ -54,7 +55,9 @@ about:
     streamline the creation of common visualisations in medical, epidemiological,
     genetic, and machine learning contexts. These templates facilitate consistent
     and efficient generation of plots, aiding researchers and analysts in
-    presenting their data effectively. 
+    presenting their data effectively.  These functions are intentionally minimal 
+    and return axes and figure handles, allowing full post-hoc customisation using 
+    standard matplotlib interfaces, resulting in presentation ready visuals.
   license: GPL-3.0-or-later
   license_family: GPL
   license_file: LICENSE
