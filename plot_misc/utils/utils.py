@@ -35,7 +35,7 @@ calc_mid_point(x, y)
 change_ticks(ax, ticks, labels=None, axis='x', log=False)
     Updates axis tick locations and labels, with optional log scaling.
     
-fix_labels(annotations, axis, min_distance=0.1)
+adjust_labels(annotations, axis, min_distance=0.1)
     Adjusts overlapping annotation text to improve legibility.
     
 plot_span(start_span, stop_span, ax, horizontal=True, **kwargs)
@@ -669,7 +669,7 @@ def calc_matrices(data:pd.DataFrame,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NOTE see if this can be used for volcano as well
-def fix_labels(annotations:list, axis:plt.Axes,
+def adjust_labels(annotations:list, axis:plt.Axes,
                min_distance:float=0.1):
     """
     Adjust positions of overlapping annotations to prevent collision.

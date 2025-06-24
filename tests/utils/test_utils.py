@@ -15,7 +15,7 @@ from plot_misc.example_data import examples
 from plot_misc.utils.utils import (
     calc_matrices,
     _dict_string_argument,
-    fix_labels,
+    adjust_labels,
     calc_mid_point,
     calc_angle_points,
     segment_labelled,
@@ -181,18 +181,18 @@ class TestCalcMatrices(object):
             [0.596, -0.02]
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~----
-class TestFixLabels(object):
+class TestAjustLabels(object):
     '''
-    Testing function `fix_labels`.
+    Testing function `adjust_labels`.
     '''
-    def test_fix_labels(self):
+    def test_adjust_labels(self):
         # Create a mock axis
         fig, ax = plt.subplots()
         # Create mock annotations with overlapping positions
         ann1 = ax.annotate("Annotation 1", xy=(0.5, 0.5), xytext=(0.5, 0.5))
         ann2 = ax.annotate("Annotation 2", xy=(0.5, 0.55), xytext=(0.5, 0.55))
         # Call the utility function to fix labels
-        fix_labels([ann1, ann2], ax, min_distance=0.1)
+        adjust_labels([ann1, ann2], ax, min_distance=0.1)
         # Assert that annotations are adjusted to prevent overlap
         pos1 = ax.transData.inverted().transform(ax.transData.transform(ann1.get_position()))
         pos2 = ax.transData.inverted().transform(ax.transData.transform(ann2.get_position()))

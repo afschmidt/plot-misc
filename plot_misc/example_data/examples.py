@@ -567,19 +567,17 @@ def load_incidence_matrix_data(**kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
-def load_pychart_data(**kwargs):
-        # List of genes
-    genes = ['PKP2', 'MYL2', 'JUP', 'DSC2', 'DSG2', 'TTN', 'DES', 'DSP', 'PLN', 'RBM20', 'BAG3']
-    # Initialize data with zeros for genes
-    data = np.zeros((100, len(genes)), dtype=int)
-    # Assign each patient one gene
-    np.random.seed(0)  # For reproducibility
-    for row in data:
-        row[np.random.randint(len(genes))] = 1
-    # Create DataFrame
-    df = pd.DataFrame(data, columns=genes)
-
-    df['HCM'] = np.random.choice([0, 1], 100)
-    df['DCM'] = 1 - df['HCM']
-    return df
+def load_percentage_data(**kwargs):
+    """Example data with counts, percentages, and group labels"""
+    counts = [10, 8, 5, 15, 13, 10, 5, 10, 8, 10, 6]
+    labels = ["PKP2", "MYL2", "JUP", "DSC2", "DSG2", "TTN",
+                   "DES", "DSP", "PLN", "RBM20", "BAG3"]
+    percentage = [c/sum(counts) * 100 for c in counts]
+    data = pd.DataFrame({
+        "labels": [f"{l} ({p}%)" for l,p in zip(labels, percentage)],
+        "counts": counts,
+        "percentages": [c/sum(counts) * 100 for c in counts],
+    })
+    # returns
+    return data
 
