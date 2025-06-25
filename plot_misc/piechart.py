@@ -1,3 +1,20 @@
+"""
+Pie chart plotting with flexible annotation control.
+
+This module provides a `piechart` function to create labelled pie charts using
+`matplotlib`. It allows for full control over arrow and text positioning via
+scaling factors and provides mechanisms to handle exploded slices, tight label
+spacing, and custom annotation styling. The function integrates input validation,
+axis reuse, and visual tuning options such as wedge transparency, label placement,
+and arrow bending behaviour.
+
+Functions
+---------
+piechart
+    Draws a pie chart with optional annotations on an existing or new Axes,
+    using customisable options for text and arrow positioning.
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,81 +22,112 @@ from numbers import Real
 from plot_misc.errors import (
     is_df,
     are_columns_in_df,
+    is_type,
+    same_len,
 )
 from typing import Any
 from plot_misc.utils.utils import (
     adjust_labels,
     _update_kwargs,
 )
-from itertools import cycle
 
-
-    
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE add an adjustment factor for xy in annotate
-# This adjustment can other be a constant or a list of tuples with floats
-# arrow_start_scaling = 1.05  # slightly outside the unit circle
-# xy = (cx + arrow_start_scaling * x, cy + arrow_start_scaling * y)
-# probably also make xypos_scaling to accept a list of tuples with the same
-# number or elements as there are rows in data.
-def piechart(data: pd.DataFrame, col_values: str, col_labels:str | None = None,
-             ax: plt.Axes | None = None, figsize: tuple[float, float] = (8, 4),
-             fontsize: Real = 8,
-             colours: list[str] = ['black', 'grey', 'lightgrey'],
-             xypos_scaling: tuple[float, float] = (1.15, 1.15),
-             min_dist_lables: float = 0.13,
-             arrowprops: dict[str, Any] | None = None,
-             bboxprops: dict[str, Any] | None = None,
-             pie_kwargs:dict[Any,Any] | None = None,
-             annotate_kwargs:dict[Any,Any] | None = None,
-             ):
+def piechart(
+    data: pd.DataFrame, col_values: str, col_labels:str | None = None,
+    ax: plt.Axes | None = None, figsize: tuple[float, float] = (8, 4),
+    colours: list[str] = ['black', 'grey', 'lightgrey'],
+    fontsize: Real = 8, min_dist_lables: Real = 0.13,
+    text_pos_scaling:list[tuple[float,float]] | tuple[float,float]=(1.15,1.15),
+    line_start_scaling:list[tuple[float,float]] | tuple[float,float]=(1.00, 1.00),
+    arrowprops: dict[str, Any] | None = None,
+    bboxprops: dict[str, Any] | None = None,
+    pie_kwargs:dict[Any,Any] | None = None,
+    annotate_kwargs:dict[Any,Any] | None = None,
+):
     """
-    Creates a pie chart on the given Axes object,
-        or a new figure if None.
+    Draws a pie chart with optional labels and annotation arrows.
+    
+    This function draws a pie chart from the provided DataFrame, with optional
+    label annotations and arrows indicating wedge boundaries. It supports
+    both uniform and wedge-specific scaling for label and arrow placement,
+    making it suitable for charts with exploded slices or dense label sets.
     
     Parameters
     ----------
     data : `pd.DataFrame`
-        The DataFrame containing data.
+        A DataFrame containing the numeric values and (optional) labels for
+        each wedge in the pie chart.
     col_values : `str`
-        A column name in `data` representing the size of each piechart wedge.
+        Name of the column containing the numeric values that determine wedge
+        sizes.
     col_labells : `str` or `None`, default `None`
-        A column name in `data` representing the wedge labels. Set to `None`
-        to generate a piechart without labels.
-    ax : `plt.Axes` or `None`, default `NoneType`
-        The axes object on which to plot the pie chart.  If None, a new figure
-        and axes object are created.
+        Name of the column containing wedge labels. If None, the pie chart is
+        drawn without annotations.
     figsize : `tuple` [`float`, `float`], default `(8, 4)`
-        Figure size in inches.
+        Size of the figure in inches if `ax` is not provided.
+    colours : `list` [`str`, `str`], default [`black`, 'grey`, 'lightgrey']
+        List of colours to apply to the wedges. Cycled if fewer than the number
+        of data points.
     fontsize : `float`, default 8.0
-        Label font size
-    colors : `list` [`str`, `str`], default [`black`, 'grey`, 'lightgrey']
-        List of colours to use for pie chart segments.
-    xypos_scaling : `tuple` [`float`, `float`], default (1.15, 1.15)
-        The scaling factor positioning the label text in radians. The first
+        Font size used for annotation labels.
+    min_dist_lables : `float`, default 0.13
+        Minimum spacing between labels after adjustment.
+    text_pos_scaling : `tuple` [`float`, `float`], default (1.15, 1.15)
+        Scaling factor applied to the label position, controlling how far labels
+        are placed from the wedge centre. A single tuple applies the same scaling
+        to all wedges; a list allows for per-wedge positioning.  The first
         values moves the text left or right, the second value up or down.
+    line_start_scaling : `tuple` [`float`, `float`], default (1.00, 1.00)
+        Scaling factor applied to the arrow starting point (on the wedge).
+        A value > 1 pushes the arrow start outward from the centre. Like
+        `text_pos_scaling`, a list allows per-wedge values.
+    ax : `plt.Axes` or `None`, default `NoneType`
+        Axes on which to draw the pie chart. If None, a new figure and axes
+        are created.
     arrowprops : `dict` [`str`, 'any`] or `None`, default `NoneType'
-        keyword arguments passed to FancyArrowPatch.
+        keyword arguments passed to `FancyArrowPatch` to style the arrow
+        connecting label to wedge.
     bboxprops : `dict` [`str`, `any`] or `None`, default `NoneType`
-        keyword arguments passed to bbox.
+        keyword arguments passed to the annotation text bounding box (`bbox`).
     pie_kwargs : `dict`, default `NoneType`
-        keyword arguments for ax.pie
+        Additional keyword arguments passed to `ax.pie`.
     annotate_kwargs :`` dict, default `NoneType`
-        keyword arguments for annotations.
+        Additional keyword arguments passed to `ax.annotate`.
     
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The matplotlib figure containing the pie chart.
+        The figure containing the pie chart.
     ax : matplotlib.axes.Axes
-        The axes object of the plot.
+        The axes containing the pie chart and annotations.
+    
+    Raises
+    ------
+    ValueError
+        If `data[col_values]` contains any values less than or equal to zero.
+    TypeError
+        If positional scaling parameters are of the wrong type.
     """
-    # check input
+    # #### check input
     is_df(data)
+    is_type(ax, (plt.Axes, type(None)))
+    is_type(col_labels, (type(None), str))
+    is_type(col_values, str)
+    is_type(min_dist_lables, Real)
+    is_type(text_pos_scaling, (list, tuple))
+    is_type(line_start_scaling, (list, tuple))
     col_list = [col_labels, col_values]
+    # confirms columns are available
     if col_labels is None:
         col_list = [col_values]
     are_columns_in_df(data, col_list)
+    if isinstance(text_pos_scaling, tuple):
+        text_pos_scaling = [text_pos_scaling] * data.shape[0]
+    if isinstance(line_start_scaling, tuple):
+        line_start_scaling = [line_start_scaling] * data.shape[0]
+    # confirm lengths
+    same_len(text_pos_scaling, data, ['text_pos_scaling', 'data'])
+    same_len(line_start_scaling, data, ['text_pos_scaling', 'data'])
     # set defaults
     if bboxprops is None:
         bboxprops = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.0,
@@ -134,9 +182,10 @@ def piechart(data: pd.DataFrame, col_values: str, col_labels:str | None = None,
             # Annotate labels and store them in the list
             annot_kwargs = _update_kwargs(update_dict = annot_kwargs,
                                           fontsize=fontsize,)
-            ann = ax.annotate(labels[i], xy=(cx + x, cy + y),
-                              xytext=(xypos_scaling[0] * np.sign(x),
-                                      xypos_scaling[1] * y),
+            ann = ax.annotate(labels[i], xy=(cx + line_start_scaling[i][0]*x,
+                                             cy + line_start_scaling[i][1]*y),
+                              xytext=(text_pos_scaling[i][0] * np.sign(x),
+                                      text_pos_scaling[i][1] * y),
                               horizontalalignment=horizontalalignment,
                               **annot_kwargs,)
             # add annotations
