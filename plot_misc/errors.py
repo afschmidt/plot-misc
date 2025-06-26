@@ -252,6 +252,10 @@ def same_len(object1: Any, object2: Any, object_names: list[str] | None = None,
     bool
         True if lengths match.
     
+    Notes
+    -----
+    both object1 and object2 should have a `len` method.
+    
     Raises
     ------
     ValueError

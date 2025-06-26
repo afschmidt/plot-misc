@@ -1,92 +1,106 @@
-'''
-Provides a template to draw and annotate volcano plots.
+"""
+Volcano plots for visualising effect size and statistical significance.
 
-Dots are plotted on a Cartesian-grid with typically the -log10(p-value) on
-the y-axis and a measure of effect magnitude on the x-axis. Different colours
-can be used to identify certain key parts of the graph.
+This module provides a template to create volcano plots for highlighting
+results based on both the magnitude of effect and their statistical
+significance. Typically, the x-axis shows an effect estimate and the y-axis
+the negative log-transformed p-value. Dots can be coloured to distinguish
+significant from non-significant results, and selected points may be annotated
+with text labels.
 
-Label overlap is addressed by sourcing `adjustText.adjust_text` function.
-'''
-import matplotlib.pyplot as plt
+Functions
+---------
+plot_volcano(data, y_column, x_column, point_label=None,  ...)
+    Draws a volcano plot, optionally adding a vertical reference line and
+    labels for significant points.
+
+Notes
+-----
+These implementations are designed to work directly with matplotlib `Axes`
+objects, and optionally allow de-overlapping of text using `adjustText`.
+Appearance can be modified using standard matplotlib arguments and optional
+keyword dictionaries for fine control over scatter and text elements.
+"""
+
 import numpy as np
+import matplotlib.pyplot as plt
 from adjustText import adjust_text
+from numbers import Real
 from pandas.core.frame import DataFrame
 from plot_misc.utils.utils import(
     _update_kwargs,
 )
 from plot_misc.errors import(
-    # _assign_empty_default,
     is_type,
     is_df,
 )
-from typing import Any, List, Type, Union, Tuple, Optional, Dict
-
+from typing import Any
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_volcano(data:DataFrame, y_column:str, x_column:str,
-                 point_label:Union[str,None]=None, legend:bool=False,
-                 fsize:Union[Tuple[float, float], None]=None,
-                 adjust:bool=False, lim:float=1000,
-                 vline:float=0, alpha:float=0.00001,
-                 col:Tuple[str, str, str]=('orangered','dimgrey','lightcoral'),
-                 xlab:str='Point estimate',
-                 ylab:str=r'$-log_{10}(pvalue)$',
-                 ylim:Union[List[float],None]=None,
-                 msize:float=10,
-                 lsize:float=5,
-                 transparency_ns:float=0.6,
-                 index_label:Union[List[str],None]=None,
+                 point_label:str | None = None,
+                 fsize:tuple[float,float] | None = None, adjust:bool=False,
+                 lim:int=1000, vline:Real=0, alpha:float=1e-5,
+                 col:tuple[str, str, str]=('orangered','dimgrey','lightcoral'),
+                 xlab:str='Point estimate', ylab:str=r'$-log_{10}(pvalue)$',
+                 ylim:tuple[float, float] | None = None, msize:Real=10,
+                 lsize:Real=5, transparency_ns:Real=0.6,
+                 index_label:list[str] | None = None,
                  font_label: str | None = None,
-                 ax:Union[plt.Axes, None]=None,
-                 label_kwargs_dict:Union[None,Dict[Any,Any]]=None,
-                 scatter_sig_kwargs_dict:Union[None,Dict[Any,Any]]=None,
-                 scatter_nonsig_kwargs_dict:Union[None,Dict[Any,Any]]=None,
-                 ) -> Union[plt.Figure, plt.Axes]:
-    '''
-    Creates a volcano plot, allow to colour and label (subsets of)
-    significant results.
+                 ax:plt.Axes | None = None,
+                 label_kwargs_dict:dict[Any,Any] | None = None,
+                 scatter_sig_kwargs_dict:dict[Any,Any] | None = None,
+                 scatter_nonsig_kwargs_dict:dict[Any,Any] | None = None,
+                 ) -> tuple[plt.Figure, plt.Axes]:
+    """
+    Generate a volcano plot from a set of effect estimates and p-values.
     
-    Arguments
+    Paramters
     ---------
-    Data : pd.DataFrame
-        A pandas dataframe with -log10(pvalues) and
-        effect estimates and a column the points can be labels by.
-    y_column, x_column, point_label : str
-        A column name in data.
-    legend : boolean
-        Should the legend be returned (default: False).
-    fsize : tuple, default `NoneType`
-        Figure size W by H in inches. Set to `NoneType` to skip.
-    adjust : boolean
-        Should overplotting of annotations be decreased.  Note this starts a
-        (computational demanding) iterative process.
-    lim : float
+    data : `pd.DataFrame`
+        A DataFrame containing at least two columns: the effect estimate and
+        the (negative log-transformed) p-value.
+    y_column : `str`
+        Name of the column containing the y-axis values (typically –log10 p).
+    x_column : `str`
+        Name of the column containing the x-axis values (effect sizes).
+    point_label : `str` or `None`, default `NoneType`
+        Column name in `data` to use for point labels. If `None`, no labels
+        are added.
+    fsize : `tuple` [`float`, `float`] or `None`, default `None`
+        Figure size in inches (width, height). Ignored if `ax` is provided.
+    adjust : `bool`, default `False`
+        Whether to apply label de-overlapping using `adjustText`.
+    lim : `int`, default 1000
         The tolerance for overplotting, higher numbers indicate lower tolerance
         and increases the distance between labels; also increasing the run time.
-    vline : float
+    vline : `real`, default 0
         The x-position of the vertical line
-    alpha : float
-        The significance cut-off used (will be logged, internally).
-    col : tuple
-        A three element tuple listing the colours for:
-        significant dots, non-significant dots, and the vertical line.
-    xlab, ylab : str
-        The axis label.
-    ylim : list
+    alpha : `float`, default 1e-5
+        P-value threshold for significance (used on –log10 scale).
+    col : `tuple` [`str`, `str`, `str`]
+        Colours for (1) significant points, (2) non-significant points,
+        and (3) vertical line.
+    xlab : `str`, default 'Point estimate'
+        x-axis label.
+    ylab : `str`, default '-log10(pvalue)'
+        y-axis label.
+    ylim : `tuple` [`float`,`float`]
         The y-limit, by default is simply uses the data limits.
-    msize : float
-        Size of the dots.
-    lsize : float
-        The text size.
-    transparency_ns : float
-        Transparency value of the non-significant results (default 0.6)
-    index_label : list
-        An optional list of pandas indices or booleans to subset the printed
-        labels.
-    ax : plt.axes
-        An optional matplotlib axis. If supplied the function works on the axis
-        and does not return anything.
-    *_kwargs_dict : dict, default `NoneType`
+    msize : `float`, default 10
+        Marker size for scatter points.
+    lsize : `float`, default 5
+        Font size for text annotations.
+    transparency_ns : `float`, default 0.6
+        Transparency for non-significant points.
+    index_label : `list` [`str`] or `None`
+        Subset of rows indices to annotate. If `None`, all significant points
+        are eligible.
+    font_label : `str` or `None`, default `None`
+        Font family to use for point labels (e.g. 'monospace', 'Arial').
+    ax : `plt.axes` or `None`, default `None`
+        Axis object to plot on. If `None`, a new figure and axis are created.
+    *_kwargs_dict : dict, default `None`
         Optional arguments supplied to the various plotting functions:
             label_kwargs_dict          --> adjust_text
             scatter_sig_kwargs_dict    --> ax.bar
@@ -94,17 +108,22 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     
     Returns
     -------
-    figure : plt.Figure
-    axes : plt.Axes
-    '''
+    figure : `matplotlib.figure.Figure`
+        The created figure (if `ax` was not provided).
+    ax : `matplotlib.axes.Axes`
+        The matplotlib axis containing the plot.
+    """
     FT_FAM = 'font.family'
     # ###### Check input
     is_df(data)
-    is_type(y_column, str, 'y_column')
-    is_type(x_column, str, 'x_column')
-    is_type(point_label, (str, type(None)), 'point_label')
-    is_type(legend, bool, 'legend')
+    is_type(y_column, str)
+    is_type(x_column, str)
+    is_type(point_label, (str, type(None)))
     is_type(font_label, (type(None), str))
+    is_type(col, tuple)
+    if len(col) != 3:
+        raise ValueError("Please make sure `col` is a tuple with 3 elements, "
+                         f"not:{len(col)}.")
     # map None to dict
     label_kwargs_dict = label_kwargs_dict or {}
     scatter_sig_kwargs_dict = scatter_sig_kwargs_dict or {}
@@ -157,7 +176,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ax.set_ylabel(ylab)
     ### do we want to set the ylim
     if not ylim is None:
-        ax.set_ylim( ylim[0], ylim[1] )
+        ax.set_ylim(ylim[0], ylim[1])
     # adjust text only if labels are specified
     if not point_label is None:
         # check if column is present
