@@ -1,79 +1,109 @@
-'''
-A function to draw incidence matrices, creating an n by m grid of lines
-populating the intersections with shapes.
-'''
+"""
+Incidence matrix plotting for categorical heatmaps and set visualisation.
+
+This module provides a plotting function for drawing incidence matrices,
+where each cell in a 2D grid is populated with a marker (dot) based on the
+underlying matrix value. This is useful for visualising categorical
+presence/absence patterns, binary annotations, or simplified heatmaps
+without continuous shading.
+
+The visual output is a grid of vertical and horizontal lines forming an
+n-by-m lattice, with overlaid points coloured and sized according to
+user-defined thresholds and formatting options.
+
+Functions
+---------
+draw_incidencematrix(data, fsize=(6,6), ...)
+    Draws a categorical incidence matrix, customising grid lines, dot styles,
+    and axis labels using a DataFrame as input.
+
+Notes
+-----
+Each dot is rendered using `matplotlib.pyplot.scatter`, and horizontal/vertical
+lines define the grid. The mapping of dot appearance to values is governed by
+user-supplied breakpoints and style parameters. Optional keyword dictionaries
+enable fine-grained customisation of scatter and line elements.
+"""
 
 # importing
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Any, List, Type, Union, Tuple, Dict
+from typing import (
+    Any,
+)
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
-    # _assign_empty_default,
+    is_df,
+    same_len,
 )
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
-                         dot_colour:List[Tuple[str, float]]=[('grey',0), ('black',1)],
-                         line_colour:List[str]=['lightgrey', 'lightgrey'],
-                         dot_size:List[float]=[4, 8],
-                         dot_transparency:List[float]=[0.9, 1.0],
-                         lw:List[float]=[0.3, 0.3],
-                         tick_lab_size:List[float]=[4.5, 4.5],
-                         tick_len:List[float]=[2, 2],
-                         tick_wid:List[float]=[0.3, 0.3],
-                         margins:Union[List[float], None]=None,
-                         ax:Union[plt.Axes, None]=None,
-                         break_limits:List[float] = [-np.inf, np.inf],
-                         kwargs_scatter_dict:Union[Dict[Any, Any],None]=None,
-                         kwargs_vline_dict:Union[Dict[Any, Any],None]=None,
-                         kwargs_hline_dict:Union[Dict[Any, Any],None]=None,
-                         ) -> Tuple[plt.Figure, plt.Axes]:
-    '''
-    Creates a `categorical heatmap`, essentially visualising an incidence
-    matrix.
+def draw_incidencematrix(data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
+                         dot_colour:list[tuple[str, float]]=[('grey',0), ('black',1)],
+                         line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
+                         dot_size:list[float]=[4, 8],
+                         dot_transparency:list[float]=[0.9, 1.0],
+                         lw:tuple[float, float]=(0.3, 0.3),
+                         tick_lab_size:tuple[float, float]=(4.5, 4.5),
+                         tick_len:tuple[float,float]=(2, 2),
+                         tick_w:tuple[float,float]=(0.3, 0.3),
+                         margins:tuple[float,float] | None = None,
+                         ax:plt.Axes | None = None,
+                         break_limits:tuple[float, float] = (-np.inf, np.inf),
+                         kwargs_scatter_dict:dict[Any,Any] | None = None,
+                         kwargs_vline_dict:dict[Any,Any] | None = None,
+                         kwargs_hline_dict:dict[Any,Any] | None = None,
+                         ) -> tuple[plt.Figure, plt.Axes]:
+    """
+    Draw a categorical heatmap to visualise an incidence matrix.
     
-    Arguments
-    ---------
-    Data : pd.DataFrame
-        A incidence matrix with index and column labels used as x-axis and
-        y-axis tick labels. The matrix values will be plotted basd on the
-        `dot_colour` breaks and colours, with a specified size and transparency.
-    fsize : tuple
-        A two element tuple, with the width and height in cm.
-    dot_colour : list of tuples, default `[('grey',0), ('black',1)]`
-        A list of arbitrary length, specifying the colour and upper bound
-        the colour is applied to. Each tuple should have
-        (<colour>, <upper bound>).
-        
+    This function plots a square grid where each cell is populated
+    with a dot, based on the value in the input matrix. Dot colour, size,
+    and transparency are mapped to user-defined thresholds, allowing flexible
+    binary or ordinal heatmap-style visualisations for presence/absence or
+    category membership.
+    
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        A matrix of shape (n_rows, n_columns). Index and column labels are used
+        for the y-axis and x-axis ticks, respectively. Values are mapped to
+        dot attributes based on `dot_colour`.
+    fsize : `tuple` [`float`, `float`], default (6.0, 6.0)
+        Width and height of the figure in inches.
+    dot_colour : `list` [`tuple` [`str`, `float`]], default [('grey', 0), ('black', 1)]
+        A list of (colour, upper bound) tuples defining dot appearance by value.
+        Each dot is coloured according to the first `cut` for which the value is
+        less than or equal to `cut` and greater than the previous break.
+         
         The default: [('grey',0), ('black',1)], colours dots grey for value in
         (\\infinity, 0], and colours dots black for values in (0, 1].
-    dot_size : list
-        A list of length equal to `dot_colour`. specifying the size of the dots.
-    dot_transparency : list
-        A list of length equal to `dot_colour`, specifying the alpha of the dots.
-    line_colour : list
-        A two element list specifying the horizontal and vertical line
-        colours.
-    lw : list
-        A two element list specifying the horizontal and vertical line
-        size.
-    tick_lab_size : list
-        A two element list specifying the label size of the x-, y-axis ticks.
-    tick_len : list
-        A two element list specifying the length of the x-, y-axis ticks.
-    tick_wid : list
-        A two element list specifying the width of the x-, y-axis ticks.
-    margins : list
-        A two element list specifying the margins of the x-, y-axis.
-    ax : plt.axes
-        An optional matplotlib axis -- will otherwise make one internally
-    break_limits : list
-        Currently used to specify the lower bound the first colour is applied
-        to. Most likely you will never need to touch this.
-    kwargs_*_dict : dict, default None
+    line_colour : `tuple` [`str`, `str`], default ('lightgrey', 'lightgrey')
+        Colours of vertical and horizontal grid lines.
+    dot_size : `list` [`float`], default [4, 8]
+        Size of dots corresponding to each threshold in `dot_colour`.
+    dot_transparency : `list` [`float`], default [0.9, 1.0]
+        Alpha transparency values for dots in each category.
+    lw : tuple [`float`, `float`], default (0.3, 0.3)
+        Line width for vertical and horizontal grid lines.
+    tick_lab_size : `tuple` [`float`, `float`], default (4.5, 4.5)
+        Font size of x- and y-axis tick labels.
+    tick_len : `tuple` [`float`, `float`], default (2, 2)
+        Tick length for x- and y-axes.
+    tick_w : `tuple` [`float`, `float`], default (0.3, 0.3)
+        Tick width for x- and y-axes.
+    margins : `tuple` [`float`, `float`], optional
+        Margins to apply along the x- and y-axes.
+    ax : `plt.axes` or `None`, default `None`
+        If provided, the plot is drawn on this axis. Otherwise, a new figure
+        and axis are created.
+    break_limits : `tuple` [`float`, `float`], default (-np.inf, np.inf)
+        Lower and upper bounds for the first and final break. Used to define
+        open-ended ranges in dot colouring. Currently only uses the lower
+        bound.
+    kwargs_*_dict : `dict` [`any`, `any`] or `None`, default None
         Optional arguments supplied to the various plotting functions:
             kwargs_scatter_dict        --> ax.scatter
             kwargs_vline_dict          --> ax.vline
@@ -81,22 +111,30 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         
     Returns
     -------
-    fig: plt.Figure
-    ax: plt.Axes
-    '''
+    fig : `matplotlib.figure.Figure`
+        The matplotlib figure containing the plot.
+    ax : `matplotlib.axes.Axes`
+        The axis containing the plotted incidence matrix.
+    
+    Notes
+    -----
+    The appearance of the matrix is governed by the breakpoints defined in
+    `dot_colour`. If fewer than `len(dot_colour)` values are supplied for
+    `dot_size` or `dot_transparency`, these are automatically broadcast.
+    
+    Grid lines are drawn behind dots. Missing or non-matching entries in the
+    input matrix will be ignored.
+    """
     
     # check inputs
     is_type(dot_size, list)
     is_type(dot_colour, list)
     is_type(dot_transparency, list)
+    is_df(data)
     # map None to dict
     kwargs_scatter_dict = kwargs_scatter_dict or {}
     kwargs_vline_dict = kwargs_vline_dict or {}
     kwargs_hline_dict = kwargs_hline_dict or {}
-    # kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict =\
-    #     _assign_empty_default(
-    #         [kwargs_scatter_dict, kwargs_vline_dict, kwargs_hline_dict],
-    #         dict)
     # if one value is supplied, multiply the number of dot_colour elements
     ndots = len(dot_colour)
     if len(dot_size) == 1:
@@ -104,29 +142,16 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
     if len(dot_transparency) ==1:
         dot_transparency = dot_transparency * ndots
     # further tests
-    if not len(dot_colour) == len(dot_size):
-        raise IndexError('The number of `dot_size` entries should equal '
-                         '`dot_colour`.'
-                         )
-    if not len(dot_colour) == len(dot_transparency):
-        raise IndexError('The number of `dot_transparency` entries should '
-                         'equal `dot_colour`.'
-                         )
-    if not isinstance(data, pd.DataFrame):
-        raise ValueError('`data` should be a pd.DataFrame.')
-    
+    same_len(dot_colour, dot_size, ['dot_colour','dot_size'])
+    same_len(dot_colour, dot_transparency, ['dot_colour','dot_transparency'])
     # do we need to make an axis
     if ax is None:
-        cmtoinch = 0.393700787
-        f, ax = plt.subplots(figsize=(fsize[0] * cmtoinch,
-                                      fsize[1] * cmtoinch))
+        f, ax = plt.subplots(figsize=(fsize[0], fsize[1]))
     else:
         f = ax.figure
-    
     # the x and y coordinates
     M, N = data.shape
     x, y = np.meshgrid(np.arange(M), np.arange(N))
-    
     ################
     # plot dots
     for it, value in enumerate(dot_colour):
@@ -163,7 +188,6 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
         cut_old = cut
         # end loop
     ################
-    
     # adding grid lines
     for xv in range(x.shape[1]):
         new_vline_kwargs = _update_kwargs(update_dict=kwargs_vline_dict,
@@ -181,13 +205,11 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:Tuple[float, float]=(6,6),
     ax.set(xticks=np.arange(x.shape[1]), yticks=np.arange(x.shape[0]),
            xticklabels=data.index, yticklabels=data.columns)
     ax.tick_params(axis="x", labelsize=tick_lab_size[0], length=tick_len[0],
-                   width=tick_wid[0], rotation=90)
+                   width=tick_w[0], rotation=90)
     ax.tick_params(axis="y", labelsize=tick_lab_size[1], length=tick_len[1],
-                   width=tick_wid[1])
-    
+                   width=tick_w[1])
     # trim margin
     if not margins is None:
         ax.margins(x=margins[0], y=margins[1])
-    
     # return the figure and axes
     return f, ax

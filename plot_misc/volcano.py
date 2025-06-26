@@ -55,8 +55,8 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     """
     Generate a volcano plot from a set of effect estimates and p-values.
     
-    Paramters
-    ---------
+    Parameters
+    ----------
     data : `pd.DataFrame`
         A DataFrame containing at least two columns: the effect estimate and
         the (negative log-transformed) p-value.
@@ -128,14 +128,6 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     label_kwargs_dict = label_kwargs_dict or {}
     scatter_sig_kwargs_dict = scatter_sig_kwargs_dict or {}
     scatter_nonsig_kwargs_dict = scatter_nonsig_kwargs_dict or {}
-    # label_kwargs_dict, scatter_sig_kwargs_dict, scatter_nonsig_kwargs_dict =\
-    #     _assign_empty_default(
-    #         [label_kwargs_dict,
-    #          scatter_sig_kwargs_dict,
-    #          scatter_nonsig_kwargs_dict,
-    #          ],
-    #         dict,
-    #     )
     # raise warning
     if (adjust == True and point_label == None):
         warnings.warn('`adjust` is ignored if `point_label` is None',
