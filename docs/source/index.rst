@@ -39,6 +39,7 @@ Content
    :caption: Project admin
 
    contributing
+   raising_issues
 
 
 Indices and tables
