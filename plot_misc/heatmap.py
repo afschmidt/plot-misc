@@ -1,10 +1,35 @@
+"""
+Heatmap drawing and annotation tools built on top of matplotlib and seaborn.
 
-'''
-A module to draw and annotate heatmaps using matplotlib or seasborn.
+This module provides flexible functions to create and annotate heatmaps using
+either `matplotlib` or `seaborn`, with extensive support for customisation and
+publication-quality output. It includes functionality for standard heatmaps,
+clustered heatmaps, and embedded annotations with control over grid styling,
+tick labelling, and colourbar presentation.
 
-A majority of the code comes from
-    `here <https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html>`_.
-'''
+Functions
+---------
+heatmap(data, row_labels, col_labels, ...)
+    Draws a standard heatmap using matplotlib's `imshow`, with options for
+    gridlines, tick formatting, and embedded colourbars.
+
+annotate_heatmap(im, data=None, valfmt=None, ...)
+    Adds text annotations to an existing heatmap image (AxesImage object),
+    with configurable formatting and colour thresholding.
+
+clustermap(data, cmap='Spectral', annot=None, ...)
+    Wraps seaborn's `clustermap` with additional layout and styling options
+    suitable for compact or publication figures.
+
+Notes
+-----
+The base structure of the `heatmap` and `annotate_heatmap` functions is derived
+from the example published in the official matplotlib gallery [1]_.
+
+References
+----------
+.. [1] https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
+"""
 
 # modules
 import numpy as np
@@ -15,65 +40,72 @@ import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
-    # as_array,
-    # _assign_empty_default,
 )
-from typing import Any, List, Type, Union, Tuple, Optional, Dict
+from numbers import Real
+from typing import (
+    Any,
+    Optional,
+)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def heatmap(data:Union[pd.DataFrame, np.ndarray],
-            row_labels:Union[List[str], np.ndarray],
-            col_labels:Union[List[str], np.ndarray],
-            grid_col:str='white', grid_linestyle:str='-',
-            grid_linewidth:float=3,
-            grid_kw:Union[Dict[Any, Any],None]=None,
-            cbar_bool:bool=False,
-            cbar_label:str="",
-            cbar_kw:Union[Dict[Any, Any],None]=None,
-            ax:Union[plt.Axes, None]=None,
-            **kwargs:Optional[Any]) -> Tuple[matplotlib.image.AxesImage,
-                                             matplotlib.colorbar.Colorbar]:
+def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
+            col_labels:list[str] | np.ndarray, grid_col:str='white',
+            grid_linestyle:str='-', grid_linewidth:float=3,
+            cbar_bool:bool=False, cbar_label:str="",
+            ax:plt.Axes | None = None,
+            grid_kw:dict[Any,Any] | None = None,
+            cbar_kw:dict[Any,Any] | None = None,
+            **kwargs:Optional[Any],
+            ) -> tuple[matplotlib.image.AxesImage,
+                       matplotlib.colorbar.Colorbar]:
     """
-    Creates a heatmap from a numpy array and two lists of labels. The returned
-    objects can be used to annotate the cells using for example
-    `annotate_heatmap`.
+    Plot a heatmap with row and column labels using matplotlib.
+    
+    This function draws a heatmap using `imshow`, with options to configure
+    grid lines, colourbars, and axis labels. It accepts both NumPy arrays
+    and pandas DataFrames as input.
     
     Parameters
     ----------
-    data : pd.DataFrame or np.array
-        A 2D numpy array of shape (M, N).
-    row_labels : list or np.array
+    data : `pd.DataFrame` or `np.array`
+        A 2D array of shape (M, N) containing the values to plot.
+    row_labels : `list` [`str`] or `np.ndarray`
         A list or array of length M with the labels for the rows.
-    col_labels : list or np.array
+    col_labels : `list` [`str`] or `np.ndarray`
         A list or array of length N with the labels for the rows.
-    grid_col : str, default 'white'
+    grid_col : `str`, default 'white'
         The colour of the grid lines
-    grid_linestyle : str, default '-'
+    grid_linestyle : `str`, default '-'
         The linestyle of the grid lines
-    grid_linewidth : float, default 3
-        The grid lines width.
-    grid_kw : dict
-        A dictionary with arguments to `matplotlib.Axes.grid`. Optional.
-    cbar_bool : boolean, default False
-        Set to True to add a colour bar.
-    cbar_label : str
-        The label for the colorbar.  Optional.
-    cbar_kw : dict
-        A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
-    ax : plt.Axes, default NoneType
-        A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
-        not provided, use current axes or create a new one.  Optional.
-    *_kw : dict, default None
-        Optional arguments supplied to the various plotting functions:
-            grid_kw --> ax.grid
-            cbar_kw --> ax.figure.colorbar
-    **kwargs: Any
+    grid_linewidth : `float`, default 3
+        The width of the grid lines.
+    cbar_bool : `bool`, default `False`
+        If `True`, add a colourbar to the figure.
+    cbar_label : `str`, default " "
+        The label for the colorbar.
+    ax : `plt.Axes` or `None`, default NoneType
+        A `matplotlib.axes.Axes` instance to which the heatmap is plotted. If
+        not provided, use current axes or create a new one.
+    grid_kw : `dict` [`str`,`any`] or `None`, default None
+        A dictionary with arguments to `matplotlib.Axes.grid`.
+    cbar_kw : `dict` [`str`, `any`] or `None`, default `None`
+        A dictionary with arguments to `matplotlib.Figure.colorbar`.
+    **kwargs : `any`
         All other arguments are forwarded to `imshow`.
     
     Returns
     -------
-    im: mpl.image.AxesImage
-    cbar: mpl.colorbar.Colorbar
+    im : `matplotlib.image.AxesImage`
+        The heatmap image object.
+    cbar : `matplotlib.colorbar.Colorbar` or `None`
+        The colourbar object if `cbar_bool` is `True`, otherwise `None`.
+    
+    Notes
+    -----
+    The returned objects can be used to annotate the cells using for example
+    `annotate_heatmap`.
+    
+    This function is adapted from the matplotlib gallery example [1]_.
     """
     
     # create a axes if needed
@@ -94,7 +126,6 @@ def heatmap(data:Union[pd.DataFrame, np.ndarray],
     # map None to dict
     grid_kw = grid_kw or {}
     cbar_kw = cbar_kw or {}
-    # grid_kw, cbar_kw = _assign_empty_default([grid_kw, cbar_kw], dict)
     # ### Plot the heatmap
     im = ax.imshow(matrix, **kwargs)
     # Create colorbar
@@ -134,44 +165,49 @@ def heatmap(data:Union[pd.DataFrame, np.ndarray],
     return im, cbar
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def annotate_heatmap(im:plt.Axes.imshow,
-                     data:Union[pd.DataFrame, np.ndarray, None]=None,
-                     valfmt:Union[str, matplotlib.ticker.Formatter, None]=None,
-                     textcolors:Union[Tuple[str], List[str]]=("black", "white"),
-                     threshold:Union[float,None]=None,
-                     **text_kw:Optional[Any],
-                     ) -> List[plt.Text]:
+def annotate_heatmap(
+    im:plt.Axes.imshow,
+    data:pd.DataFrame | np.ndarray | None = None,
+    valfmt:str | matplotlib.ticker.Formatter | None = None,
+    textcolors:tuple[str,str] | list[str,str]=("black","white"),
+    threshold: float | None = None,
+    **kwargs:Optional[Any],
+) -> list[plt.Text]:
     """
-    A function to annotate mpl.image.AxesImage object, most typically a
-    heatmap generated by `heatmap`.
+    Annotate each cell in a heatmap image with its value.
+    
+    This function adds text annotations to an existing `AxesImage` object,
+    such as those created by the `heatmap` function. The text colour may
+    be adjusted dynamically based on a threshold value and the image’s colour
+    map.
     
     Parameters
     ----------
-    im : plt.Axes.imshow
+    im : `plt.Axes.imshow`
         The AxesImage to be labeled.
-    data : pd.DataFrame or np.array, default `Nonetype`
-        A 2D numpy array of shape (M, N). Optional.
-    valfmt : str or matplotlib.ticker.Formatter, default `NoneType`
+    data : `pd.DataFrame`, `np.array`, or `None`, default `Nonetype`
+        A 2D numpy array of shape (M, N). If `None`, the function uses the
+        array embedded in `im`.
+    valfmt : `str`, `matplotlib.ticker.Formatter` or `None`, default `NoneType`
         The format of the annotations inside the heatmap.  This should either
         use the string format method, e.g. "$ {x:.2f}" - (note the `x` is needs
         to be included to represent the numerical), or be a
-        `matplotlib.ticker.Formatter`.  Optional.
-    textcolors: list or tuple of string, default `('black', 'white')`
+        `matplotlib.ticker.Formatter`.
+    textcolors : `list` or `tuple` [`str`, `str`], default `('black', 'white')`
         A pair of colors.  The first is used for values below a threshold,
         the second for those above.
-    threshold: float, default `NoneType`
+    threshold : `float` or `None`, default `NoneType`
         The absolute value in data units according to which the colors from
         textcolors are applied.  If None (the default) uses the middle of the
-        colormap as separation.  Optional.
-    **text_kw: Any
+        colormap as separation.
+    **kwargs : `any`
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
     
     Returns
     -------
-    texts: list of plt.text.Text objects
-        The plt.text.Text objects contain `tuple`-like objects with the
-        Cartesian-coordinates and the text for each coordinate.
+    texts : `list` of `matplotlib.text.Text`
+        A list of text annotation objects added to the heatmap.
     """
     
     # mapping data to matrix
@@ -193,7 +229,7 @@ def annotate_heatmap(im:plt.Axes.imshow,
             threshold = None
     # Set default alignment to center, but allow it to be
     # overwritten by text_kw.
-    kw = _update_kwargs(update_dict=text_kw,
+    kw = _update_kwargs(update_dict=kwargs,
                         horizontalalignment="center",
                         verticalalignment="center",
                         )
@@ -221,91 +257,89 @@ def annotate_heatmap(im:plt.Axes.imshow,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def clustermap(data:pd.DataFrame,
                cmap:matplotlib.cm.get_cmap=matplotlib.colormaps.get_cmap('Spectral'),
-               annot:Union[pd.DataFrame, None]=None,
-               fsize:Tuple[float]=(15, 15),
+               annot:pd.DataFrame | None = None,
+               fsize:tuple[Real,Real]=(15, 15),
                linewidths:float=1.0,
-               cpos:Union[None, Tuple[float]]=(0.09, 0.02, 0.03, 0.10),
-               annotsize:float=6, clab:str='', clabfs:float=7,
-               fmt:str=".3",
-               clabpos:str='left', clabtsize:float=5,
-               xticklabsize:float=8, yticklabsize:float=6,
-               yticks:bool=True, xticks:bool=True,
-               cbar_dict_kw:Union[Dict[Any, Any],None]=None,
-               tree_dict_kw:Union[Dict[Any, Any],None]=None,
-               annot_dict_kw:Union[Dict[Any, Any],None]=None,
-               clustermap_dict_kw:Union[Dict[Any, Any],None]=None,
+               cpos: tuple[float] | None =(0.09, 0.02, 0.03, 0.10),
+               annotsize:float=6, clab:str='', clabfs:float=7, fmt:str=".3",
+               clabpos:str='left', clabtsize:float=5, xticklabsize:float=8,
+               yticklabsize:float=6, yticks:bool=True, xticks:bool=True,
+               cbar_dict_kw:dict[Any,Any] | None = None,
+               tree_dict_kw:dict[Any,Any] | None = None,
+               annot_dict_kw:dict[Any,Any] | None = None,
+               clustermap_dict_kw:dict[Any,Any] | None = None,
                ) -> sns.matrix.ClusterGrid:
-    '''
-    Creates a heatmap where the rows and columns are clustered based on
-    the plotted values.
-    Provides a wrap of `sns.clustermap`.
+    """
+    Plot a clustered heatmap using seaborn's clustermap API.
+    
+    Wraps `seaborn.clustermap` with additional controls for layout,
+    annotation, and appearance. Allows clustering of both rows and columns
+    and supports annotated values, tick styling, and custom colourbars.
     
     Parameters
     ----------
-    data : pd.DataFrame
+    data : `pd.DataFrame`
         A datafarme of shape (M, N).
-    fsize : tuple of two floats, default `(15, 15)`
-        figure size in cm
-    linewidths : float, default 1.0
-        Width of the lines that will divide each cell.
-    annot : pd.DataFrame, default `NoneType`
+    fsize : `tuple` [`real`, `real`], default `(15, 15)`
+        figure size in inches
+    linewidths : `float`, default 1.0
+        Width of the gridlines between cells.
+    annot : `pd.DataFrame` or `None`, default `NoneType`
         An opional dataframe used for annotation.
-    annotsize : float, default 6.0
-        The fontsize of the annotations, will be parsed to
+    annotsize : `float`, default 6.0
+        Font size for annotations, will be parsed to
         `matplotlib.axes.Axes.text`.
-    fmt : string, default '.3'
+    fmt : `str`, default '.3'
         String formatting code to use when adding annotations.
-    cmap : matplotlib.colormaps, default 'viridis'
+    cmap : `matplotlib.colormaps`, default 'viridis'
         matplotlib colormaps
-    cpos : tuple of four floats
-        Position of the colorbar axes in the figure
-        (left, bottom, width, height). Set to None to disable colour bar.
-    clab : str, default ' '
+    cpos : `tuple` [`float`, `float`, `float`, `float`]
+        Default (0.09,0.02.0.03,0.10). Position of the colourbar in figure
+        coordinates: `(left, bottom, width, height)`. Set to `None` to disable
+        the colourbar.
+    clab : `str`, default ' '
         colour guide y-axis title.
-    clabsf : float, default 7.0.
-        The title fontsize
-    clabpos : str, `left`
-        Position of the title.
-    clabtsize : float, default 5.0
-        colour guide tick label fontsize.
-    xticklabsize : float, default 8.0
-        The x-axis tick label fontsize.
-    yticklabsize : float, default 6.0
-        The y-axis tick label fontsize.
-    yticks : boolean, default `True`
-        Whether the yticks should be plotted.
-    xticks : boolean, default `True`
-        Whether the xticks should be plotted.
-    *_kw : dict, default None
-        Optional arguments supplied to the various plotting functions:
-            cbar_dict_kw        --> matplotlib.figure.Figure.colorbar
-            tree_dict_kw        --> matplotlib.collections.LineCollection
-            annot_dict_kw       --> matplotlib.axes.Axes.text
-            clustermap_dict_kw  --> sns.clustermap
+    clabsf : `float`, default 7.0.
+        Font size for the colourbar label.
+    clabpos : `str`, `left`
+        Position of the colourbar label (e.g., `'left'`, `'right'`).
+    clabtsize : `float`, default 5.0
+        Font size for the colourbar tick labels.
+    xticklabsize : `float`, default 8.0
+        Font size for x-axis tick labels.
+    yticklabsize : `float`, default 6.0
+        Font size for y-axis tick labels.
+    yticks : `bool`, default `True`
+        Whether to display y-axis tick marks.
+    xticks : `bool`, default `True`
+        Whether to display x-axis tick marks.
+    cbar_dict_kw : `dict` [`any`, `any`], optional
+        Keyword arguments passed to `Figure.colorbar()`.
+    tree_dict_kw : `dict` [`any`, `any`], optional
+        Keyword arguments passed to dendrogram tree plotting.
+    annot_dict_kw : `dict` [`any`, `any`], optional
+        Keyword arguments passed to annotation text formatting.
+    clustermap_dict_kw : `dict` [`any`, `any`], optional
+        Keyword arguments passed to `seaborn.clustermap()`.
     
     Returns
     -------
-    cm: sns.matrix.ClusterGrid
-    '''
+    cm : `seaborn.matrix.ClusterGrid`
+        A seaborn cluster grid object with the full figure layout.
+    """
     # #### constants
-    # inches to cm's
-    FSCALE=0.393700787
     # map None to dict
     cbar_dict_kw = cbar_dict_kw or {}
     tree_dict_kw = tree_dict_kw or {}
     annot_dict_kw = annot_dict_kw or {}
     clustermap_dict_kw = clustermap_dict_kw or {}
-    # cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw =\
-    #     _assign_empty_default(
-    #         [cbar_dict_kw, tree_dict_kw, annot_dict_kw, clustermap_dict_kw],
-    #         dict)
     # update keyword dictionaries
     annot_kw = _update_kwargs(update_dict=annot_dict_kw,
                               size=annotsize,
                               )
     clustermap_kw = _update_kwargs(update_dict=clustermap_dict_kw,
                                    fmt=fmt, linewidths=linewidths,
-                                   figsize=(fsize[0] * FSCALE, fsize[1] * FSCALE),
+                                   figsize=(fsize[0], fsize[1]),
                                    cbar_pos=cpos, cmap=cmap,
                                    annot=annot,
                                    )
