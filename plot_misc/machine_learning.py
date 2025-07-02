@@ -9,32 +9,36 @@ import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
+# import matplotlib as mpl
 from plot_misc.constants import (
     NamesDecisionCurves as NamesDC,
     NamesMachineLearnig as NamesML,
 )
 from plot_misc.errors import (
-    # as_array,
     is_type,
     is_df,
     are_columns_in_df,
     same_len,
     InputValidationError,
     string_to_list,
-    # _assign_empty_default,
 )
 from plot_misc.utils.utils import (
     change_ticks,
     _update_kwargs,
 )
-from typing import Any, List, Type, Union, Tuple, Dict, Optional
+from typing import (
+    Any,
+    List,
+    Union,
+    Tuple,
+    Dict,
+)
 from statsmodels.nonparametric.smoothers_lowess import lowess
-from packaging import version
-if version.parse('3.4.0') < version.parse(mpl._version.version):
-    from matplotlib.colorbar import Colorbar as colorbar_factory
-else:
-    from matplotlib.colorbar import colorbar_factory
+# from packaging import version
+# if version.parse('3.4.0') < version.parse(mpl._version.version):
+#     from matplotlib.colorbar import Colorbar as colorbar_factory
+# else:
+#     from matplotlib.colorbar import colorbar_factory
 
 # #############################################################################
 
@@ -266,11 +270,6 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     kwargs_dot_dict = kwargs_dot_dict or {}
     kwargs_line_dict = kwargs_line_dict or {}
     kwargs_diagonal_dict = kwargs_diagonal_dict or {}
-    # kwargs_ci_dict, kwargs_dot_dict, kwargs_line_dict,\
-    #     kwargs_diagonal_dict = _assign_empty_default(
-    #         [kwargs_ci_dict, kwargs_dot_dict,
-    #          kwargs_line_dict, kwargs_diagonal_dict], dict,
-    #     )
     # combined the columns
     columns = [predicted, observed]
     if not lower_observed is None:
@@ -357,6 +356,8 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
                    )
         # NOTE can expand this to include an optional loess curve
         # NOTE need to add an entry point for individual level data
+        # NOTE should also allow for a curve based on a user supplied array
+        # with x and y values - overriding the loess default.
     # ################### set the plot params
     # making sure the axis is square
     # axes_min = min(ax.get_xlim()[0], ax.get_ylim()[0])
@@ -718,9 +719,6 @@ class DecisionCurve(object):
         # map None to empty dict
         kwargs_lowess = kwargs_lowess or {}
         kwargs_plot = kwargs_plot or {}
-        # kwargs_lowess, kwargs_plot = _assign_empty_default(
-        #     [kwargs_lowess, kwargs_plot], dict,
-        # )
         # #### should we create a figure and axis
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
