@@ -1,8 +1,29 @@
-'''
-A collection of figure templates relevant for machine learning projects.
+"""
+Figure templates for visualising performance and interpretability of
+machine learning models.
 
-Includes, for example, code for lollipop graphs or calibration plots.
-'''
+This module provides reusable plotting utilities for common visualisations in
+machine learning workflows, including lollipop charts for feature importance,
+calibration plots for model reliability assessment, and decision curve
+analysis (DCA) plots for evaluating clinical utility.
+
+Functions
+---------
+lollipop(values, labels, ...)
+    Draws a line-and-dot chart as a visual alternative to bar plots.
+
+calibration(data, observed, predicted, ...)
+    Creates calibration plots comparing observed and predicted risks with
+    optional confidence intervals.
+
+Classes
+-------
+DecisionCurve
+    A class to compute and plot decision curves, quantifying net benefit
+    across varying risk thresholds.
+
+"""
+
 # imports
 import sys
 import warnings
@@ -46,66 +67,80 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 def lollipop(values:np.ndarray, labels:np.ndarray,
              line_color:str='tab:orange', dot_color:str='deeppink',
              linewidth:float=1, dot_edge_color:str='black', dot_size:float=4,
-             dot_edge_size:float=0.5, figsize:tuple=(6, 6),
-             xmargin:Union[float, None]=0, reverse_y:bool=False,
-             xlimit:Union[Tuple[float, float], None]=None,
-             ax:Union[plt.Axes, None]=None,
-             kwargs_lines_dict:Union[None,Dict[Any,Any]]=None,
-             kwargs_plot_dict:Union[None,Dict[Any,Any]]=None,
-             ) -> Tuple[plt.Axes, plt.Figure]:
+             dot_edge_size:float=0.5,
+             importance_margin:float | None =0,
+             importance_limit:tuple[float,float] | None=None,
+             reverse_feature_order:bool=False,
+             vertical:bool=False,
+             figsize:tuple=(6, 6),
+             ax:plt.Axes | None=None,
+             kwargs_lines_dict:dict[Any,Any] | None=None,
+             kwargs_plot_dict:dict[Any,Any] | None=None,
+             ) -> tuple[plt.Axes, plt.Figure]:
     '''
-    Essentially a bar chart, where the bar is replaced by a line with a dot for
-    the bar endpoint. Currently the plotting assumes we want to plot a line
-    from zero to the`max_col`.
+    Plots a lollipop chart.
+    
+    A visual alternative to a bar chart, drawing a horizontal line for each
+    observation and ending in a dot. Primarily used for ranked feature
+    importance, effect sizes, or similar vector-valued summaries.
     
     Parameters
     ----------
-    max_col : np.ndarray
-        The column with line endpoints.
-    lab_col : np.ndarray
-        The column with tick labels.
-    line_color: str, default `tab:orange`
+    values : `np.ndarray`
+        Values determining the length of each line.
+    labels : `np.ndarray`
+        Labels for each feature.
+    line_color: `str`, default `tab:orange`
         The line colour.
-    linewidth : float, default 1
+    linewidth : `float`, default 1
         The linewidth.
-    dot_color : str, default `deeppink`
+    dot_color : `str`, default `deeppink`
         The dot colour.
-    dot_edge_color : str, default `black`
-        The dot edge colour.
-    dot_size : float, default 4
-        The side of the dot.
-    dot_edge_size : float, default 0.5
-        The line size of the edge.
-    xmargin : float, default 0
-        The x margins, set to `NoneType` to keep default.
-    xlimit : tuple of floats, default `NoneType`
-        The x-axis limits.
-    ax : plt.Axes, default `NoneType`
-        A `matplotlib.axes.Axes` instance to which the figure is plotted. If
-        not provided, use current axes or create a new one.  Optional.
-    figsize : tuple of two floats, default `(10, 10)`
-        The figure size, when ax==None.
-    reverse_y : boolean, default `False`
-        inverts the y-axis.
-    kwargs_*_dict : dict, default `NoneType`
-        Optional arguments supplied to the various plotting functions:
-            kwargs_lines_dict -- > ax.hlines
-            kwargs_plot_dict  -- > ax.plot
+    dot_edge_color : `str`, default `black`
+        Colour of the dot edges.
+    dot_size : `float`, default 4
+        The size of the dot.
+    dot_edge_size : `float`, default 0.5
+        Width of the dot edge outline.
+    reverse_feature_order : `bool`, default `False`
+        Plots the features in opposite order.
+    importance_margin : `float`, default 0
+        Padding on the axis representing the feature importance value.
+        Set to `None` to use matplotlib defaults.
+    importance_limit : `tuple` [`float`,`float`], default `NoneType`
+        Explicit x-axis limits. If None, inferred automatically.
+    vertical : `bool`, default `True`
+        If True, draws vertical lines with feature labels on the y-axis.
+        If False, draws horizontal lines with feature labels on the x-axis.
+        This effectively transposes the chart orientation and can be used
+        to better accommodate long labels or large feature sets.
+    ax : `plt.Axes`, default `NoneType`
+        Matplotlib Axes to plot on. If None, a new figure and axes are created.
+    figsize : `tuple` [`float`,`float`], default `(10, 10)`
+        The figure size in inches when ax is `NoneType`.
+    kwargs_lines_dict : `dict` [`str`, `any`] or `None`, default `None`
+        Additional keyword arguments passed to `ax.hlines`.
+    kwargs_plot_dict : `dict` [`str`, `any`] or `None`, default `None`
+        Additional keyword arguments passed to `ax.plot` for dot rendering.
     
     Returns
     -------
-    figure: plt.Figure
-    axes: plt.Axes
+    figure : `matplotlib.figure.Figure`
+        The matplotlib Figure object.
+    ax : `matplotlib.axes.Axes`
+        The matplotlib Axes object with the plot drawn on.
     '''
-
+    
     # ################### Check input
-    is_type(ax, (type(None), plt.Axes), 'ax')
-    is_type(line_color, str, 'line_color')
-    is_type(linewidth, (int, float), 'linewidth')
-    is_type(dot_color, str, 'dot_color')
-    is_type(dot_edge_color, str, 'dot_edge_color')
-    is_type(dot_size, (int, float), 'dot_size')
-    is_type(dot_edge_size, (int, float), 'dot_edge_size')
+    is_type(ax, (type(None), plt.Axes))
+    is_type(line_color, str)
+    is_type(linewidth, (int, float))
+    is_type(dot_color, str)
+    is_type(dot_edge_color, str)
+    is_type(dot_size, (int, float))
+    is_type(dot_edge_size, (int, float))
+    is_type(vertical, bool)
+    same_len(values, labels)
     # map None to empty dict
     kwargs_lines_dict = kwargs_lines_dict or {}
     kwargs_plot_dict = kwargs_plot_dict or {}
@@ -123,8 +158,6 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     # ################### plot lines and dots, first updating the kwargs
     new_lines_dict = _update_kwargs(kwargs_lines_dict, color=line_color,
                                     linewidth=linewidth)
-    ax.hlines(y=index, xmin=0, xmax=values, **new_lines_dict,
-              )
     new_plot_dict = _update_kwargs(kwargs_plot_dict,
                                    marker='o',
                                    linestyle='None',
@@ -133,10 +166,40 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
                                    markersize=dot_size,
                                    markeredgewidth=dot_edge_size,
                                    )
-    ax.plot(values, index, **new_plot_dict,
-            )
-    # ################### tick labels
-    change_ticks(ax=ax, ticks=list(index), labels=list(labels), axis='y')
+    if vertical == True:
+        ax.vlines(x=index, ymin=0, ymax=values, **new_lines_dict,
+                  )
+        ax.plot(index, values,  **new_plot_dict,
+                )
+        change_ticks(ax=ax, ticks=list(index), labels=list(labels), axis='x')
+        #  margins
+        value_lim = ax.get_ylim()
+        if not importance_margin is None:
+            ax.margins(y=importance_margin)
+        if importance_limit is None:
+            ax.set_ylim(0, value_lim[1]*1.05)
+        else:
+            ax.set_ylim(importance_limit)
+        #  invert feature axis
+        if reverse_feature_order == True:
+            ax.invert_xaxis()
+    else:
+        ax.hlines(y=index, xmin=0, xmax=values, **new_lines_dict,
+                  )
+        ax.plot(values, index, **new_plot_dict,
+                )
+        change_ticks(ax=ax, ticks=list(index), labels=list(labels), axis='y')
+        #  margins
+        value_lim = ax.get_xlim()
+        if not importance_margin is None:
+            ax.margins(x=importance_margin)
+        if importance_limit is None:
+            ax.set_xlim(0, value_lim[1]*1.05)
+        else:
+            ax.set_xlim(importance_limit)
+        #  invert feature axis
+        if reverse_feature_order == True:
+            ax.invert_yaxis()
     # ################### hide spines
     try:
         ax.spines['right'].set_visible(False)
@@ -144,15 +207,6 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     except AttributeError:
         ax.spines.right.set_visible(False)
         ax.spines.top.set_visible(False)
-    # ################### margins
-    xlim = ax.get_xlim()
-    if not xmargin is None:
-        ax.margins(x=xmargin)
-    if xlimit is None:
-        ax.set_xlim(0, xlim[1]*1.05)
-    # ################### invert y-axis
-    if reverse_y == True:
-        ax.invert_yaxis()
     # ################### return the figure and axis
     return f, ax
 
@@ -412,6 +466,16 @@ class DecisionCurve(object):
         A table including one or more columns containing predicted scores
         on the risk scale (i.e., ranging between 0 and 1), and an
         outcome/target column.
+
+    Notes
+    -----
+    The code is based on the `dcurves` python repo [1]_ where the current
+    implementation is slightly more `pythonic`. Currently there is no support
+    for the survival implementation.
+    
+    References
+    ----------
+    .. [1] https://github.com/MSKCC-Epi-Bio/dcurves
     '''
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __init__(self,

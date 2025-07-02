@@ -65,6 +65,22 @@ class TestLollipop(object):
              ax.get_yticklabels()[0::]]
         )
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_lollipop_vertical(self):
+        # data
+        data = examples.load_lollipop_data()
+        data = data[data[VALUES] > 0]
+        # running the function
+        _, ax = ml.lollipop(
+            values=data[VALUES].to_numpy(), labels=data[LABELS].to_numpy(),
+            vertical=True,)
+        # asserting
+        line=ax.lines[0]
+        assert all(line.get_ydata() == data[VALUES].to_numpy())
+        assert all(
+            [i.get_text() in  data[LABELS].to_numpy() for i in
+             ax.get_xticklabels()[0::]]
+        )
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_lollipop_reverse_y(self):
         # data
         data = examples.load_lollipop_data()
@@ -72,10 +88,10 @@ class TestLollipop(object):
         # running the function
         _, ax = ml.lollipop(
             values=data[VALUES].to_numpy(), labels=data[LABELS].to_numpy(),
-            reverse_y=True)
+            reverse_feature_order=True)
         _, ax2 = ml.lollipop(
             values=data[VALUES].to_numpy(), labels=data[LABELS].to_numpy(),
-            reverse_y=False)
+            reverse_feature_order=False)
         # asserting
         line=ax.lines[0]
         assert all(line.get_xdata() == data[VALUES].to_numpy())
