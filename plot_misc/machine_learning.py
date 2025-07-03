@@ -49,6 +49,7 @@ from plot_misc.utils.utils import (
 )
 from typing import (
     Any,
+    Callable,
     List,
     Union,
     Tuple,
@@ -144,9 +145,6 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     # map None to empty dict
     kwargs_lines_dict = kwargs_lines_dict or {}
     kwargs_plot_dict = kwargs_plot_dict or {}
-    # kwargs_lines_dict, kwargs_plot_dict = _assign_empty_default(
-    #     [kwargs_lines_dict, kwargs_plot_dict], dict,
-    # )
     # ################### process input
     # create a axes if needed
     if ax is None:
@@ -167,6 +165,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
                                    markeredgewidth=dot_edge_size,
                                    )
     if vertical == True:
+        # #### vertical lines
         ax.vlines(x=index, ymin=0, ymax=values, **new_lines_dict,
                   )
         ax.plot(index, values,  **new_plot_dict,
@@ -184,6 +183,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         if reverse_feature_order == True:
             ax.invert_xaxis()
     else:
+        # #### horizontal lines
         ax.hlines(y=index, xmin=0, xmax=values, **new_lines_dict,
                   )
         ax.plot(values, index, **new_plot_dict,
@@ -200,40 +200,40 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         #  invert feature axis
         if reverse_feature_order == True:
             ax.invert_yaxis()
-    # ################### hide spines
+    # hide spines
     try:
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
     except AttributeError:
         ax.spines.right.set_visible(False)
         ax.spines.top.set_visible(False)
-    # ################### return the figure and axis
+    # return the figure and axis
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE add LOESS functionality
-def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
+def calibration(data:pd.DataFrame | dict[str,pd.DataFrame],
                 observed:str, predicted:str,
-                lower_observed:Union[None, str]=None,
-                upper_observed:Union[None, str]=None,
-                ci_colour:Union[str, List[str], None]=['lightcoral'],
-                ci_linewidth:Union[str, List[float], None]=[0.5],
-                dot_marker:Union[str, List[str]]=['o'],
-                dot_colour:Union[str, List[str]]=['lightcoral'],
-                line_colour:Union[str, List[str]]=['lightcoral'],
-                line_linewidth:Union[str, List[float]]=[0.7],
-                line_linestyle:Union[str, List[str]]=['--'],
-                figsize:Tuple[float, float]=(6, 6),
+                lower_observed:str | None = None,
+                upper_observed:str | None = None,
+                ci_colour:str | list[str] | None = ['lightcoral'],
+                ci_linewidth:str | list[float] | None = [0.5],
+                dot_marker:str | list[str] = ['o'],
+                dot_colour:str | list[str] = ['lightcoral'],
+                line_colour:str | list[str] = ['lightcoral'],
+                line_linewidth:str | list[float] = [0.7],
+                line_linestyle:str | list[str] =['--'],
+                figsize:tuple[float,float]=(6, 6),
                 diagonal_colour:str='black',
                 diagonal_linewidth:float=0.5,
                 diagonal_linestyle:str='-',
-                margins:Tuple[float, float]=(0.01, 0.01),
-                ax:Union[plt.Axes, None]=None,
-                kwargs_ci_dict:Union[None,Dict[Any,Any]]=None,
-                kwargs_dot_dict:Union[None,Dict[Any,Any]]=None,
-                kwargs_line_dict:Union[None,Dict[Any,Any]]=None,
-                kwargs_diagonal_dict:Union[None,Dict[Any,Any]]=None,
-                ) -> Tuple[plt.Axes, plt.Figure]:
+                margins:tuple[float, float]=(0.01, 0.01),
+                curves:dict[str,list[np.ndarray, Callable, dict, dict]] | None = None,
+                ax:plt.Axes | None = None,
+                kwargs_ci_dict:dict[Any,Any] | None = None,
+                kwargs_dot_dict:dict[Any,Any] | None = None,
+                kwargs_line_dict:dict[Any,Any] | None = None,
+                kwargs_diagonal_dict:dict[Any,Any] | None = None,
+                ) -> tuple[plt.Axes, plt.Figure, dict[str, np.ndarray]]:
     '''
     Provides a basic template for a calibration plot, comparing the observed
     and predicted risks. Here the observed risk will be based on some grouping
@@ -282,6 +282,19 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         The linestyle of the diagonal line.
     diagonal_linewidth : float
         The width of the diagonal line.
+    curves : `dict` [`str`, `list`] or `None`, default `None`
+        A dictionary with list values. The list can have the following entries:
+            - The first element should include a np.ndarray where the
+                first column represents the y-axis value and the second column
+                the x-axis values.
+            - The second list entry should be a callable that returns
+                predicted y-values in the same order as the observed x-axis
+                values. Set this to `None` to simply plots the np.ndarray
+                data.
+            - The third entry can be used to pass a dictionary to
+                The callable function. Set to `None` to skip.
+            - The fourth entry can be used to supply a dictionary with
+                keyword arguments for ax.plot, set to `None` to skip.
     ax : plt.Axes, default `NoneType`
         A `matplotlib.axes.Axes` instance to which the figure is plotted. If
         not provided, use current axes or create a new one.  Optional.
@@ -298,6 +311,9 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     -------
     figure: plt.Figure
     ax: plt.Axes
+    curves : dict
+        A dictionary with np.ndarray with observed x-values and predicted
+        y-values based on the callable model supplied in `curves`.
     '''
     
     # ################### check input
@@ -365,6 +381,12 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         f, ax = plt.subplots(figsize=figsize)
     else:
         f = ax.figure
+    # Add the diagonal line, first updating the kwargs
+    new_diagonal_dict =\
+        _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewidth,
+                       ls=diagonal_linestyle, c=diagonal_colour)
+    ax.axline(xy1=(0, 0), slope=1, **new_diagonal_dict,
+              )
     # ################### loop over dict
     for idx, (key, val) in enumerate(data.items()):
         # unpack data
@@ -380,12 +402,6 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
         # set confidence intervals
         y_ci = [y_bin_lb, y_bin_ub]
         x_ci = [x_bin, x_bin]
-        # Add the diagonal line, first updating the kwargs
-        new_diagonal_dict =\
-            _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewidth,
-                           ls=diagonal_linestyle, c=diagonal_colour)
-        ax.axline(xy1=(0, 0), slope=1, **new_diagonal_dict,
-                  )
         # add line connecting the dots, first updating the kwargs
         new_line_dict =\
             _update_kwargs(kwargs_line_dict, c=line_colour[idx],
@@ -408,10 +424,38 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
                            )
         ax.scatter(x_bin, y_bin, **new_dot_dict,
                    )
-        # NOTE can expand this to include an optional loess curve
-        # NOTE need to add an entry point for individual level data
-        # NOTE should also allow for a curve based on a user supplied array
-        # with x and y values - overriding the loess default.
+    # ################### add a curve
+    curves_res = {}
+    if curves is not None:
+        for idx, (nam, vals) in enumerate(curves.items()):
+            # extract data, model, and kwargs
+            curves_data = vals[0]
+            curves_mod = vals[1]
+            curves_kwargs_mod = vals[2] or {}
+            curves_kwargs_plot = vals[3] or {}
+            is_type(curves_data, np.ndarray)
+            is_type(curves_kwargs_mod, dict)
+            is_type(curves_kwargs_plot, dict)
+            # sort by x-axis value
+            curves_data = curves_data[curves_data[:, 1].argsort()]
+            c_x = curves_data[:,1]
+            c_y = curves_data[:,0]
+            # do we need to fit a model
+            if curves_mod is not None:
+                y_pred=curves_mod(c_y, c_x, **curves_kwargs_mod)
+            else:
+                y_pred = c_y
+            # plot the model
+            curves_kwargs_plot = _update_kwargs(
+                update_dict=curves_kwargs_plot,
+                c=line_colour[idx],
+                linewidth=line_linewidth[idx],
+                linestyle=line_linestyle[idx],
+            )
+            ax.plot(c_x, y_pred, **curves_kwargs_plot,
+                    )
+            # save predictions
+            curves_res[nam] = np.column_stack((y_pred, c_x))
     # ################### set the plot params
     # making sure the axis is square
     # axes_min = min(ax.get_xlim()[0], ax.get_ylim()[0])
@@ -426,7 +470,7 @@ def calibration(data:Union[pd.DataFrame, Dict[str, pd.DataFrame]],
     # margins around the both x and y
     ax.margins(margins[0], margins[1])
     # ################### return the figure and axis
-    return f, ax
+    return f, ax, curves_res
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Decision Curves
@@ -466,7 +510,7 @@ class DecisionCurve(object):
         A table including one or more columns containing predicted scores
         on the risk scale (i.e., ranging between 0 and 1), and an
         outcome/target column.
-
+    
     Notes
     -----
     The code is based on the `dcurves` python repo [1]_ where the current
