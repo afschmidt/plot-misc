@@ -33,6 +33,7 @@ from typing import (
     Any,
     Literal,
 )
+from numbers import Real
 from plot_misc.constants import (
     NamesIncidenceMatrix as NamesIM,
 )
@@ -48,9 +49,9 @@ from plot_misc.errors import (
 def draw_incidencematrix(
     data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
     dot_colour:list[tuple[str, float]]=[('grey',0), ('black',1)],
-    line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
     dot_size:list[float]=[4, 8],
     dot_transparency:list[float]=[0.9, 1.0],
+    line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
     lw:tuple[float, float]=(0.3, 0.3),
     tick_lab_size:tuple[float, float]=(4.5, 4.5),
     tick_len:tuple[float,float]=(2, 2),
@@ -59,6 +60,8 @@ def draw_incidencematrix(
     grid_position:Literal['outline', 'centre'] | None = 'centre',
     ax:plt.Axes | None = None,
     break_limits:tuple[float, float] = (-np.inf, np.inf),
+    size_data: pd.DataFrame | None = None,
+    transparency_data: pd.DataFrame | None = None,
     kwargs_scatter_dict:dict[Any,Any] | None = None,
     kwargs_vline_dict:dict[Any,Any] | None = None,
     kwargs_hline_dict:dict[Any,Any] | None = None,
@@ -134,19 +137,32 @@ def draw_incidencematrix(
     Grid lines are drawn behind dots. Missing or non-matching entries in the
     input matrix will be ignored.
     """
-    
+    SHAPE_ERR = ('`data` and `{0}` should have the same shapes '
+                 'not: {1} and {2}, respectively.')
     # check inputs
     is_type(dot_size, list)
     is_type(dot_colour, list)
     is_type(dot_transparency, list)
     is_df(data)
     is_type(grid_position, (str, type(None)))
+    is_type(size_data, (type(None), pd.DataFrame))
+    is_type(transparency_data, (type(None), pd.DataFrame))
     # check literals
     EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
     if grid_position is not None and not grid_position in EXP_GRID:
         raise ValueError(
             Error_MSG.INVALID_STRING.format(
                 'grid_position', EXP_GRID))
+    # make sure all the data have the same shape
+    if size_data is not None and data.shape != size_data.shape:
+        raise IndexError(
+            SHAPE_ERR.format('size_data', data.shape, size_data.shape
+                             ))
+    if transparency_data is not None and data.shape != transparency_data.shape:
+        raise IndexError(
+            SHAPE_ERR.format('transparency_data', data.shape,
+                             transparency_data.shape
+                             ))
     # map None to dict
     kwargs_scatter_dict = kwargs_scatter_dict or {}
     kwargs_vline_dict = kwargs_vline_dict or {}
@@ -157,52 +173,61 @@ def draw_incidencematrix(
         dot_size = dot_size * ndots
     if len(dot_transparency) ==1:
         dot_transparency = dot_transparency * ndots
-    # further tests
-    same_len(dot_colour, dot_size, ['dot_colour','dot_size'])
-    same_len(dot_colour, dot_transparency, ['dot_colour','dot_transparency'])
+    # # further tests
+    # same_len(dot_colour, dot_size, ['dot_colour','dot_size'])
+    # same_len(dot_colour, dot_transparency, ['dot_colour','dot_transparency'])
     # do we need to make an axis
     if ax is None:
         f, ax = plt.subplots(figsize=(fsize[0], fsize[1]))
     else:
         f = ax.figure
+    # get colour maps
+    dot_colours_arr = _map_attributes(data, dot_colour,
+                                      break_limits=break_limits)
+    # get size maps
+    size_input = size_data if size_data is not None else data
+    if all(isinstance(x, Real) for x in dot_size) == True:
+        new_dot_size = [(n, i[1]) for n, i in zip(dot_size, dot_colour)]
+    else:
+        new_dot_size = dot_size
+    dot_size_arr = _map_attributes(size_input, new_dot_size,
+                                   break_limits=break_limits)
+    # get transparency maps
+    transparency_input = (
+        transparency_data if transparency_data is not None else data)
+    if all(isinstance(x, Real) for x in dot_transparency) == True:
+        new_dot_transparency=\
+            [(n, i[1]) for n, i in zip(dot_transparency, dot_colour)]
+    else:
+        new_dot_transparency = dot_transparency
+    dot_transparency_arr = _map_attributes(
+        transparency_input, new_dot_transparency,
+        break_limits=break_limits)
     # the x and y coordinates
     M, N = data.shape
     x, y = np.meshgrid(np.arange(M), np.arange(N))
+    xv = x.T.ravel()
+    yv = y.T.ravel()
+    col_flat = dot_colours_arr.ravel()
+    size_flat = dot_size_arr.ravel().astype(float)
+    alpha_flat = dot_transparency_arr.ravel().astype(float)
     ################
-    # plot dots
-    for it, value in enumerate(dot_colour):
-        # unpack value
-        col, cut = value
-        # make breaks
-        if it==0:
-            sel = (data > break_limits[0]) & (data <= cut)
-        # elif it==n:
-        #     sel = (data >= cut) & (data < break_limits[1])
-        #     print(sel)
-        else:
-            sel = (data > cut_old) & (data <= cut)
-        
-        # subset data
-        xs = x[sel.to_numpy().T]
-        ys = y[sel.to_numpy().T]
-        
-        # error out if there is no data.
-        if xs.size == 0:
-            raise ValueError('No data, for cut: `{}`.'.format(str(cut)))
-        
-        # plot
+    # plot dots, size, and alpha
+    for col in np.unique(col_flat):
+        mask = col_flat == col
+        if not np.any(mask):
+            continue
+        # sort out kwargs
         new_scatter_kwargs = _update_kwargs(update_dict=kwargs_scatter_dict,
-                                            edgecolor=(1, 1, 1, 0),
+                                            edgecolor='black',
                                             linewidths=0.0,
-                                            s=dot_size[it],
-                                            alpha=dot_transparency[it],
+                                            s=size_flat[mask],
+                                            alpha=alpha_flat[mask],
                                             c=col, zorder=3,
                                             )
-        ax.scatter(xs.flat, ys.flat, **new_scatter_kwargs)
-        
-        # store previous cut
-        cut_old = cut
-        # end loop
+        ax.scatter(
+            xv[mask], yv[mask],
+            **new_scatter_kwargs,)
     ################
     # adding grid lines
     if grid_position is not None:
@@ -232,6 +257,70 @@ def draw_incidencematrix(
     # return the figure and axes
     return f, ax
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE add pytest
+def _map_attributes(data:pd.DataFrame, list_map: list[tuple[Any, Real]],
+                    break_limits:tuple[float, float] = (-np.inf, np.inf),
+                    ) -> np.ndarray:
+    """
+    Map values from a DataFrame to discrete attributes based on thresholds.
+    
+    This function assigns each element in the input `data` a corresponding
+    attribute (e.g., colour, size, or alpha) using a list of thresholded
+    rules provided in `list_map`. Each rule is a tuple of the form
+    `(attribute_value, upper_bound)`, and values are mapped according to
+    which threshold interval they fall into.
+    
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        A numeric matrix of shape (N, M) to be mapped.
+    list_map : `list` [`tuple` [`any`, `real`]]
+        A list of (attribute, upper_bound) pairs. Each value in the input
+        data is mapped to the `attribute` if it lies in the open-closed
+        interval (previous_bound, upper_bound]. The list is automatically
+        sorted by `upper_bound`.
+    break_limits : `tuple` [`float`, `float`], default (-np.inf, np.inf)
+        Tuple specifying the lower and upper bounds for the mapping. The first
+        threshold interval begins just above `break_limits[0]`. The upper bound
+        is not currently used, but is included for future expansion.
+    
+    Returns
+    -------
+    np.ndarray
+        A NumPy array of the same shape as `data`, with each element replaced
+        by the mapped attribute.
+    
+    Notes
+    -----
+    The rules are applied sequentially after sorting by `upper_bound`, and
+    values outside the defined breakpoints are assigned `np.nan`.
+    
+    Examples
+    --------
+    >>> data = pd.DataFrame([[0.2, 0.6], [1.2, 2.5]])
+    >>> rules = [('grey', 0.5), ('black', 1.5), ('red', 3)]
+    >>> _map_attributes(data, rules)
+    array([['grey', 'black'],
+           ['black', 'red']], dtype=object)
+    """
+    # check input
+    is_type(list_map, list)
+    is_type(break_limits, tuple)
+    is_df(data)
+    # get values
+    vals = data.to_numpy()
+    # sortting the rule
+    rule_sorted = sorted(list_map, key=lambda x: x[1])
+    # apply rule
+    mapped_vals = np.full_like(vals, np.nan, dtype=object)
+    cut_low = break_limits[0]
+    for col, cut_high in rule_sorted:
+        sel = (vals > cut_low) & (vals <= cut_high)
+        mapped_vals[sel] = col
+        cut_low = cut_high
+    # return
+    return mapped_vals
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NOTE add pytest

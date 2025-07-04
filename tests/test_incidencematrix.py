@@ -27,15 +27,16 @@ class TestIncidenceMatrix(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_plot_incidencematrix(self):
         # plotting
-        f, ax = imat_plt.draw_incidencematrix(data.iloc[::-1].T, fsize=(6,17),
-                                        dot_colour=DOT_COLOUR,
-                                        dot_size=DOT_SIZE,
-                                        tick_lab_size=TICK_LAB_SIZE,
-                                        margins=MARGINS,
-                                        kwargs_scatter_dict={'edgecolor': ['black'],
-                                                             'linewidths':0.8,
-                                                             }
-                                        )
+        _, ax = imat_plt.draw_incidencematrix(
+            data.iloc[::-1].T, fsize=(6,17),
+            dot_colour=DOT_COLOUR,
+            dot_size=DOT_SIZE,
+            tick_lab_size=TICK_LAB_SIZE,
+            margins=MARGINS,
+            kwargs_scatter_dict={'edgecolor': ['black'],
+                                 'linewidths':0.8,
+                                 }
+        )
         # evaluate points
         point0 = ax.collections[0]
         point1 = ax.collections[1]
@@ -43,5 +44,5 @@ class TestIncidenceMatrix(object):
         assert list(np.round(point1.get_facecolors()[0], 1)) == [0.7, 0.1, 0.2, 1.0]
         # evaluate lines
         lines=ax.lines
-        assert list(lines[2].get_xdata()) == [2, 2]
+        assert list(lines[2].get_xdata()) == [0, 1]
         assert lines[0].get_color() == 'lightgrey'
