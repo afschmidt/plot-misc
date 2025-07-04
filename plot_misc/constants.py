@@ -83,6 +83,17 @@ class NamesDecisionCurves(object):
     LTY          = 'lty'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class NamesIncidenceMatrix(object):
+    """
+    Names used by incidencematrix.py
+    """
+    AXIS_X       = 'x'
+    AXIS_Y       = 'y'
+    AXIS_B       = 'both'
+    GRID_POS_B   = 'centre'
+    GRID_POS_O   = 'outline'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class NamesMachineLearnig(object):
     '''
     Names used by machinelearning.py

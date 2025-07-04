@@ -31,31 +31,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import (
     Any,
+    Literal,
+)
+from plot_misc.constants import (
+    NamesIncidenceMatrix as NamesIM,
 )
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
     is_df,
     same_len,
+    Error_MSG,
 )
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def draw_incidencematrix(data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
-                         dot_colour:list[tuple[str, float]]=[('grey',0), ('black',1)],
-                         line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
-                         dot_size:list[float]=[4, 8],
-                         dot_transparency:list[float]=[0.9, 1.0],
-                         lw:tuple[float, float]=(0.3, 0.3),
-                         tick_lab_size:tuple[float, float]=(4.5, 4.5),
-                         tick_len:tuple[float,float]=(2, 2),
-                         tick_w:tuple[float,float]=(0.3, 0.3),
-                         margins:tuple[float,float] | None = None,
-                         ax:plt.Axes | None = None,
-                         break_limits:tuple[float, float] = (-np.inf, np.inf),
-                         kwargs_scatter_dict:dict[Any,Any] | None = None,
-                         kwargs_vline_dict:dict[Any,Any] | None = None,
-                         kwargs_hline_dict:dict[Any,Any] | None = None,
-                         ) -> tuple[plt.Figure, plt.Axes]:
+def draw_incidencematrix(
+    data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
+    dot_colour:list[tuple[str, float]]=[('grey',0), ('black',1)],
+    line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
+    dot_size:list[float]=[4, 8],
+    dot_transparency:list[float]=[0.9, 1.0],
+    lw:tuple[float, float]=(0.3, 0.3),
+    tick_lab_size:tuple[float, float]=(4.5, 4.5),
+    tick_len:tuple[float,float]=(2, 2),
+    tick_w:tuple[float,float]=(0.3, 0.3),
+    margins:tuple[float,float] | None = None,
+    grid_position:Literal['outline', 'centre'] | None = 'centre',
+    ax:plt.Axes | None = None,
+    break_limits:tuple[float, float] = (-np.inf, np.inf),
+    kwargs_scatter_dict:dict[Any,Any] | None = None,
+    kwargs_vline_dict:dict[Any,Any] | None = None,
+    kwargs_hline_dict:dict[Any,Any] | None = None,
+) -> tuple[plt.Figure, plt.Axes]:
     """
     Draw a categorical heatmap to visualise an incidence matrix.
     
@@ -96,6 +103,8 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
         Tick width for x- and y-axes.
     margins : `tuple` [`float`, `float`], optional
         Margins to apply along the x- and y-axes.
+    grid_position : {'centre', 'outline'}, default 'centre'
+        Whether to draw lines through cell centres or between cells.
     ax : `plt.axes` or `None`, default `None`
         If provided, the plot is drawn on this axis. Otherwise, a new figure
         and axis are created.
@@ -131,6 +140,13 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
     is_type(dot_colour, list)
     is_type(dot_transparency, list)
     is_df(data)
+    is_type(grid_position, (str, type(None)))
+    # check literals
+    EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
+    if grid_position is not None and not grid_position in EXP_GRID:
+        raise ValueError(
+            Error_MSG.INVALID_STRING.format(
+                'grid_position', EXP_GRID))
     # map None to dict
     kwargs_scatter_dict = kwargs_scatter_dict or {}
     kwargs_vline_dict = kwargs_vline_dict or {}
@@ -189,18 +205,20 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
         # end loop
     ################
     # adding grid lines
-    for xv in range(x.shape[1]):
+    if grid_position is not None:
+    # if grid_position is not None and grid_position == 'centre':
         new_vline_kwargs = _update_kwargs(update_dict=kwargs_vline_dict,
+                                          c=line_colour[1], linestyle='-',
+                                          linewidth=lw[1], zorder=1,
+                                          )
+        _draw_grid(x, ax, axis = 'y', grid_position=grid_position,
+                   **new_vline_kwargs)
+        new_hline_kwargs = _update_kwargs(update_dict=kwargs_hline_dict,
                                           c=line_colour[0], linestyle='-',
                                           linewidth=lw[0], zorder=1,
                                           )
-        ax.axvline(x=xv, **new_vline_kwargs)
-    for xy in range(x.shape[0]):
-        new_hline_kwargs = _update_kwargs(update_dict=kwargs_vline_dict,
-                                          c=line_colour[0], linestyle='-',
-                                          linewidth=lw[0], zorder=1,
-                                          )
-        ax.axhline(y=xy, **new_hline_kwargs)
+        _draw_grid(x, ax, axis = 'x', grid_position=grid_position,
+                   **new_hline_kwargs)
     # ticks
     ax.set(xticks=np.arange(x.shape[1]), yticks=np.arange(x.shape[0]),
            xticklabels=data.index, yticklabels=data.columns)
@@ -213,3 +231,57 @@ def draw_incidencematrix(data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
         ax.margins(x=margins[0], y=margins[1])
     # return the figure and axes
     return f, ax
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE add pytest
+def _draw_grid(arr:np.ndarray, ax:plt.Axes,
+               axis:Literal['x','y','both'] = 'both',
+               grid_position: Literal['centre', 'outline'] = 'centre',
+               **kwargs,) -> None:
+    """
+    Draws grid lines across or around the provide coordinates.
+    
+    Parameters
+    ----------
+    arr : `np.ndarray`
+        A 2D array off coordinates.
+    ax : `matplotlib.axes.Axes`
+        The axis on which to draw the grid lines.
+    axis : {'x', 'y', 'both'}, default 'both'
+        Which axis to draw grid lines for.
+    grid_position : {'centre', 'outline'}, default 'centre'
+        Whether to draw lines through cell centres or between cells.
+    **kwargs
+        Additional keyword arguments passed to `ax.axvline` and/or
+        `ax.axhline`.
+    
+    Returns
+    -------
+    None
+    """
+    # check input
+    EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
+    if grid_position is not None and not grid_position in EXP_GRID:
+        raise ValueError(
+            Error_MSG.INVALID_STRING.format(
+                'grid_position', EXP_GRID))
+    EXP_AXIS = [NamesIM.AXIS_X, NamesIM.AXIS_Y, NamesIM.AXIS_B]
+    if not axis in EXP_AXIS:
+        raise ValueError(
+            Error_MSG.INVALID_STRING.format(
+                'axis', EXP_AXIS))
+    # what type of grid - the first type will plot across the dot centers
+    # the second type will place the grid around the dots.
+    x_vals = (np.arange(arr.shape[1]) if grid_position == 'centre'
+              else np.arange(-0.5, arr.shape[1], 1.0))
+    y_vals = (np.arange(arr.shape[0]) if grid_position == 'centre'
+              else np.arange(-0.5, arr.shape[0], 1.0))
+    # finally set grid
+    if axis in ['x', 'both']:
+        for xv in x_vals:
+            ax.axvline(x=xv, **kwargs)
+    if axis in ['y', 'both']:
+        for xy in y_vals:
+            ax.axhline(y=xy, **kwargs)
+
