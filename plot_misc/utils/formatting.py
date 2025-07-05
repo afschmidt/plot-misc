@@ -30,6 +30,7 @@ MAXLOG10 : int
 import numpy as np
 import pandas as pd
 import warnings
+from numbers import Real
 from scipy.stats import norm
 from typing import (
     Any,
@@ -254,3 +255,120 @@ def sci_notation(number:float | int, sig_fig:int=2,
     except ValueError or TypeError:
         return str(np.nan)
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO add pytest
+def string_sets(limits:list[Real], int_notation:bool=False, middle:bool=False,
+             lower_lim:Real | None = None, inq_space:str = ' ', sep:str = ', ',
+             ) -> list[str]:
+    """
+    Generate string labels for numeric intervals using midpoint, inequality, or
+    interval notation.
+    
+    Parameters
+    ----------
+    limits : `list` [`real`]
+        A list of numeric values (floats or integers) defining the upper bounds
+        of each interval.
+    int_notation : `bool`, default `False`
+        If True, return intervals using mathematical interval notation
+        (e.g., "(a, b]"). Cannot be used together with `middle=True`.
+    middle : `bool`, default `False`
+        If True, return the midpoint of each interval instead of the full
+        bounds.  If the interval is open-ended (i.e., includes ±inf), it falls
+        back to inequality notation.
+    lower_lim : `real` or `None`, default `None`
+        Left-most bound of the first interval. If not provided, assumed to be
+        negative infinity.
+    inq_space : `str`, default ' '
+        Space between inequality symbols and numbers (e.g., "< 0.5" vs "<0.5").
+    sep : `str`, default ', '
+        Separator for interval notation (e.g., "(a, b]").
+    
+    Return
+    ------
+    list of str
+        A list of interval descriptions as strings, formatted according to the
+        selected output style.
+    
+    Examples
+    --------
+    >>> string_sets([0.2, 0.5, 1.0], lower_lim=0.0, middle=True)
+    ['0.1', '0.35', '0.75']
+    
+    >>> string_sets([0.5, 1.0], lower_lim=0.0, int_notation=True)
+    ['(0.0, 0.5]', '(0.5, 1.0]']
+    
+    >>> string_sets([0.5, 1.0], lower_lim=0.0, sep=' p ')
+    ['0.0 < p ≤ 0.5', '< 1.0']
+    """
+    # chec input
+    is_type(limits, list)
+    is_type(int_notation, bool)
+    is_type(middle, bool)
+    is_type(lower_lim, (type(None), Real))
+    # what should be plotted
+    vals = []
+    limits = sorted(limits)
+    if middle == True:
+        # combine lower limit with limits to form intervals
+        edges = [lower_lim if lower_lim is not None else -np.inf] + limits
+        for i in range(len(limits)):
+            lo = edges[i]
+            hi = edges[i + 1]
+            if np.isinf(lo) or np.isinf(hi):
+                # still include an inequality for inf
+                if np.isinf(lo):
+                    # if the left value is inf use the value to the right
+                    vals.append("≤" + inq_space + str(hi))
+                else:
+                    # if the last value is inf use the value to the left
+                    vals.append(">" + inq_space + str(lo))
+            else:
+                # otherwise just plot the mid point
+                vals.append(str((lo + hi) / 2))
+    else:
+        # not mid-points, just inq or intervals
+        for k in  range(len(limits)):
+            if int_notation:
+                if k == 0 and lower_lim is not None:
+                    vals.append("(" + str(lower_lim) + sep +\
+                                str(limits[k]) + ']')
+                elif k == 0:
+                    vals.append("(" + str(-np.inf) + sep +\
+                                str(limits[k]) + ']')
+                elif limits[k] == limits[-1] and np.isinf(limits[-1]):
+                    vals.append("(" + str(limits[k - 1]) + sep +\
+                                str(limits[k]) + ')')
+                else:
+                    vals.append("(" + str(limits[k - 1]) + sep +\
+                                str(limits[k]) + ']')
+            else:
+                if limits[k] == limits[0] or limits[k] == limits[-1]:
+                    if limits[k] == limits[0] and lower_lim is not None:
+                        vals.append(
+                            str(lower_lim) + inq_space + "<" + sep + "≤" +
+                            inq_space + str(limits[k])
+                        )
+                    else:
+                        vals.append("≤" + inq_space + str(limits[k]))
+                else:
+                    vals.append("<" + inq_space + str(limits[k]))
+    # return
+    return vals
+
+
+
+# string_sets([0.2, 0.5, 1.0], lower_lim=0.0, sep=' p ')
+# string_sets([0.2, 0.5, 1.0], lower_lim=None)
+
+# string_sets([0.2, 0.5, 1.0], lower_lim=0.0, middle=True)
+# string_sets([0.2, 0.5, 1.0], lower_lim=None, middle=True)
+# string_sets([0.2, 0.5, 1.0, np.inf], lower_lim=None, middle=True)
+
+# string_sets([0.2, 0.5, 1.0], lower_lim=0.0, middle=False, int_notation=True)
+# string_sets([0.2, 0.5, 1.0], lower_lim=None, middle=False, int_notation=True)
+# string_sets([0.2, 0.5, 1.0], lower_lim=None, middle=False, int_notation=True,
+#             sep=',')
+
+# string_sets([0.2, 0.5, 1.0, np.inf], lower_lim=0.0, middle=False, int_notation=True)
+# string_sets([0.2, 0.5, 1.0, np.inf], middle=False, int_notation=True)
