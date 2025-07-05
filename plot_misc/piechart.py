@@ -18,7 +18,7 @@ piechart
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from numbers import Real
+from plot_misc.constants import Real
 from plot_misc.errors import (
     is_df,
     are_columns_in_df,

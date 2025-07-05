@@ -20,6 +20,9 @@ sci_notation(number, sig_fig=2, max=1e-100)
 format_roc(observed, predicted, **kwargs)
     Computes ROC curve data and returns it as a tidy DataFrame.
 
+string_interval(limits, int_notation, middle, lower_lim, inq_space, sep)
+    Maps a lists of intervals to string interval notation.
+
 Constants
 ---------
 MAXLOG10 : int
@@ -30,7 +33,6 @@ MAXLOG10 : int
 import numpy as np
 import pandas as pd
 import warnings
-from numbers import Real
 from scipy.stats import norm
 from typing import (
     Any,
@@ -38,6 +40,7 @@ from typing import (
 )
 from plot_misc.constants import (
     UtilsNames,
+    Real,
 )
 from plot_misc.errors import (
     is_type,
@@ -256,10 +259,10 @@ def sci_notation(number:float | int, sig_fig:int=2,
         return str(np.nan)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO add pytest
-def string_sets(limits:list[Real], int_notation:bool=False, middle:bool=False,
-             lower_lim:Real | None = None, inq_space:str = ' ', sep:str = ', ',
-             ) -> list[str]:
+def string_interval(limits:list[Real], int_notation:bool=False,
+                    middle:bool=False, lower_lim:Real | None = None,
+                    inq_space:str = ' ', sep:str = ', ',
+                    ) -> list[str]:
     """
     Generate string labels for numeric intervals using midpoint, inequality, or
     interval notation.
@@ -295,17 +298,16 @@ def string_sets(limits:list[Real], int_notation:bool=False, middle:bool=False,
     >>> string_sets([0.2, 0.5, 1.0], lower_lim=0.0, middle=True)
     ['0.1', '0.35', '0.75']
     
-    >>> string_sets([0.5, 1.0], lower_lim=0.0, int_notation=True)
-    ['(0.0, 0.5]', '(0.5, 1.0]']
-    
     >>> string_sets([0.5, 1.0], lower_lim=0.0, sep=' p ')
     ['0.0 < p ≤ 0.5', '< 1.0']
     """
-    # chec input
+    # check input
     is_type(limits, list)
     is_type(int_notation, bool)
     is_type(middle, bool)
     is_type(lower_lim, (type(None), Real))
+    is_type(sep, str)
+    is_type(inq_space, str)
     # what should be plotted
     vals = []
     limits = sorted(limits)
@@ -356,19 +358,3 @@ def string_sets(limits:list[Real], int_notation:bool=False, middle:bool=False,
     # return
     return vals
 
-
-
-# string_sets([0.2, 0.5, 1.0], lower_lim=0.0, sep=' p ')
-# string_sets([0.2, 0.5, 1.0], lower_lim=None)
-
-# string_sets([0.2, 0.5, 1.0], lower_lim=0.0, middle=True)
-# string_sets([0.2, 0.5, 1.0], lower_lim=None, middle=True)
-# string_sets([0.2, 0.5, 1.0, np.inf], lower_lim=None, middle=True)
-
-# string_sets([0.2, 0.5, 1.0], lower_lim=0.0, middle=False, int_notation=True)
-# string_sets([0.2, 0.5, 1.0], lower_lim=None, middle=False, int_notation=True)
-# string_sets([0.2, 0.5, 1.0], lower_lim=None, middle=False, int_notation=True,
-#             sep=',')
-
-# string_sets([0.2, 0.5, 1.0, np.inf], lower_lim=0.0, middle=False, int_notation=True)
-# string_sets([0.2, 0.5, 1.0, np.inf], middle=False, int_notation=True)

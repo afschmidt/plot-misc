@@ -25,8 +25,8 @@ keyword dictionaries for fine control over scatter and text elements.
 import numpy as np
 import matplotlib.pyplot as plt
 from adjustText import adjust_text
-from numbers import Real
 from pandas.core.frame import DataFrame
+from plot_misc.constants import Real
 from plot_misc.utils.utils import(
     _update_kwargs,
 )

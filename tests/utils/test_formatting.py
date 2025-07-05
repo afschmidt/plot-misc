@@ -3,6 +3,7 @@ from plot_misc.utils.formatting import(
     format_roc,
     format_estimates,
     sci_notation,
+    string_interval,
     _nlog10_func,
     _superscriptinate,
 )
@@ -72,3 +73,34 @@ class Test_sci_notation(object):
         assert sci_notation(0.0012545, sig_fig=4) == '1.2545×10⁻³'
         assert sci_notation(0.0012545, max=0.01) == '1.00×10⁻²'
 
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_string_interval(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=0.0, sep=' p ') ==\
+            ['0.0 < p ≤ 0.2', '< 0.5', '≤ 1.0']
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=None) ==\
+            ['≤ 0.2', '< 0.5', '≤ 1.0']
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=0.0, middle=True) ==\
+            ['0.1', '0.35', '0.75']
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=None, middle=True) ==\
+            ['≤ 0.2', '0.35', '0.75']
+        assert string_interval([0.2, 0.5, 1.0, np.inf], lower_lim=None,
+                               middle=True) ==\
+            ['≤ 0.2', '0.35', '0.75', '> 1.0']
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=0.0, middle=False,
+                               int_notation=True) ==\
+            ['(0.0, 0.2]', '(0.2, 0.5]', '(0.5, 1.0]']
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=None, middle=False,
+                               int_notation=True) ==\
+            ['(-inf, 0.2]', '(0.2, 0.5]', '(0.5, 1.0]']
+        assert string_interval([0.2, 0.5, 1.0], lower_lim=None, middle=False,
+                               int_notation=True, sep=',') ==\
+            ['(-inf,0.2]', '(0.2,0.5]', '(0.5,1.0]']
+        assert string_interval([0.2, 0.5, 1.0, np.inf], lower_lim=0.0,
+                               middle=False, int_notation=True) ==\
+            ['(0.0, 0.2]', '(0.2, 0.5]', '(0.5, 1.0]', '(1.0, inf)']
+        assert string_interval([0.2, 0.5, 1.0, np.inf], middle=False,
+                               int_notation=True) ==\
+            ['(-inf, 0.2]', '(0.2, 0.5]', '(0.5, 1.0]', '(1.0, inf)']

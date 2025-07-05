@@ -41,7 +41,7 @@ from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
 )
-from numbers import Real
+from plot_misc.constants import Real
 from typing import (
     Any,
     Optional,
