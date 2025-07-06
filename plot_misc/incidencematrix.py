@@ -33,9 +33,9 @@ from typing import (
     Any,
     Literal,
 )
-from plot_misc.constants import Real
 from plot_misc.constants import (
     NamesIncidenceMatrix as NamesIM,
+    Real,
 )
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
@@ -47,14 +47,14 @@ from plot_misc.errors import (
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def draw_incidencematrix(
-    data:pd.DataFrame, fsize:tuple[float, float]=(3,4),
-    dot_colour:list[tuple[str, float]]=[('grey',0), ('black',1)],
-    dot_size:list[float]=[4, 8],
-    dot_transparency:list[float]=[0.9, 1.0],
+    data:pd.DataFrame, fsize:tuple[Real, Real]=(3,4),
+    dot_colour:list[tuple[str, Real]]=[('grey',0), ('black',1)],
+    dot_size:list[Real] | list[tuple[Real, Real]]=[4, 8],
+    dot_transparency:list[Real] | list[tuple[Real, Real]]=[0.9, 1.0],
     line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
     lw:tuple[float, float]=(0.3, 0.3),
     tick_lab_size:tuple[float, float]=(4.5, 4.5),
-    tick_len:tuple[float,float]=(2, 2),
+    tick_len:tuple[float,float]=(2.0, 2.0),
     tick_w:tuple[float,float]=(0.3, 0.3),
     margins:tuple[float,float] | None = None,
     grid_position:Literal['outline', 'centre'] | None = 'centre',
@@ -87,15 +87,21 @@ def draw_incidencematrix(
         A list of (colour, upper bound) tuples defining dot appearance by value.
         Each dot is coloured according to the first `cut` for which the value is
         less than or equal to `cut` and greater than the previous break.
-         
+        
         The default: [('grey',0), ('black',1)], colours dots grey for value in
         (\\infinity, 0], and colours dots black for values in (0, 1].
     line_colour : `tuple` [`str`, `str`], default ('lightgrey', 'lightgrey')
         Colours of vertical and horizontal grid lines.
     dot_size : `list` [`float`], default [4, 8]
-        Size of dots corresponding to each threshold in `dot_colour`.
+        Size of dots corresponding to each threshold in `dot_colour`. Can also
+        be supplied a list of tuple similar to `dot_colour`. The cut-offs
+        can be based on the `data` values or on a separately supplied
+        `size_data` of equal dimmension to `data`.
     dot_transparency : `list` [`float`], default [0.9, 1.0]
-        Alpha transparency values for dots in each category.
+        Alpha transparency values for dots in each category. Can also be
+        supplied a list of tuple similar to `dot_colour`. The cut-offs
+        can be based on the `data` values or on a separately supplied
+        `transparency_data` of equal dimmension to `data`.
     lw : tuple [`float`, `float`], default (0.3, 0.3)
         Line width for vertical and horizontal grid lines.
     tick_lab_size : `tuple` [`float`, `float`], default (4.5, 4.5)
@@ -131,11 +137,14 @@ def draw_incidencematrix(
     Notes
     -----
     The appearance of the matrix is governed by the breakpoints defined in
-    `dot_colour`. If fewer than `len(dot_colour)` values are supplied for
-    `dot_size` or `dot_transparency`, these are automatically broadcast.
+    `dot_colour`, and optionally `dot_size` and `dot_transparency. The latter
+    two can take a list of floats to be applied at the same cut-offs as
+    `dot_colour`.  One can also provide fewer values than `len(dot_colour)`
+    for `dot_size` or `dot_transparency`, these are automatically broadcast.
+    A list with tuples can be used to define custom cut-points for size and
+    transparency.
     
-    Grid lines are drawn behind dots. Missing or non-matching entries in the
-    input matrix will be ignored.
+    Missing or non-matching entries in the input matrix will be ignored.
     """
     SHAPE_ERR = ('`data` and `{0}` should have the same shapes '
                  'not: {1} and {2}, respectively.')
@@ -143,6 +152,7 @@ def draw_incidencematrix(
     is_type(dot_size, list)
     is_type(dot_colour, list)
     is_type(dot_transparency, list)
+    is_type(ax,(type(None), plt.Axes))
     is_df(data)
     is_type(grid_position, (str, type(None)))
     is_type(size_data, (type(None), pd.DataFrame))
@@ -163,6 +173,12 @@ def draw_incidencematrix(
             SHAPE_ERR.format('transparency_data', data.shape,
                              transparency_data.shape
                              ))
+    # transpose - hack to make the output match the input row,col and order.
+    data = data.iloc[::-1].T
+    if transparency_data is not None:
+        transparency_data = transparency_data.iloc[::-1].T
+    if size_data is not None:
+        size_data = size_data.iloc[::-1].T
     # map None to dict
     kwargs_scatter_dict = kwargs_scatter_dict or {}
     kwargs_vline_dict = kwargs_vline_dict or {}
@@ -258,7 +274,6 @@ def draw_incidencematrix(
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE add pytest
 def _map_attributes(data:pd.DataFrame, list_map: list[tuple[Any, Real]],
                     break_limits:tuple[float, float] = (-np.inf, np.inf),
                     ) -> np.ndarray:
@@ -310,7 +325,7 @@ def _map_attributes(data:pd.DataFrame, list_map: list[tuple[Any, Real]],
     is_df(data)
     # get values
     vals = data.to_numpy()
-    # sortting the rule
+    # sortting the rule based on the second tuple element
     rule_sorted = sorted(list_map, key=lambda x: x[1])
     # apply rule
     mapped_vals = np.full_like(vals, np.nan, dtype=object)
@@ -350,6 +365,8 @@ def _draw_grid(arr:np.ndarray, ax:plt.Axes,
     None
     """
     # check input
+    is_type(arr, np.ndarray)
+    is_type(ax,plt.Axes)
     EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
     if grid_position is not None and not grid_position in EXP_GRID:
         raise ValueError(

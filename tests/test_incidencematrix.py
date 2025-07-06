@@ -21,7 +21,6 @@ MARGINS = [0.060, 0.025]
 data = examples.load_incidence_matrix_data()
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# plot_forest
 class TestIncidenceMatrix(object):
     """
     Testing the `incidencematrix` function.
@@ -30,7 +29,7 @@ class TestIncidenceMatrix(object):
     def test_default(self):
         # plotting
         _, ax = imat_plt.draw_incidencematrix(
-            data.iloc[::-1].T, fsize=(6,17),
+            data, fsize=(6,17),
             dot_colour=DOT_COLOUR,
             dot_size=DOT_SIZE,
             tick_lab_size=TICK_LAB_SIZE,
@@ -55,7 +54,7 @@ class TestIncidenceMatrix(object):
         """ Testing grid pos `outline` """
         DOT_SIZE = [0,40]
         LW = 0.8
-        _, ax = imat_plt.draw_incidencematrix(data.iloc[::-1].T,
+        _, ax = imat_plt.draw_incidencematrix(data,
                                 dot_colour=DOT_COLOUR,
                                 dot_size=DOT_SIZE,
                                 tick_lab_size=TICK_LAB_SIZE,
@@ -109,8 +108,8 @@ class TestIncidenceMatrix(object):
         ]
         # Plot
         _, ax = imat_plt.draw_incidencematrix(
-            data=data.iloc[::-1].T,
-            size_data=size_data.iloc[::-1].T,
+            data=data,
+            size_data=size_data,
             dot_colour=DOT_COLOUR,
             dot_size=DOT_SIZE,
             dot_transparency=[1.0],
@@ -131,4 +130,66 @@ class TestIncidenceMatrix(object):
         assert observed_rgba.issubset(expected_rgba), \
             f"Unexpected colours: {observed_rgba} not in {expected_rgba}"
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class TestMapAttributes(object):
+    """
+    Testing the `_map_attributes` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        data = pd.DataFrame([[0.2, 0.6], [1.2, 2.5]])
+        rules = [('grey', 0.5), ('black', 1.5), ('red', 3.0)]
+        result = imat_plt._map_attributes(data, rules)
+        expected = np.array([['grey', 'black'],
+                             ['black', 'red']], dtype=object)
+        assert np.array_equal(result, expected)
+        assert list(result.flatten()) == ['grey', 'black', 'black', 'red']
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_with_nan_output(self):
+        """ confirming nan's are returned for values that are not included in
+            the interval (using break_limits[0] == 0.0
+        """
+        data = pd.DataFrame([[-0.5, 0.4], [1.6, 3.1]])
+        rules = [('grey', 0.5), ('black', 1.5), ('red', 3.0)]
+        result = imat_plt._map_attributes(data, rules,
+                                          break_limits=(0.0, np.inf))
+        expected = np.array([[np.nan, 'grey'],
+                             ['red', np.nan]], dtype=object)
+        assert result.shape == expected.shape
+        assert all(isinstance(v, str) or np.isnan(v) for v in result.flatten())
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_float_target(self):
+        data = pd.DataFrame([[0.2, 0.6], [1.2, 2.5]])
+        rules = [(1.0, 0.5), (1.5, 1.5), (2.0, 3.0)]
+        result = imat_plt._map_attributes(data, rules)
+        assert list(result.flatten()) == [1.0, 1.5, 1.5, 2.0]
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class TestDrawGrid(object):
+    """
+    Testing the `_draw_grid` function.
+    """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        arr = np.zeros((3, 4))
+        _, ax = plt.subplots()
+        imat_plt._draw_grid(arr, ax, color='red')
+        # assertion
+        vlines = [line for line in ax.lines if line.get_linestyle() == '-']
+        assert len(vlines) == 7
+        # there are 3 vertical lines who do not have an x-coordinate
+        assert [line.get_xdata()[0] for line in ax.lines] == [0,1,2,3,0,0,0]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_grid_position_effect(self):
+        """Test grid_position effect by comparison"""
+        arr = np.zeros((2, 3))
+        _, ax1 = plt.subplots()
+        _, ax2 = plt.subplots()
+        # centre
+        imat_plt._draw_grid(arr, ax1, axis='x', grid_position='centre')
+        centre_x = [line.get_xdata()[0] for line in ax1.lines]
+        # outline
+        imat_plt._draw_grid(arr, ax2, axis='x', grid_position='outline')
+        outline_x = [line.get_xdata()[0] for line in ax2.lines]
+        assert np.allclose(centre_x, [0,1,2])
+        assert np.allclose(outline_x, [-0.5,0.5,1.5,2.5])
