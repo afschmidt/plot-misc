@@ -29,6 +29,7 @@ enable fine-grained customisation of scatter and line elements.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.transforms import Bbox
 from typing import (
     Any,
     Literal,
@@ -41,6 +42,7 @@ from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
     is_df,
+    are_columns_in_df,
     # same_len,
     Error_MSG,
 )
@@ -390,4 +392,122 @@ def _draw_grid(arr:np.ndarray, ax:plt.Axes,
     if axis in ['y', 'both']:
         for xy in y_vals:
             ax.axhline(y=xy, **kwargs)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE confirm values for tick_loc
+# NOTE add fontsize for labels
+def legend_matrix(
+    data:pd.DataFrame, ax: plt.Axes,
+    box_to_anchor: tuple[float, float] | None = None,
+    loc:str | int | None = None,
+    tick_loc:Literal['left', 'top', 'right', 'bottom'] = 'right',
+    label_loc:Literal['left', 'top', 'right', 'bottom'] = 'right',
+    kwargs_matrix: dict[str, Any] | None = None,
+    kwargs_inset: dict[str, Any] | None = None,) -> plt.Axes:
+    """ To Do
+    
+    parameters
+    ----------
+    box_to_anchor : `tuple` [`x0`, `y0`, `width`, `height`]
+        Lower-left corner of inset Axes, and its width and height.
+    
+    
+    """
+    # check input
+    is_df(data)
+    is_type(ax,plt.Axes)
+    is_type(box_to_anchor, (type(None), tuple))
+    is_type(loc, (str, int, type(None)))
+    is_type(tick_loc, str)
+    is_type(kwargs_inset, (dict, type(None)))
+    is_type(kwargs_matrix, (dict, type(None)))
+    # confirm content
+    are_columns_in_df(data, ['value', 'threshold'])
+    # error
+    if box_to_anchor is not None and len(box_to_anchor) != 4:
+        raise ValueError("`box_to_anchor` should contain four values, not "
+                         f"{len(box_to_anchor)}")
+    if box_to_anchor is not None and loc is not None:
+        raise ValueError("Please supply either `loc` or `box_to_anchor`, not "
+                         "both.")
+    if box_to_anchor is None and loc is None:
+        raise ValueError("Please supply either `loc` or `box_to_anchor`"
+                         )
+    # map None
+    kwargs_inset = kwargs_inset or {}
+    kwargs_matrix = kwargs_matrix or {}
+    # ### get inset axes
+    if box_to_anchor is not None:
+        new_kwargs_inset = _update_kwargs(update_dict=kwargs_inset,
+                                          transform=ax.figure.transFigure,
+                                          )
+        inset_bbox = Bbox.from_bounds(*box_to_anchor)
+        ax_inset = ax.inset_axes(inset_bbox.transformed(ax.transAxes),
+                                      **new_kwargs_inset)
+    else:
+        new_kwargs_inset = _update_kwargs(update_dict=kwargs_inset,
+                                          )
+        ax_inset = ax.ax_inset(loc=loc, **new_kwargs_inset)
+    # ### apply matrix
+    # NOTE map input_list to colour, size, or transparency - ONLY one!
+    input_list = list(data.itertuples(index=False, name=None))
+    new_kwargs_matrix = _update_kwargs(update_dict=kwargs_matrix,
+                                       margins=[0,0],
+                                       grid_position='outline',
+                                       tick_len = [0,0],
+                                       )
+    draw_incidencematrix(data=data, ax=ax_inset,
+                         **new_kwargs_matrix,
+                         )
+    # ### axes tick/lables and axes title.
+    for spine in ax_inset.spines.values():
+        spine.set_visible(True)
+    # ticks
+    if tick_loc == 'right':
+        ax_inset.yaxis.set_ticks_position('right')
+        ax_inset.tick_params(
+            left=False, labelleft=False,
+            right=True, labelright=True,
+            bottom=False, labelbottom=False,
+            top=False, labeltop=False,
+        )
+    elif tick_loc == 'left':
+        ax_inset.yaxis.set_ticks_position('left')
+        ax_inset.tick_params(
+            left=True, labelleft=True,
+            right=False, labelright=False,
+            bottom=False, labelbottom=False,
+            top=False, labeltop=False,
+        )
+    elif tick_loc = 'top':
+        ax_inset.xaxis.set_ticks_position('top')
+        ax_inset.tick_params(
+            left=False, labelleft=False,
+            right=False, labelright=False,
+            bottom=False, labelbottom=False,
+            top=True, labeltop=True,
+        )
+    else:
+        ax_inset.xaxis.set_ticks_position('bottom')
+        ax_inset.tick_params(
+            left=False, labelleft=False,
+            right=False, labelright=False,
+            bottom=True, labelbottom=True,
+            top=False, labeltop=False,
+        )
+    # labels, NOTE add lael as an parameter.
+    if label_loc == 'right' or label_loc == 'left':
+        ax_inset.yaxis.set_label_position(label_loc)
+        ax_inset.set_ylabel("Y-axis label (right)")
+    else:
+        ax_inset.xaxis.set_label_position(label_loc)
+        ax_inset.set_xlabel("X-axis label (right)")
+    # return
+    return ax_inset
+
+    
+    
+    
+    
+    
 
