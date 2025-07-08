@@ -394,14 +394,26 @@ def _draw_grid(arr:np.ndarray, ax:plt.Axes,
             ax.axhline(y=xy, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+fig, ax = plt.subplots(figsize=(6, 4))
+DOT_SIZE = [
+    (40, 0.4),
+    (150, 1.0),
+]
+data = pd.DataFrame(DOT_SIZE, columns=["value", "threshold"])
+data["label"] = data["threshold"].astype(str)
+vertical=True
+box_to_anchor = (0.80, 0.5, 0.2, 0.1)
+kwargs_matrix = dict()
+kwargs_inset = dict()
+
 # NOTE confirm values for tick_loc
 # NOTE add fontsize for labels
 def legend_matrix(
     data:pd.DataFrame, ax: plt.Axes,
     box_to_anchor: tuple[float, float] | None = None,
     loc:str | int | None = None,
+    label: str | None = None,
     tick_loc:Literal['left', 'top', 'right', 'bottom'] = 'right',
-    label_loc:Literal['left', 'top', 'right', 'bottom'] = 'right',
     kwargs_matrix: dict[str, Any] | None = None,
     kwargs_inset: dict[str, Any] | None = None,) -> plt.Axes:
     """ To Do
@@ -421,8 +433,14 @@ def legend_matrix(
     is_type(tick_loc, str)
     is_type(kwargs_inset, (dict, type(None)))
     is_type(kwargs_matrix, (dict, type(None)))
+    # confirm input
+    EXP_TICK_LOC = ['left', 'right', 'top', 'bottom']
+    if tock_loc is not None and not tock_loc in EXP_TICK_LOC:
+        raise ValueError(
+            Error_MSG.INVALID_STRING.format(
+                'tock_loc', EXP_TICK_LOC))
     # confirm content
-    are_columns_in_df(data, ['value', 'threshold'])
+    are_columns_in_df(data, ['value', 'label'])
     # error
     if box_to_anchor is not None and len(box_to_anchor) != 4:
         raise ValueError("`box_to_anchor` should contain four values, not "
@@ -442,7 +460,7 @@ def legend_matrix(
                                           transform=ax.figure.transFigure,
                                           )
         inset_bbox = Bbox.from_bounds(*box_to_anchor)
-        ax_inset = ax.inset_axes(inset_bbox.transformed(ax.transAxes),
+        ax_inset = ax.inset_axes(inset_bbox.bounds,
                                       **new_kwargs_inset)
     else:
         new_kwargs_inset = _update_kwargs(update_dict=kwargs_inset,
@@ -450,13 +468,19 @@ def legend_matrix(
         ax_inset = ax.ax_inset(loc=loc, **new_kwargs_inset)
     # ### apply matrix
     # NOTE map input_list to colour, size, or transparency - ONLY one!
-    input_list = list(data.itertuples(index=False, name=None))
+    input_list = list(
+        data[['value', 'threshold']].itertuples(index=False, name=None)
+    )
+    input_mat = data['value'].to_frame()
     new_kwargs_matrix = _update_kwargs(update_dict=kwargs_matrix,
                                        margins=[0,0],
                                        grid_position='outline',
                                        tick_len = [0,0],
                                        )
-    draw_incidencematrix(data=data, ax=ax_inset,
+    draw_incidencematrix(data=input_mat, ax=ax_inset,
+                         dot_colour=[('black', 0.4), ('grey', 1.0)],
+                         dot_size=[100, 40],
+                         dot_transparency=[1.0, 1.0],
                          **new_kwargs_matrix,
                          )
     # ### axes tick/lables and axes title.
@@ -496,12 +520,12 @@ def legend_matrix(
             top=False, labeltop=False,
         )
     # labels, NOTE add lael as an parameter.
-    if label_loc == 'right' or label_loc == 'left':
-        ax_inset.yaxis.set_label_position(label_loc)
-        ax_inset.set_ylabel("Y-axis label (right)")
+    if tick_loc == 'right' or tick_loc == 'left':
+        ax_inset.yaxis.set_label_position(tick_loc)
+        ax_inset.set_ylabel(label)
     else:
-        ax_inset.xaxis.set_label_position(label_loc)
-        ax_inset.set_xlabel("X-axis label (right)")
+        ax_inset.xaxis.set_label_position(tick_loc)
+        ax_inset.set_xlabel(label)
     # return
     return ax_inset
 
