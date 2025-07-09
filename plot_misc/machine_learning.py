@@ -54,6 +54,7 @@ from typing import (
     Union,
     Tuple,
     Dict,
+    Self,
 )
 from statsmodels.nonparametric.smoothers_lowess import lowess
 # from packaging import version
@@ -66,7 +67,7 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def lollipop(values:np.ndarray, labels:np.ndarray,
-             line_color:str='tab:orange', dot_color:str='deeppink',
+             line_colour:str='tab:orange', dot_color:str='deeppink',
              linewidth:float=1, dot_edge_color:str='black', dot_size:float=4,
              dot_edge_size:float=0.5,
              importance_margin:float | None =0,
@@ -91,7 +92,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         Values determining the length of each line.
     labels : `np.ndarray`
         Labels for each feature.
-    line_color: `str`, default `tab:orange`
+    line_colour: `str`, default `tab:orange`
         The line colour.
     linewidth : `float`, default 1
         The linewidth.
@@ -134,7 +135,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     
     # ################### Check input
     is_type(ax, (type(None), plt.Axes))
-    is_type(line_color, str)
+    is_type(line_colour, str)
     is_type(linewidth, (int, float))
     is_type(dot_color, str)
     is_type(dot_edge_color, str)
@@ -154,7 +155,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     # get index index to numeric
     index = range(values.shape[0])
     # ################### plot lines and dots, first updating the kwargs
-    new_lines_dict = _update_kwargs(kwargs_lines_dict, color=line_color,
+    new_lines_dict = _update_kwargs(kwargs_lines_dict, color=line_colour,
                                     linewidth=linewidth)
     new_plot_dict = _update_kwargs(kwargs_plot_dict,
                                    marker='o',
@@ -211,31 +212,9 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def calibration(data:pd.DataFrame | dict[str,pd.DataFrame],
-                observed:str, predicted:str,
-                lower_observed:str | None = None,
-                upper_observed:str | None = None,
-                ci_colour:str | list[str] | None = ['lightcoral'],
-                ci_linewidth:str | list[float] | None = [0.5],
-                dot_marker:str | list[str] = ['o'],
-                dot_colour:str | list[str] = ['lightcoral'],
-                line_colour:str | list[str] = ['lightcoral'],
-                line_linewidth:str | list[float] = [0.7],
-                line_linestyle:str | list[str] =['--'],
-                figsize:tuple[float,float]=(6, 6),
-                diagonal_colour:str='black',
-                diagonal_linewidth:float=0.5,
-                diagonal_linestyle:str='-',
-                margins:tuple[float, float]=(0.01, 0.01),
-                curves:dict[str,list[np.ndarray, Callable, dict, dict]] | None = None,
-                ax:plt.Axes | None = None,
-                kwargs_ci_dict:dict[Any,Any] | None = None,
-                kwargs_dot_dict:dict[Any,Any] | None = None,
-                kwargs_line_dict:dict[Any,Any] | None = None,
-                kwargs_diagonal_dict:dict[Any,Any] | None = None,
-                ) -> tuple[plt.Axes, plt.Figure, dict[str, np.ndarray]]:
-    '''
-    Provides a basic template for a calibration plot, comparing the observed
+class Calibration(object):
+    """
+    Provides a template for a calibration plot, comparing the observed
     and predicted risks. Here the observed risk will be based on some grouping
     of the predicted risk, and the average event rate within each group.
     Hence optional confidence intervals can be included for the observed risk.
@@ -244,233 +223,360 @@ def calibration(data:pd.DataFrame | dict[str,pd.DataFrame],
     although this can quickly become crowded and one might consider a
     multi panel plot.
     
+    Attributes
+    ----------
+    data : `dict` [`pd.DataFrame`]
+        The provided input data.
+    ax : `plt.Axes`
+        The axes object.
+    figure : `plt.Figure`
+        The top level figure container.
+    curves_data_ : `dict` [`str`, `np.ndarry']
+        A dictionary with the data used to plot the optional curves.
+    
     Parameters
     ----------
-    data : pd.DataFrame or dict of pd.DataFrame
+    data : `pd.DataFrame` or `dict` [`pd.DataFrame`]
         When multiple DataFrame's are provided, care should be given to ensure
         all have the same column names.
-    observed : str
-        A column name in `data` representing the observed risk
-        (between 0 and 1).
-    predicted : str
-        A column name in `data` representing the predicted risk
-        (between 0 and 1).
-    lower_observed : str, default `NoneType`
-        An optional column name in `data` representing the lower bound of
-        the observed risk.
-    upper_observed : str, default `NoneType`
-        An optional column name in `data` representing the upper bound of
-        the observed risk.
-    ci_colour : string or list of strings
-        The colours that the (optional) confidence intervals should have.
-    ci_linewidth : string or list of strings,
-        The linewidth of the (optional) confidence intervals.
-    dot_colour : string or list of strings
-        The marker colour.
-    dot_marker : string or list of strings
-        The marker for the average agreement between observed and predicted
-        risk.
-    line_colour : string or list of strings
-        The colour of the line connecting the dots.
-    line_linestyle : string or list of strings
-        The linestyle of the line(s) connecting the dots.
-    line_linewidth : string or list of floats
-        The linewidth of the line(s) connecting the dots.
-    diagonal_colour : str
-        The colour of the diagonal line.
-    diagonal_linestyle : str
-        The linestyle of the diagonal line.
-    diagonal_linewidth : float
-        The width of the diagonal line.
-    curves : `dict` [`str`, `list`] or `None`, default `None`
-        A dictionary with list values. The list can have the following entries:
-            - The first element should include a np.ndarray where the
-                first column represents the y-axis value and the second column
-                the x-axis values.
-            - The second list entry should be a callable that returns
-                predicted y-values in the same order as the observed x-axis
-                values. Set this to `None` to simply plots the np.ndarray
-                data.
-            - The third entry can be used to pass a dictionary to
-                The callable function. Set to `None` to skip.
-            - The fourth entry can be used to supply a dictionary with
-                keyword arguments for ax.plot, set to `None` to skip.
-    ax : plt.Axes, default `NoneType`
+    ax : `plt.Axes`, default `NoneType`
         A `matplotlib.axes.Axes` instance to which the figure is plotted. If
         not provided, use current axes or create a new one.  Optional.
-    figsize : tuple of two floats, default (6, 6),
+    figsize : `tuple` [`float`, `float`], default (6.0, 6.0),
         The figure size, when ax==None.
-    kwargs_*_dict : dict, default `NoneType`
-        Optional arguments supplied to the various plotting functions:
-            kwargs_ci_dict       --> ax.plot
-            kwargs_dot_dict      --> ax.scatter
-            kwargs_line_dict     --> ax.plot
-            kwargs_diagonal_dict --> ax.axline
-    
-    Returns
-    -------
-    figure: plt.Figure
-    ax: plt.Axes
-    curves : dict
-        A dictionary with np.ndarray with observed x-values and predicted
-        y-values based on the callable model supplied in `curves`.
-    '''
-    
-    # ################### check input
-    is_type(data, (dict, pd.DataFrame), 'data')
-    is_type(observed, str, 'observed')
-    is_type(predicted, str, 'predicted')
-    is_type(ax, (plt.Axes, type(None)), 'ax')
-    is_type(lower_observed, (str, type(None)), 'lower_observed')
-    is_type(upper_observed, (str, type(None)), 'upper_observed')
-    is_type(ci_colour, (str,list, type(None)), 'ci_colour')
-    is_type(ci_linewidth, (str, list, type(None)), 'ci_linewidth')
-    is_type(dot_marker,(str, list))
-    is_type(dot_colour, (str, list))
-    is_type(line_colour, (str, list))
-    is_type(line_linewidth, (str, list))
-    is_type(line_linestyle, (str, list))
-    is_type(figsize, tuple)
-    is_type(diagonal_linewidth, float)
-    is_type(diagonal_colour, str)
-    is_type(diagonal_linestyle, str)
-    is_type(margins, tuple)
-    # map None to empty dict
-    kwargs_ci_dict = kwargs_ci_dict or {}
-    kwargs_dot_dict = kwargs_dot_dict or {}
-    kwargs_line_dict = kwargs_line_dict or {}
-    kwargs_diagonal_dict = kwargs_diagonal_dict or {}
-    # combined the columns
-    columns = [predicted, observed]
-    if not lower_observed is None:
-        columns = columns + [lower_observed]
-    if not upper_observed is None:
-        columns = columns + [upper_observed]
-    # creating a dictionary if needed
-    if not isinstance(data, dict):
-        data = {'dataset1': data}
-    # testing column content
-    [are_columns_in_df(d, columns) for d in data.values()]
-    # compare plt params to dict len
-    # NOTE if None simply repeat for the number of datasets
-    if not ci_colour is None:
-        same_len(data, ci_colour, [NamesML.DATA, NamesML.CI_COLOUR])
-    else:
-        ci_colour = [None] * len(data)
-    # NOTE if None simply repeat for the number of datasets
-    if not ci_linewidth is None:
-        same_len(data, ci_linewidth, [NamesML.DATA,NamesML.CI_LINEWIDTH])
-    else:
-        ci_linewidth = [None] * len(data)
-    same_len(data, dot_colour, [NamesML.DATA,NamesML.DOT_COLOUR])
-    same_len(data, dot_marker, [NamesML.DATA,NamesML.DOT_MARKER])
-    same_len(data, line_colour, [NamesML.DATA,NamesML.LINE_LINESTYLE])
-    same_len(data, line_linewidth, [NamesML.DATA,NamesML.LINE_LINEWIDTH])
-    same_len(data, line_linestyle, [NamesML.DATA,NamesML.LINE_LINESTYLE])
-    # ################### making lists
-    ci_linewidth = string_to_list(ci_linewidth)
-    ci_colour = string_to_list(ci_colour)
-    dot_marker = string_to_list(dot_marker)
-    dot_colour = string_to_list(dot_colour)
-    line_colour = string_to_list(line_colour)
-    line_linewidth = string_to_list(line_linewidth)
-    line_linestyle = string_to_list(line_linestyle)
-    # ################### process input
-    # create a axes if needed
-    if ax is None:
-        f, ax = plt.subplots(figsize=figsize)
-    else:
-        f = ax.figure
-    # Add the diagonal line, first updating the kwargs
-    new_diagonal_dict =\
-        _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewidth,
-                       ls=diagonal_linestyle, c=diagonal_colour)
-    ax.axline(xy1=(0, 0), slope=1, **new_diagonal_dict,
-              )
-    # ################### loop over dict
-    for idx, (key, val) in enumerate(data.items()):
-        # unpack data
-        x_bin = val[predicted]
-        y_bin = val[observed]
-        # set lb and ub to the same y-values, and update based on avail data
-        y_bin_lb = val[observed]
-        y_bin_ub = val[observed]
+    """
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __init__(self, data:pd.DataFrame, ax:plt.Axes | None = None,
+                 figsize:tuple[float,float]=(6.0, 6.0),
+                 ):
+        '''
+        Copies the data internally.
+        '''
+        is_type(data, (dict, pd.DataFrame))
+        is_type(ax, (type(None), plt.Axes))
+        # create a axes if needed
+        if ax is None:
+            f, ax = plt.subplots(figsize=figsize)
+        else:
+            f = ax.figure
+        # creating a dictionary if needed
+        if not isinstance(data, dict):
+            data = {'dataset1': data}
+        # assign to self
+        self.figure = f
+        self.ax = ax
+        self._plot = False
+        self.curves_data_ = None
+        self.data = data.copy()
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __str__(self) -> str:
+        NAME = type(self).__name__
+        if isinstance(self.data, dict):
+            keys = ', '.join(map(str, self.data.keys()))
+            return f"{NAME} for {len(self.data)} models: {keys}"
+        else:
+            return f"{NAME} for a single model: {self.data.shape[0]} rows"
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def __repr__(self) -> str:
+        NAME = type(self).__name__
+        data_type = (
+            f"dict[{len(self.data)}]" if isinstance(self.data, dict)
+            else f"DataFrame[{self.data.shape[0]}x{self.data.shape[1]}]"
+        )
+        ax_type = type(self.ax).__name__
+        fig_size = tuple(round(x, 1) for x in self.figure.get_size_inches())
+        return (
+            f"{NAME}("
+            f"data={data_type}, "
+            f"ax={ax_type}, "
+            f"figure=Figure(size={fig_size}))"
+        )
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def plot(self,
+        observed:str, predicted:str,
+        lower_observed:str | None = None,
+        upper_observed:str | None = None,
+        ci_colour:str | list[str] | None = ['lightcoral'],
+        ci_linewidth:str | list[float] | None = [0.5],
+        dot_marker:str | list[str] = ['o'],
+        dot_colour:str | list[str] = ['lightcoral'],
+        line_colour:str | list[str] = ['lightcoral'],
+        line_linewidth:float | list[float] = [0.7],
+        line_linestyle:str | list[str] =['--'],
+        figsize:tuple[float,float]=(6, 6),
+        diagonal_colour:str='black',
+        diagonal_linewidth:float=0.5,
+        diagonal_linestyle:str='-',
+        margins:tuple[float, float]=(0.01, 0.01),
+        kwargs_ci_dict:dict[Any,Any] | None = None,
+        kwargs_dot_dict:dict[Any,Any] | None = None,
+        kwargs_line_dict:dict[Any,Any] | None = None,
+        kwargs_diagonal_dict:dict[Any,Any] | None = None,
+             ) -> Self:
+        """
+        Plots the actual calibration plot.
+        
+        Parameters
+        ----------
+        observed : str
+            A column name in `data` representing the observed risk
+            (between 0 and 1).
+        predicted : str
+            A column name in `data` representing the predicted risk
+            (between 0 and 1).
+        lower_observed : str, default `NoneType`
+            An optional column name in `data` representing the lower bound of
+            the observed risk.
+        upper_observed : str, default `NoneType`
+            An optional column name in `data` representing the upper bound of
+            the observed risk.
+        ci_colour : string or list of strings
+            The colours that the (optional) confidence intervals should have.
+        ci_linewidth : string or list of strings,
+            The linewidth of the (optional) confidence intervals.
+        dot_colour : string or list of strings
+            The marker colour.
+        dot_marker : string or list of strings
+            The marker for the average agreement between observed and predicted
+            risk.
+        line_colour : string or list of strings
+            The colour of the line connecting the dots.
+        line_linestyle : string or list of strings
+            The linestyle of the line(s) connecting the dots.
+        line_linewidth : float or list of floats
+            The linewidth of the line(s) connecting the dots.
+        diagonal_colour : str
+            The colour of the diagonal line.
+        diagonal_linestyle : str
+            The linestyle of the diagonal line.
+        diagonal_linewidth : float
+            The width of the diagonal line.
+        kwargs_*_dict : dict, default `NoneType`
+            Optional arguments supplied to the various plotting functions:
+                kwargs_ci_dict       --> ax.plot
+                kwargs_dot_dict      --> ax.scatter
+                kwargs_line_dict     --> ax.plot
+                kwargs_diagonal_dict --> ax.axline
+        
+        Returns
+        -------
+        self
+        """
+        # ################### check input
+        is_type(observed, str)
+        is_type(predicted, str)
+        is_type(lower_observed, (str, type(None)))
+        is_type(upper_observed, (str, type(None)))
+        is_type(ci_colour, (str,list, type(None)))
+        is_type(ci_linewidth, (str, list, type(None)))
+        is_type(dot_marker,(str, list))
+        is_type(dot_colour, (str, list))
+        is_type(line_colour, (str, list))
+        is_type(line_linewidth, (float, list))
+        is_type(line_linestyle, (str, list))
+        is_type(figsize, tuple)
+        is_type(diagonal_linewidth, float)
+        is_type(diagonal_colour, str)
+        is_type(diagonal_linestyle, str)
+        is_type(margins, tuple)
+        # #### map None to empty dict
+        kwargs_ci_dict = kwargs_ci_dict or {}
+        kwargs_dot_dict = kwargs_dot_dict or {}
+        kwargs_line_dict = kwargs_line_dict or {}
+        kwargs_diagonal_dict = kwargs_diagonal_dict or {}
+        # #### testing column content
+        # combined the columns
+        columns = [predicted, observed]
         if not lower_observed is None:
-            y_bin_lb = val[lower_observed]
+            columns = columns + [lower_observed]
         if not upper_observed is None:
-            y_bin_ub = val[upper_observed]
-        # set confidence intervals
-        y_ci = [y_bin_lb, y_bin_ub]
-        x_ci = [x_bin, x_bin]
-        # add line connecting the dots, first updating the kwargs
-        new_line_dict =\
-            _update_kwargs(kwargs_line_dict, c=line_colour[idx],
-                           linewidth=line_linewidth[idx],
-                           linestyle=line_linestyle[idx],
-                           )
-        ax.plot(x_bin, y_bin, **new_line_dict,
-                )
-        # plot confidence interval, first updating the kwargs
-        new_ci_dict =\
-            _update_kwargs(kwargs_ci_dict, c=ci_colour[idx],
-                           linewidth=ci_linewidth[idx],
-                           )
-        ax.plot(x_ci, y_ci, **new_ci_dict,
-                )
-        # plot dots, first updating the kwargs
-        new_dot_dict =\
-            _update_kwargs(kwargs_dot_dict, c=dot_colour[idx],
-                           marker=dot_marker[idx],
-                           )
-        ax.scatter(x_bin, y_bin, **new_dot_dict,
-                   )
-    # ################### add a curve
-    curves_res = {}
-    if curves is not None:
-        for idx, (nam, vals) in enumerate(curves.items()):
-            # extract data, model, and kwargs
-            curves_data = vals[0]
-            curves_mod = vals[1]
-            curves_kwargs_mod = vals[2] or {}
-            curves_kwargs_plot = vals[3] or {}
-            is_type(curves_data, np.ndarray)
-            is_type(curves_kwargs_mod, dict)
-            is_type(curves_kwargs_plot, dict)
-            # sort by x-axis value
+            columns = columns + [upper_observed]
+        [are_columns_in_df(d, columns) for d in self.data.values()]
+        # #### compare plt params to dict len
+        # NOTE if None simply repeat for the number of datasets
+        if not ci_colour is None:
+            same_len(self.data, ci_colour, [NamesML.DATA, NamesML.CI_COLOUR])
+        else:
+            ci_colour = [None] * len(self.data)
+        # NOTE if None simply repeat for the number of datasets
+        if not ci_linewidth is None:
+            same_len(self.data, ci_linewidth, [NamesML.DATA,NamesML.CI_LINEWIDTH])
+        else:
+            ci_linewidth = [None] * len(self.data)
+        # further test
+        same_len(self.data, dot_colour, [NamesML.DATA,NamesML.DOT_COLOUR])
+        same_len(self.data, dot_marker, [NamesML.DATA,NamesML.DOT_MARKER])
+        same_len(self.data, line_colour, [NamesML.DATA,NamesML.LINE_LINESTYLE])
+        same_len(self.data, line_linewidth, [NamesML.DATA,NamesML.LINE_LINEWIDTH])
+        same_len(self.data, line_linestyle, [NamesML.DATA,NamesML.LINE_LINESTYLE])
+        # ################### making lists
+        ci_linewidth = string_to_list(ci_linewidth)
+        ci_colour = string_to_list(ci_colour)
+        dot_marker = string_to_list(dot_marker)
+        dot_colour = string_to_list(dot_colour)
+        self.line_colour = string_to_list(line_colour)
+        self.line_linewidth = string_to_list(line_linewidth)
+        self.line_linestyle = string_to_list(line_linestyle)
+        # ################### Plotting
+        # Add the diagonal line, first updating the kwargs
+        new_diagonal_dict =\
+            _update_kwargs(kwargs_diagonal_dict, lw=diagonal_linewidth,
+                           ls=diagonal_linestyle, c=diagonal_colour)
+        self.ax.axline(xy1=(0, 0), slope=1, **new_diagonal_dict,
+                  )
+        # ################### loop over dict
+        for idx, (key, val) in enumerate(self.data.items()):
+            # unpack data
+            x_bin = val[predicted]
+            y_bin = val[observed]
+            # set lb and ub to the same y-values, and update based on avail data
+            y_bin_lb = val[observed]
+            y_bin_ub = val[observed]
+            if not lower_observed is None:
+                y_bin_lb = val[lower_observed]
+            if not upper_observed is None:
+                y_bin_ub = val[upper_observed]
+            # set confidence intervals
+            y_ci = [y_bin_lb, y_bin_ub]
+            x_ci = [x_bin, x_bin]
+            # add line connecting the dots, first updating the kwargs
+            new_line_dict =\
+                _update_kwargs(kwargs_line_dict, c=self.line_colour[idx],
+                               linewidth=self.line_linewidth[idx],
+                               linestyle=self.line_linestyle[idx],
+                               )
+            self.ax.plot(x_bin, y_bin, **new_line_dict,
+                    )
+            # plot confidence interval, first updating the kwargs
+            new_ci_dict =\
+                _update_kwargs(kwargs_ci_dict, c=ci_colour[idx],
+                               linewidth=ci_linewidth[idx],
+                               )
+            self.ax.plot(x_ci, y_ci, **new_ci_dict,
+                    )
+            # plot dots, first updating the kwargs
+            new_dot_dict =\
+                _update_kwargs(kwargs_dot_dict, c=dot_colour[idx],
+                               marker=dot_marker[idx],
+                               )
+            self.ax.scatter(x_bin, y_bin, **new_dot_dict,
+                       )
+        # ################### set the plot params
+        # making sure the axis is square
+        # axes_min = min(ax.get_xlim()[0], ax.get_ylim()[0])
+        # NOTE this is slightly opinionated thinking that the lower limit should
+        # always start at zero.
+        axes_max = max(self.ax.get_xlim()[1], self.ax.get_ylim()[1])
+        self.ax.set_xlim(0, axes_max)
+        self.ax.set_ylim(0, axes_max)
+        # hide the right and top spines
+        self.ax.spines.right.set_visible(False)
+        self.ax.spines.top.set_visible(False)
+        # margins around the both x and y
+        self.ax.margins(margins[0], margins[1])
+        # ################### return the figure and axis
+        self._plot = True
+        return self
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    def add_curves(self, data: pd.DataFrame | dict[str, pd.DataFrame],
+                   smoother: Callable | None = None,
+                   line_colour:str | list[str] | None = None,
+                   line_linewidth:float | list[float] | None = None,
+                   line_linestyle:str | list[str]  | None = None,
+                   kwargs_smoother: dict[str, Any] | None = None,
+                   kwargs_curve: dict[str, Any] | None = None,
+                   ) -> Self:
+        """
+        Adds one or multiple calibration curves to the calibration plot.
+        The curve can be pre-calculated (when smoother is set to `NoneType`)
+        or internally calculated using the `smoother` callable. Typically,
+        the curve should be based on the individual participant level data
+        with the actual observed data (e.g. 0/1) and the predicted quantity
+        (e.g. the predicted risk between 0 and 1).
+        
+        Parameters
+        ----------
+        data : `pd.DataFrame` or `dict` [`pd.DataFrame`]
+            The DataFrames should record the observed outcome (the y-axis) to
+            the first column and the predicted scores (the x-axis) to the
+            second column. Each table will internally be mapped to a numpy
+            array and sorted by the second column.
+        smoother : `callable` or `None`, default `None`
+            A callable method which return the predicted y-axis value. This
+            can be a user supplied function or for example `smoothers_lowess`.
+        line_colour : `str`, `list` [`str`], or `None`, default `None`
+            The colour of the curve(s), set to None to re-use this parameter.
+        line_linestyle : `str`, `list` [`str`], or `None`, default `None`
+            The linestyle of the curve(s), set to None to re-use this
+            parameter.
+        line_linewidth : `float`, `list` [`float`], or `None`, default `None`
+            The linewidth of the curve(s), set to None to re-use this parameter.
+        kwargs_smoother: `dict` [`str`, `any`] or `None`, default `None`
+            keyword arguments passed to the `smoother`.
+        kwargs_curve: `dict` [`str`, `any`] or `None`, default `None`
+            keyword arguments passed to the plot function.
+        
+        Return
+        ------
+        self
+        """
+        if self._plot == False:
+            raise RuntimeError('Please run the `plot` method prior to adding '
+                               'curves.')
+        # check input
+        is_type(data, (dict, pd.DataFrame))
+        is_type(smoother, (type(None), Callable))
+        is_type(line_linestyle, (str, list, type(None)))
+        is_type(line_colour, (str, list, type(None)))
+        is_type(line_linewidth, (str, list, type(None)))
+        # map to dict
+        kwargs_smoother = kwargs_smoother or {}
+        kwargs_curve = kwargs_curve or {}
+        # creating a dictionary if needed
+        if not isinstance(data, dict):
+            data_c = {'dataset1': data}
+        # check if line is None or not
+        if line_colour is None:
+            line_colour = self.line_colour
+        if line_linestyle is None:
+            line_linestyle = self.line_linestyle
+        if line_linewidth is None:
+            line_linewidth = self.line_linewidth
+        same_len(data_c, line_colour, [NamesML.DATA,NamesML.LINE_LINESTYLE])
+        same_len(data_c, line_linewidth, [NamesML.DATA,NamesML.LINE_LINEWIDTH])
+        same_len(data_c, line_linestyle, [NamesML.DATA,NamesML.LINE_LINESTYLE])
+        # making lists
+        line_colour = string_to_list(line_colour)
+        line_linewidth = string_to_list(line_linewidth)
+        line_linestyle = string_to_list(line_linestyle)
+        # ################### add a curve
+        curves_res = {}
+        for idx, (nam, data_cu) in enumerate(data_c.items()):
+            # sort by x-axis value - the second column
+            curves_data = data_cu.to_numpy()
             curves_data = curves_data[curves_data[:, 1].argsort()]
             c_x = curves_data[:,1]
             c_y = curves_data[:,0]
             # do we need to fit a model
-            if curves_mod is not None:
-                y_pred=curves_mod(c_y, c_x, **curves_kwargs_mod)
+            if smoother is not None:
+                y_pred=smoother(c_y, c_x, **kwargs_smoother)
             else:
                 y_pred = c_y
-            # plot the model
-            curves_kwargs_plot = _update_kwargs(
-                update_dict=curves_kwargs_plot,
+            # plot the cruves
+            kwargs_curve = _update_kwargs(
+                update_dict=kwargs_curve,
                 c=line_colour[idx],
                 linewidth=line_linewidth[idx],
                 linestyle=line_linestyle[idx],
             )
-            ax.plot(c_x, y_pred, **curves_kwargs_plot,
+            self.ax.plot(c_x, y_pred, **kwargs_curve
                     )
             # save predictions
             curves_res[nam] = np.column_stack((y_pred, c_x))
-    # ################### set the plot params
-    # making sure the axis is square
-    # axes_min = min(ax.get_xlim()[0], ax.get_ylim()[0])
-    # NOTE this is slightly opinionated thinking that the lower limit should
-    # always start at zero.
-    axes_max = max(ax.get_xlim()[1], ax.get_ylim()[1])
-    ax.set_xlim(0, axes_max)
-    ax.set_ylim(0, axes_max)
-    # hide the right and top spines
-    ax.spines.right.set_visible(False)
-    ax.spines.top.set_visible(False)
-    # margins around the both x and y
-    ax.margins(margins[0], margins[1])
-    # ################### return the figure and axis
-    return f, ax, curves_res
+        # add curves_res to self
+        self.curves_data_ = curves_res
+        # return
+        return self
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Decision Curves
