@@ -10,17 +10,18 @@ analysis (DCA) plots for evaluating clinical utility.
 Functions
 ---------
 lollipop(values, labels, ...)
-    Draws a line-and-dot chart as a visual alternative to bar plots.
-
-calibration(data, observed, predicted, ...)
-    Creates calibration plots comparing observed and predicted risks with
-    optional confidence intervals.
+    Draws a lollipop chart (dot-and-line plot) for visualising feature
+    importance or effect sizes.
 
 Classes
 -------
+Calibration
+    A plotting template for comparing observed and predicted risk, with
+    optional confidence intervals and calibration curves.
+
 DecisionCurve
-    A class to compute and plot decision curves, quantifying net benefit
-    across varying risk thresholds.
+    A class to compute and plot DCA, evaluating net benefit of prediction
+    models across varying risk thresholds.
 
 """
 
@@ -34,6 +35,7 @@ import matplotlib.pyplot as plt
 from plot_misc.constants import (
     NamesDecisionCurves as NamesDC,
     NamesMachineLearnig as NamesML,
+    Real,
 )
 from plot_misc.errors import (
     is_type,
@@ -42,18 +44,17 @@ from plot_misc.errors import (
     same_len,
     InputValidationError,
     string_to_list,
+    number_to_list,
 )
 from plot_misc.utils.utils import (
     change_ticks,
     _update_kwargs,
+    
 )
 from typing import (
     Any,
     Callable,
-    List,
     Union,
-    Tuple,
-    Dict,
     Self,
 )
 from statsmodels.nonparametric.smoothers_lowess import lowess
@@ -79,7 +80,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
              kwargs_lines_dict:dict[Any,Any] | None=None,
              kwargs_plot_dict:dict[Any,Any] | None=None,
              ) -> tuple[plt.Axes, plt.Figure]:
-    '''
+    """
     Plots a lollipop chart.
     
     A visual alternative to a bar chart, drawing a horizontal line for each
@@ -131,7 +132,13 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         The matplotlib Figure object.
     ax : `matplotlib.axes.Axes`
         The matplotlib Axes object with the plot drawn on.
-    '''
+    
+    Notes
+    -----
+    When `vertical=True`, values are shown on the y-axis, and labels appear
+    along the x-axis. This is suitable for ranking large numbers of features.
+    For long text labels, set `vertical=False` to flip the axes.
+    """
     
     # ################### Check input
     is_type(ax, (type(None), plt.Axes))
@@ -214,44 +221,51 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Calibration(object):
     """
-    Provides a template for a calibration plot, comparing the observed
-    and predicted risks. Here the observed risk will be based on some grouping
-    of the predicted risk, and the average event rate within each group.
-    Hence optional confidence intervals can be included for the observed risk.
+    Calibration plot for evaluating the agreement between predicted and
+    observed risks.
     
-    Can plot multiple lines (representing distinct prediction models),
-    although this can quickly become crowded and one might consider a
-    multi panel plot.
+    This class provides a plotting interface to assess model calibration by
+    comparing predicted risks (typically from a statistical or machine learning
+    model) with observed event rates, optionally including confidence intervals
+    and smooth calibration curves.
     
     Attributes
     ----------
     data : `dict` [`pd.DataFrame`]
-        The provided input data.
+        A dictionary or single DataFrame containing binned calibration data,
+        with at least columns for predicted and observed risks.
     ax : `plt.Axes`
         The axes object.
     figure : `plt.Figure`
         The top level figure container.
-    curves_data_ : `dict` [`str`, `np.ndarry']
-        A dictionary with the data used to plot the optional curves.
+    curves_data_ : `dict` [`str`, `np.ndarry'] or `None`
+        The smoothed calibration curve data added via `add_curves`.
     
     Parameters
     ----------
     data : `pd.DataFrame` or `dict` [`pd.DataFrame`]
-        When multiple DataFrame's are provided, care should be given to ensure
-        all have the same column names.
+        Binned data containing predicted risks and observed outcomes per bin.
+        If multiple models are provided, use a dictionary of DataFrames.
     ax : `plt.Axes`, default `NoneType`
-        A `matplotlib.axes.Axes` instance to which the figure is plotted. If
-        not provided, use current axes or create a new one.  Optional.
+        Optional matplotlib axis to draw on. If None, a new figure and axis are
+        created.
     figsize : `tuple` [`float`, `float`], default (6.0, 6.0),
-        The figure size, when ax==None.
+        Figure size in inches if `ax` is not supplied.
+    
+    Notes
+    -----
+    This class expects that the input data consists of the pre-computed
+    x- and y-coordinates. Typically these reflect observed risk per bin and the
+    mean predicted risk per bin, but no default choice in enforced. Smoothed
+    curves can be drawn based on individual participant level data.
     """
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __init__(self, data:pd.DataFrame, ax:plt.Axes | None = None,
                  figsize:tuple[float,float]=(6.0, 6.0),
                  ):
-        '''
+        """
         Copies the data internally.
-        '''
+        """
         is_type(data, (dict, pd.DataFrame))
         is_type(ax, (type(None), plt.Axes))
         # create a axes if needed
@@ -297,7 +311,7 @@ class Calibration(object):
         lower_observed:str | None = None,
         upper_observed:str | None = None,
         ci_colour:str | list[str] | None = ['lightcoral'],
-        ci_linewidth:str | list[float] | None = [0.5],
+        ci_linewidth:float | list[float] | None = [0.5],
         dot_marker:str | list[str] = ['o'],
         dot_colour:str | list[str] = ['lightcoral'],
         line_colour:str | list[str] = ['lightcoral'],
@@ -318,49 +332,58 @@ class Calibration(object):
         
         Parameters
         ----------
-        observed : str
+        observed : `str`
             A column name in `data` representing the observed risk
             (between 0 and 1).
-        predicted : str
+        predicted : `str`
             A column name in `data` representing the predicted risk
             (between 0 and 1).
-        lower_observed : str, default `NoneType`
+        lower_observed : `str` or `None`, default `NoneType`
             An optional column name in `data` representing the lower bound of
-            the observed risk.
-        upper_observed : str, default `NoneType`
+            the observed risk. For example this can be a confidence interval
+            limit.
+        upper_observed : `str` or `None`, default `NoneType`
             An optional column name in `data` representing the upper bound of
-            the observed risk.
-        ci_colour : string or list of strings
-            The colours that the (optional) confidence intervals should have.
-        ci_linewidth : string or list of strings,
-            The linewidth of the (optional) confidence intervals.
-        dot_colour : string or list of strings
-            The marker colour.
-        dot_marker : string or list of strings
+            the observed risk. For example this can be a confidence interval
+            limit.
+        ci_colour : `str` or `list` [`str`]
+            The colours the interval limits.
+        ci_linewidth : `float` or `list` [`float`]
+            The linewidth the the interval limits.
+        dot_marker : `str` or `list` [`str`]
             The marker for the average agreement between observed and predicted
             risk.
-        line_colour : string or list of strings
+        dot_colour : `str` or `list` [`str`]
+            The marker colour.
+        line_colour : `str` or `list` [`str`]
             The colour of the line connecting the dots.
-        line_linestyle : string or list of strings
-            The linestyle of the line(s) connecting the dots.
-        line_linewidth : float or list of floats
-            The linewidth of the line(s) connecting the dots.
-        diagonal_colour : str
+        line_linestyle : `str` or `list` [`str`]
+            The linestyle of the line connecting the dots.
+        line_linewidth : `float` or `list` [`float`]
+            The linewidth of the line connecting the dots.
+        diagonal_colour : `str`
             The colour of the diagonal line.
-        diagonal_linestyle : str
+        diagonal_linestyle : `str`
             The linestyle of the diagonal line.
-        diagonal_linewidth : float
+        diagonal_linewidth : `float`
             The width of the diagonal line.
-        kwargs_*_dict : dict, default `NoneType`
-            Optional arguments supplied to the various plotting functions:
-                kwargs_ci_dict       --> ax.plot
-                kwargs_dot_dict      --> ax.scatter
-                kwargs_line_dict     --> ax.plot
-                kwargs_diagonal_dict --> ax.axline
+        margins : `tuple` [`float`,`float`], default (0.01, 0.01)
+            Additional space around the plot boundaries (x and y).
+        kwargs_ci_dict : `dict` [`str`, `any`] or `None`, default None
+            Additional keyword arguments for `ax.plot` used for the interval
+            lines.
+        kwargs_dot_dict : `dict` [`str`, `any`] or `None`, default None
+            Additional keyword arguments for `ax.scatter` used for the markers.
+        kwargs_line_dict : `dict` [`str`, `any`] or `None`, default None
+            Additional keyword arguments for `ax.plot` used for the connecting
+            lines.
+        kwargs_diagonal_dict : `dict` [`str`, `any`] or `None`, default None
+            Additional keyword arguments for the reference line (`ax.axline`).
         
         Returns
         -------
-        self
+        self : Calibration
+            The same instance with the plot rendered.
         """
         # ################### check input
         is_type(observed, str)
@@ -403,20 +426,20 @@ class Calibration(object):
             same_len(self.data, ci_linewidth, [NamesML.DATA,NamesML.CI_LINEWIDTH])
         else:
             ci_linewidth = [None] * len(self.data)
+        # ################### making lists
+        ci_linewidth = number_to_list(ci_linewidth)
+        ci_colour = string_to_list(ci_colour)
+        dot_marker = string_to_list(dot_marker)
+        dot_colour = string_to_list(dot_colour)
+        self.line_colour = string_to_list(line_colour)
+        self.line_linewidth = number_to_list(line_linewidth)
+        self.line_linestyle = string_to_list(line_linestyle)
         # further test
         same_len(self.data, dot_colour, [NamesML.DATA,NamesML.DOT_COLOUR])
         same_len(self.data, dot_marker, [NamesML.DATA,NamesML.DOT_MARKER])
         same_len(self.data, line_colour, [NamesML.DATA,NamesML.LINE_LINESTYLE])
         same_len(self.data, line_linewidth, [NamesML.DATA,NamesML.LINE_LINEWIDTH])
         same_len(self.data, line_linestyle, [NamesML.DATA,NamesML.LINE_LINESTYLE])
-        # ################### making lists
-        ci_linewidth = string_to_list(ci_linewidth)
-        ci_colour = string_to_list(ci_colour)
-        dot_marker = string_to_list(dot_marker)
-        dot_colour = string_to_list(dot_colour)
-        self.line_colour = string_to_list(line_colour)
-        self.line_linewidth = string_to_list(line_linewidth)
-        self.line_linestyle = string_to_list(line_linestyle)
         # ################### Plotting
         # Add the diagonal line, first updating the kwargs
         new_diagonal_dict =\
@@ -487,23 +510,28 @@ class Calibration(object):
                    kwargs_curve: dict[str, Any] | None = None,
                    ) -> Self:
         """
-        Adds one or multiple calibration curves to the calibration plot.
-        The curve can be pre-calculated (when smoother is set to `NoneType`)
-        or internally calculated using the `smoother` callable. Typically,
-        the curve should be based on the individual participant level data
-        with the actual observed data (e.g. 0/1) and the predicted quantity
-        (e.g. the predicted risk between 0 and 1).
+        Adds smoothed or empirical calibration curves to the existing plot.
+        
+        This method supplements the primary calibration plot with one or more
+        continuous calibration curves, typically generated using
+        individual-level data and a smoothing function such as LOWESS. It
+        supports overlaying model-specific calibration trends using consistent
+        or custom aesthetics.
         
         Parameters
         ----------
         data : `pd.DataFrame` or `dict` [`pd.DataFrame`]
-            The DataFrames should record the observed outcome (the y-axis) to
-            the first column and the predicted scores (the x-axis) to the
-            second column. Each table will internally be mapped to a numpy
-            array and sorted by the second column.
+            A DataFrame or dictionary of DataFrames, where each table includes two
+            columns: the first with binary outcomes (0 or 1) and the second with
+            predicted probabilities (ranging from 0 to 1). Each table will
+            internally be mapped to a numpy array and sorted by the second
+            column.
         smoother : `callable` or `None`, default `None`
-            A callable method which return the predicted y-axis value. This
-            can be a user supplied function or for example `smoothers_lowess`.
+            A smoothing function such as `lowess` from `statsmodels`, or any
+            user-defined callable accepting `y`, `x`, and keyword arguments.
+            The function should return the predicted y on the risk scale. If
+            `None`, the raw y-values will be plotted against the predicted
+            scores. This can be used to plot pre-computed data.
         line_colour : `str`, `list` [`str`], or `None`, default `None`
             The colour of the curve(s), set to None to re-use this parameter.
         line_linestyle : `str`, `list` [`str`], or `None`, default `None`
@@ -514,11 +542,24 @@ class Calibration(object):
         kwargs_smoother: `dict` [`str`, `any`] or `None`, default `None`
             keyword arguments passed to the `smoother`.
         kwargs_curve: `dict` [`str`, `any`] or `None`, default `None`
-            keyword arguments passed to the plot function.
+            keyword arguments passed to the plot function (i.e. ax.plot).
         
-        Return
+        Returns
+        -------
+        self : Calibration
+            The modified instance with curves added to the existing axes.
+        
+        Notes
+        -----
+        The data should be individual-level (not binned). The first column is
+        assumed to contain the observed binary outcomes (0 or 1), and the second
+        column the predicted probabilities. Each dataset will be sorted by
+        predicted risk prior to plotting.
+        
+        Raises
         ------
-        self
+        RuntimeError
+            If `plot()` has not been called prior to adding curves.
         """
         if self._plot == False:
             raise RuntimeError('Please run the `plot` method prior to adding '
@@ -535,6 +576,8 @@ class Calibration(object):
         # creating a dictionary if needed
         if not isinstance(data, dict):
             data_c = {'dataset1': data}
+        else:
+            data_c = data
         # check if line is None or not
         if line_colour is None:
             line_colour = self.line_colour
@@ -542,13 +585,13 @@ class Calibration(object):
             line_linestyle = self.line_linestyle
         if line_linewidth is None:
             line_linewidth = self.line_linewidth
+        # making lists
+        line_colour = string_to_list(line_colour)
+        line_linestyle = string_to_list(line_linestyle)
+        line_linewidth = number_to_list(line_linewidth)
         same_len(data_c, line_colour, [NamesML.DATA,NamesML.LINE_LINESTYLE])
         same_len(data_c, line_linewidth, [NamesML.DATA,NamesML.LINE_LINEWIDTH])
         same_len(data_c, line_linestyle, [NamesML.DATA,NamesML.LINE_LINESTYLE])
-        # making lists
-        line_colour = string_to_list(line_colour)
-        line_linewidth = string_to_list(line_linewidth)
-        line_linestyle = string_to_list(line_linestyle)
         # ################### add a curve
         curves_res = {}
         for idx, (nam, data_cu) in enumerate(data_c.items()):
@@ -581,59 +624,77 @@ class Calibration(object):
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Decision Curves
 class DecisionCurve(object):
-    '''
-    Calculates the net benefit for one or more prediction models. Can also
-    produce an matplotlib figure, returning the figure and axes for further
-    downstream manipulations
+    """
+    Implements decision curve analysis (DCA) to evaluate the clinical utility
+    of predictive models.
+    
+    Decision curve analysis quantifies the net benefit of a model across a
+    range of risk thresholds, helping assess its usefulness in a clinical
+    context. The method compares model-based decision strategies against
+    interventions on all or none, accounting for false positives, true
+    positives, and optional model-associated harm.
     
     Attributes
     ----------
-    data : pd.DataFrame
-        The provided input data.
-    TICK_WIDTH : float, default 0.6
+    data : `pd.DataFrame`
+        The original dataset containing predicted risks and binary outcomes.
+    TICK_WIDTH : `float`
         The width ticks.
-    TICK_LAB_SIZE : float, default 4.5
+    TICK_LAB_SIZE : `float`
         The fontsize of the tick labels.
-    TICK_LEN : float, default 3.0
+    TICK_LEN : `float`
         The tick length.
-    LABEL_FONT_SIZE : float, default 6.0
+    LABEL_FONT_SIZE : `float`
         The fontsize of the axes labels.
-    LABEL_PAD : float, default 1.2
+    LABEL_PAD : `float`
         The padding of the axes labels.
-    MODEL_NAMES : list of string
+    MODEL_NAMES : `list` [`str`]
         The names of the available models, including the internally
         generated: `None model` and `All model`.
-    NUMBER_OF_MODELS : integer
+    NUMBER_OF_MODELS : `int`
         The number of available models.
-    NET_BENEFIT : pd.DataFrame
+    NET_BENEFIT : `pd.DataFrame`
         The net benefit table.
-    CALCULATED : bool
+    CALCULATED : `bool`
         Whether the net benefit table has been calculated.
     
     Parameters
     ----------
-    data: pd.DataFrame
-        A table including one or more columns containing predicted scores
-        on the risk scale (i.e., ranging between 0 and 1), and an
-        outcome/target column.
+    data: `pd.DataFrame`
+        Data containing model predictions and binary outcomes. Columns must
+        include at least one predicted risk score (between 0 and 1) and a
+        binary outcome variable.
+    
+    Methods
+    -------
+    calc_net_benefit(...)
+        Computes the net benefit across a range of thresholds for one or more
+        models.
+    plot(...)
+        Visualises the decision curves, with optional smoothing and style
+        customisation.
     
     Notes
     -----
-    The code is based on the `dcurves` python repo [1]_ where the current
-    implementation is slightly more `pythonic`. Currently there is no support
-    for the survival implementation.
+    This implementation is adapted from the `dcurves` Python package
+    [https://github.com/MSKCC-Epi-Bio/dcurves], but has been refactored for
+    improved readability, style consistency, and integration with custom plotting.
+    Currently supports binary outcomes only. Survival-based extensions are
+    not (yet) included.
     
     References
     ----------
-    .. [1] https://github.com/MSKCC-Epi-Bio/dcurves
-    '''
+    Vickers, A. J., & Elkin, E. B. (2006). Decision curve analysis: a novel
+    method for evaluating prediction models. *Medical Decision Making*,
+    26(6), 565–574.
+    """
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __init__(self,
                  data:pd.DataFrame,
                  ):
-        '''
+        """
         Copies the data internally.
-        '''
+        """
         is_df(data)
         self.data = data.copy()
         # adding plotting params
@@ -655,45 +716,63 @@ class DecisionCurve(object):
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     @staticmethod
     def calc_rates(data: pd.DataFrame, outcome:str, model:str,
-                    thresholds: List[float], prevalence: Union[float,int]
+                    thresholds: list[Real], prevalence: Real,
     ) -> pd.DataFrame:
-        '''
-        Calculates the true and false positive rates per threshold value for
-        the supplied models.
+        """
+        Computes true positive and false positive rates for a given model across
+        a range of threshold probabilities.
+        
+        This method calculates, for each threshold, the proportion of true and
+        false positives among those classified as high risk by the model.
         
         Parameters
         ----------
-        data: pd.DataFrame
+        data: `pd.DataFrame`
             A dataframe including `outcome` and `model` as a column.
-        outcome: str
+        outcome: `str`
             Column name in `data` of outcome/target of interest.
-        model : str
+        model : `str`
             Column name from `data` that contain model risk score. Note the
             risk score should contain values between 0 and 1.
-        thresholds : list of floats or inters
+        thresholds : `list` [`int` | `float`]
             The probability values the net benefit will be calculated for.
-        prevalence : int or float
-            Value that indicates the prevalence among the population, only to
-            be specified in case-control situations.
+        prevalence : `int` or `float`
+            Value that indicates the prevalence among the population. Can
+            either be estimated from the data or for external sources (e.g.
+            based on the case-control sampling scheme).
         
         Returns
         -------
-        table: pd.core.frame.DataFrame
-            A dataframe with the true positives and false positives as columns.
-            The index consists of the threshold values.
+        pd.DataFrame
+            A DataFrame indexed by `threshold` with the following columns:
+            - 'true_positive_rate' : Prevalence-adjusted true positive rate
+            - 'false_positive_rate' : Prevalence-adjusted false positive rate
+        Raises
+        ------
+        ValueError
+            If required columns are missing from the input DataFrame.
         
         Notes
         -----
+        True positives are defined as individuals with outcome = 1 and model
+        prediction ≥ threshold.
+        
+        False positives are defined as individuals with outcome = 0 and model
+        prediction ≥ threshold.
+        
+        These rates are scaled by the assumed prevalence to allow valid
+        comparisons across populations with different case/control ratios.
+        
         Code addapted from
         `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_.
         
         Hash: 007c64b
-        '''
+        """
         
-        is_type(outcome, str, 'outcome')
-        is_type(model, str, 'model')
-        is_type(thresholds, list, 'thresholds')
-        is_type(prevalence, (float, int), 'prevalence')
+        is_type(outcome, str)
+        is_type(model, str)
+        is_type(thresholds, list)
+        is_type(prevalence, (float, int))
         is_df(data)
         # check if the necessary columns are there
         are_columns_in_df(data, expected_columns=[model, outcome])
@@ -723,62 +802,76 @@ class DecisionCurve(object):
         return rates
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def calc_net_benefit(self,
-                         outcome: str, modelnames: Union[str,list],
-                         thresholds: Union[List[float],None]=None,
-                         harm: Union[None,Dict[str,float]] = None,
-                         prevalence: Union[None,float,int] = None,
+                         outcome: str, modelnames: str | list[str],
+                         thresholds: list[float] | None = None,
+                         harm: dict[str,float] | None = None,
+                         prevalence:  Real | None = None,
                          ):
         """
-        Decision curve analysis is a method for evaluating and comparing
-        prediction models that incorporates clinical consequences.
+        Calculates net benefit across a range of risk thresholds for one or
+        more prediction models.
+        
+        Decision curve analysis estimates the clinical value of predictive
+        models by computing the net benefit for each risk threshold, taking
+        into account true positives, false positives, and optional
+        model-associated harms.
         
         Parameters
         ----------
-        data: pd.DataFrame
-            A dataframe including one or more columns containing predicted
-            scores on the risk scale (i.e., ranging between 0 and 1), and an
-            outcome/target column. Each prediction model (e.g., based on a
-            regression or ML) will be univariable evaluated against the
-            outcome/target variable. ``_note_`` for scores with values exactly
-            0 or 1 `sys.float_info.epsilon` is added or subtracted,
-            respectfully.
-        outcome: str
+        outcome: `str`
             Column name in `data` of outcome/target of interest.
-        modelnames : str or list of strings
-            Column names from `data` that contain model risk scores or values
-        thresholds : list of floats, default `NoneType`
+        modelnames : `str` or `list` [`str`]
+            Column names from `data` that contain model risk scores or values.
+        thresholds : `list` [`float`] or `None`, default `NoneType`
             The probability values the net benefit will be calculated for. If
             `NoneType` will default to a list between 0 and 1 with 100 equally
             spaced values.
-        harm : dictionary, default `NoneType`
+        harm : `dict` [`str`,`float`] or `None`, default `NoneType`
             An optional dictionary, supplied with a `key` referring tot a
             `modelnames` entry and a float value between 0 and 1. Will be
             skipped if `NoneType`. Harm represents the burden of model might
             entail, and its value is subtracted from the crude net benefit.
-        prevalence : int or float, default `NoneType`
-            Value that indicates the prevalence among the population, only to
-            be specified in case-control situations. Will be skipped if
-            `NoneType`.
+        prevalence : `int`,`float` or `None, default `NoneType`
+            Optional value indicating the outcome prevalence, primarily for
+            case-control correction. If None, will be estimated from `data`.
         
         Returns
         -------
-        pd.DataFrame
-            Data containing net benefit values for each model, as well as the
-            `all` and `none` strategies
+        None
+            The results are stored internally in `self.NET_BENEFIT` and made
+            available for plotting.
+        
+        Raises
+        ------
+        ValueError
+            If model predictions are outside the [0, 1] range, or thresholds
+            are not within valid bounds.
+        Warning
+            If predictions contain exact 0 or 1 values, which are adjusted
+            internally to avoid division issues.
         
         Notes
         -----
+        Net benefit is defined as:
+            NB = (TP / N) - (FP / N) * (threshold / (1 - threshold)) - harm
+        
+        Two default strategies are always included:
+            - "All": assume everyone receives an intervention.
+            - "None": assume no one receives an intervention.
+        
+        The resulting table can be visualised using the `plot()` method.
+        
         Code addapted from:
         `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_
         
         Hash: 007c64b
         """
         # ### check input
-        is_type(outcome, str, 'outcome')
-        is_type(modelnames, (str, list), 'modelnames')
-        is_type(thresholds, (list, type(None), 'threshold'))
-        is_type(harm, (dict, type(None)), 'harm')
-        is_type(prevalence, (float, int, type(None)), 'prevalence')
+        is_type(outcome, str)
+        is_type(modelnames, (str, list))
+        is_type(thresholds, (list, type(None)))
+        is_type(harm, (dict, type(None)))
+        is_type(prevalence, (float, int, type(None)))
         # set modelnames to list if needed
         if isinstance(modelnames, str):
             modelnames = [modelnames]
@@ -811,12 +904,17 @@ class DecisionCurve(object):
                 warnings.warn(
                     '`{}` contains risk(s) of exactly 1 or 0, these will '
                     'be truncated.'.format(m))
-                self.data[m]=\
-                    [r + sys.float_info.epsilon if r == 0 else r for r in
-                     self.data[m]]
-                self.data[m]=\
-                    [r - sys.float_info.epsilon if r == 1 else r for r in
-                     self.fdata[m]]
+                # self.data[m]=\
+                #     [r + sys.float_info.epsilon if r == 0 else r for r in
+                #      self.data[m]]
+                # self.data[m]=\
+                #     [r - sys.float_info.epsilon if r == 1 else r for r in
+                #      self.data[m]]
+                # NOTE confirm this work and then delete the above
+                eps = sys.float_info.epsilon
+                self.data[m] = self.data[m].apply(
+                    lambda r: r + eps if r == 0 else (r - eps if r == 1 else r)
+                )
         if len(non_risk_scores) > 0:
             raise ValueError(score_msg.format(', '.join(non_risk_scores)))
         # ### calculating the prevalence
@@ -862,54 +960,80 @@ class DecisionCurve(object):
         self.NET_BENEFIT = results
         self.CALCULATED=True
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # NOTE add smoother paramter to allow for a different smoothing function.
     def plot(self,
-             ax:Union[plt.Axes, None]=None,
-             col_dict:Union[None, Dict[str, str]]=None,
-             line_dict:Union[None, Dict[str, str]]=None,
-             lowess_frac:Union[float, None]=None,
+             ax: plt.Axes | None = None,
+             col_dict: dict[str,str] | None = None,
+             line_dict: dict[str,str] | None = None,
+             lowess_frac: float | None = None,
              linewidth:float=0.8,
-             figsize:tuple=(6, 6),
-             kwargs_lowess:Union[None,Dict[Any,Any]]=None,
-             kwargs_plot:Union[None,Dict[Any,Any]]=None,
-             ) -> Tuple[plt.Figure, plt.Axes]:
-        '''
-        Plots a decision curve.
+             figsize:tuple[float,float]=(6, 6),
+             kwargs_lowess:dict[str,Any] | None = None,
+             kwargs_plot:dict[str,Any] | None = None,
+             ) -> tuple[plt.Figure, plt.Axes]:
+        """
+        Plots decision curves for one or more models.
+        
+        Visualises the net benefit across risk thresholds for each prediction
+        model, allowing direct comparison of model utility relative to 'treat all'
+        and 'treat none' strategies. Curves can optionally be smoothed with
+        LOWESS, and all visual properties are customisable.
         
         Parameters
         ----------
-        col_dict: dict, default `NoneType`
-            A dictionary with the model names as keys and the colours as values.
-            Set to `Nonetype` to plot each line in black.
-        line_dict: dict, default `NoneType`
-            A dictionary with the model names as keys and the linetypes as values.
-            Set to `Nonetype` to use a solid line for all models.
-        ax : plt.axes, default `NoneType`
+        ax : `plt.axes` or `None`, default `NoneType`
             An optional matplotlib axis. If supplied the function works on the
             axis. Otherwise will internally generate a figure and axes pair.
-        lowess_frac: float, default `NoneType`
+        col_dict: `dict` [`str`,`str`] or `None`, default `NoneType`
+            A dictionary with the model names as keys and the colours as values.
+            Set to `Nonetype` to plot each line in black.
+        line_dict: `dict` [`str`,`str`], default `NoneType`
+            A dictionary with the model names as keys and the linetypes as values.
+            Set to `Nonetype` to use a solid line for all models.
+        linewidth : `float`, default 0.8
+            Width of the decision curve lines.
+        lowess_frac: `float` or `None`, default `NoneType`
             Set this to a value between 0 and 1 to use a lowess smoothed
             curve. Set to `NoneType` to use the raw values instead.
-        figsize : tuple of two floats, default (6, 6),
-            The figure size in inches, when ax==None.
-        kwargs_*_dict : dict, default `NoneType`
-            Optional arguments supplied:
-                kwargs_lowess --> statsmodels.nonparametric.smoothers_lowess
-                kwargs_plot   --> ax.plot
+        figsize : `tuple` [`float`,`float`], default (6, 6),
+            The figure size in inches, when ax is `None`.
+        kwargs_lowess : `dict` [`str`,`any`] or `None`, default None
+            Additional keyword arguments passed to the `lowess` function
+            (e.g., `it`, `delta`, `return_sorted`).
+        kwargs_plot : `dict` [`str`,`any`] or `None`, default None
+            Additional keyword arguments passed to `ax.plot`.
+        
         
         Returns
         -------
-        figure : plt.Figure
-        axes : plt.Axes
-        '''
+        fig : matplotlib.figure.Figure
+            The created or inherited figure object.
+        ax : matplotlib.axes.Axes
+            The axis containing the rendered decision curves.
+        
+        Raises
+        ------
+        RuntimeError
+            If `calc_net_benefit()` has not been called before plotting.
+        InputValidationError
+            If the number of colours or line styles does not match the number of
+            models.
+        
+        Notes
+        -----
+        - The y-axis represents net benefit.
+        - The x-axis represents risk thresholds (typically between 0 and 1).
+        - `lowess_frac` may improve interpretability but introduces smoothing bias.
+        """
         
         # make sure net_benefit is available
         if self.CALCULATED == False:
             raise RuntimeError('calc_net_benefit must be run before plotting.')
         # #### check input
-        is_type(ax, (type(None), plt.Axes), 'ax')
-        is_type(line_dict, (type(None), dict), 'line_dict')
-        is_type(col_dict, (type(None), dict), 'col_dict')
-        is_type(lowess_frac, (float, int, type(None)), 'lowess_frac')
+        is_type(ax, (type(None), plt.Axes))
+        is_type(line_dict, (type(None), dict))
+        is_type(col_dict, (type(None), dict))
+        is_type(lowess_frac, (float, int, type(None)))
         if line_dict is None:
             line_dict = {j:'-' for j in self.MODEL_NAMES }
         if self.NUMBER_OF_MODELS != len(line_dict):

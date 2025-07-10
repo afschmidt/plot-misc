@@ -10,6 +10,7 @@ from plot_misc.constants import (
     NamesDecisionCurves as NamesDC,
 )
 from plot_misc.example_data import examples
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # CONSTANT
@@ -20,11 +21,6 @@ PRED = 'average_predict_risk'
 OBS = 'average_observed_risk'
 DC_OUTCOME='Composite outcome'
 DC_MODELNAMES=['DCM-PROGRESS', 'maggic (3-years risk of death)']
-DC_MODELNAMES2 = DC_MODELNAMES + [NamesDC.NONE_MODEL, NamesDC.ALL_MODEL]
-COL_DICT = {k:j for j, k in zip(['orangered', 'blue', 'pink', 'black'],
-                                DC_MODELNAMES2)}
-LINE_DICT = {k:j for j, k in zip(['--', '--', '-', '-'], DC_MODELNAMES2)}
-
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing the lollipop function
 class TestLollipop(object):
@@ -136,11 +132,11 @@ class TestClibration(object):
         data = examples.load_calibration_bins()
         fig, ax = plt.subplots(1, figsize=(1,1))
         # make plot
-        _, ax = ml.calibration(data, predicted=PRED,
-                               observed=OBS,
-                               lower_observed='lower_observed_risk',
-                               upper_observed='upper_observed_risk',
-                               ax=ax)
+        ml.Calibration(data, ax).plot(predicted=PRED,
+                                      observed=OBS,
+                                      lower_observed='lower_observed_risk',
+                                      upper_observed='upper_observed_risk',
+                                      )
         # asserting
         lines=ax.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
@@ -152,12 +148,14 @@ class TestClibration(object):
         # data
         data = examples.load_calibration_bins()
         # make plot
-        _, ax = ml.calibration(data, predicted=PRED,
-                               observed=OBS,
-                               lower_observed='lower_observed_risk',
-                               upper_observed='upper_observed_risk',
-                               )
+        cal_obj = ml.Calibration(data).plot(
+            predicted=PRED,
+            observed=OBS,
+            lower_observed='lower_observed_risk',
+            upper_observed='upper_observed_risk',
+        )
         # asserting
+        ax = cal_obj.ax
         lines=ax.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
         assert all(lines[1].get_ydata() == data[OBS].to_numpy())
@@ -178,42 +176,53 @@ class TestClibration(object):
         DOT_COL = ['lightcoral', 'lightgreen']
         DOT_MARK = ['s', 'o']
         # make plot
-        _, ax = ml.calibration(data_dict, predicted=PRED, observed=OBS,
-                               ci_colour=None, ci_linewidth=None,
-                               dot_marker=DOT_MARK, dot_colour=DOT_COL,
-                               line_colour=LINE_COL, line_linestyle=LINE_LS,
-                               line_linewidth=LINE_LW,
-                               )
+        cal_obj = ml.Calibration(data_dict).plot(
+            predicted=PRED, observed=OBS,
+            ci_colour=None, ci_linewidth=None,
+            dot_marker=DOT_MARK, dot_colour=DOT_COL,
+            line_colour=LINE_COL, line_linestyle=LINE_LS,
+            line_linewidth=LINE_LW,
+        )
         # asserting
+        ax = cal_obj.ax
         lines=ax.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
         assert all(lines[1].get_ydata() == data[OBS].to_numpy())
-        assert lines[9].get_c() == 'lightgreen'
-        assert lines[9].get_markerfacecolor() == 'lightgreen'
-        assert lines[1].get_markerfacecolor() == 'lightcoral'
+        assert any(line.get_c() == 'lightgreen' for line in ax.lines)
+        marker_colours = [line.get_markerfacecolor() for line in ax.lines]
+        assert any(c == 'lightgreen' for c in marker_colours)
+        assert any(c == 'lightcoral' for c in marker_colours)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_calibration_kwargs(self):
         # data
         data = examples.load_calibration_bins()
         # make plot
-        _, ax = ml.calibration(data, predicted=PRED, observed=OBS,
-                               ci_colour=None, ci_linewidth=None,
-                               kwargs_dot_dict={'s':100},
-                               )
-        _, ax2 = ml.calibration(data, predicted=PRED, observed=OBS,
-                               ci_colour=None, ci_linewidth=None,
-                               kwargs_line_dict={'alpha':0.2},
-                               )
-        _, ax3 = ml.calibration(data, predicted=PRED, observed=OBS,
-                               lower_observed='lower_observed_risk',
-                               upper_observed='upper_observed_risk',
-                               kwargs_ci_dict={'alpha':0.2},
-                               )
-        _, ax4 = ml.calibration(data, predicted=PRED, observed=OBS,
-                               ci_colour=None, ci_linewidth=None,
-                               kwargs_diagonal_dict={'c':'red'},
-                               )
+        cal_obj1 = ml.Calibration(data).plot(
+            predicted=PRED, observed=OBS,
+            ci_colour=None, ci_linewidth=None,
+            kwargs_dot_dict={'s':100},
+        )
+        cal_obj2 = ml.Calibration(data).plot(
+            predicted=PRED, observed=OBS,
+            ci_colour=None, ci_linewidth=None,
+            kwargs_line_dict={'alpha':0.2},
+        )
+        cal_obj3 = ml.Calibration(data).plot(
+            predicted=PRED, observed=OBS,
+            lower_observed='lower_observed_risk',
+            upper_observed='upper_observed_risk',
+            kwargs_ci_dict={'alpha':0.2},
+        )
+        cal_obj4 = ml.Calibration(data).plot(
+            predicted=PRED, observed=OBS,
+            ci_colour=None, ci_linewidth=None,
+            kwargs_diagonal_dict={'c':'red'},
+        )
         # asserting
+        ax = cal_obj1.ax
+        ax2 = cal_obj2.ax
+        ax3 = cal_obj3.ax
+        ax4 = cal_obj4.ax
         lines=ax.lines
         collect=ax.collections
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
@@ -228,6 +237,43 @@ class TestClibration(object):
         lines=ax4.lines
         assert all(lines[1].get_xdata() == data[PRED].to_numpy())
         assert lines[0].get_c() == 'red'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_curve(self):
+        data = examples.load_calibration_bins()
+        data_curve = examples.load_calibration_data()
+        # create plot without lines
+        cal_obj = cal_plot = ml.Calibration(data).plot(
+            predicted='average_predict_risk',
+            observed='average_observed_risk',
+            line_linestyle=' ')
+        # call add_curves - testing both the line_colour param and the kwargs
+        cal_plot.add_curves(
+            data=data_curve,
+            smoother=lowess,
+            line_colour='slategrey',
+            kwargs_smoother={
+                "return_sorted": False, "it": 2, "frac": 1/5
+            },
+            kwargs_curve={
+                'linewidth': 1.5,
+                'zorder': 0
+            }
+        )
+        # collect lines
+        ax = cal_obj.ax
+        lines = ax.lines
+        # find the newly added 'slategrey' curve
+        smoothed_line_col = [
+            line for line in lines
+            if line.get_color() == 'slategrey'
+        ]
+        smoothed_line_wd = [
+            line for line in lines
+            if np.isclose(line.get_linewidth(), 1.5)
+        ]
+        # check that at least one such line exists
+        assert len(smoothed_line_col) >= 1
+        assert len(smoothed_line_wd) >= 1
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing the Decision Curve class
@@ -261,6 +307,11 @@ class TestDecisionCurve(object):
             [0.14, 0.42, 0.15, 0.01, 0.06]
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_decisioncurve_plot_without_axes(self):
+        # input data
+        DC_MODELNAMES2 = DC_MODELNAMES + [NamesDC.NONE_MODEL, NamesDC.ALL_MODEL]
+        LINE_DICT = {k:j for j, k in zip(['--', '--', '-', '-'], DC_MODELNAMES2)}
+        COL_DICT = {k:j for j, k in zip(['orangered', 'blue', 'pink', 'black'],
+                                        DC_MODELNAMES2)}
         data = examples.load_net_benefit_data()
         nb_obj = ml.DecisionCurve(data)
         # basic plot

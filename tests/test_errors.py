@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from plot_misc.errors import (
     is_type, is_df, are_columns_in_df,
-    is_series_type, same_len, string_to_list,
+    is_series_type, number_to_list, same_len, string_to_list,
     InputValidationError,
     _get_param_name,
 )
@@ -79,11 +79,19 @@ class TestSameLen(object):
 class TestStringToList(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_string_to_list_wraps_string(self):
-        assert string_to_list("abc") == ['a', 'b', 'c']
+        assert string_to_list("abc") == ['abc']
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_string_to_list_returns_object(self):
         assert string_to_list([1, 2]) == [1, 2]
         assert string_to_list(3.14) == 3.14
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class TestNumberToList(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        assert number_to_list(123) == [123]
+        assert number_to_list(123.01) == [123.01]
+        assert number_to_list('123.01') == '123.01'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class TestGetParamName(object):

@@ -33,6 +33,7 @@ string_to_list(object)
     Wraps strings in a list; leaves other objects unchanged.
 
 """
+
 import inspect
 import warnings
 import pandas as pd
@@ -294,7 +295,28 @@ def string_to_list(object:Any) -> Any | list[str]:
         List if input is string; otherwise the input unchanged.
     """
     if isinstance(object, str):
-        return list(object)
+        return [object]
+    else:
+        return object
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def number_to_list(object:Any) -> Any | list[str]:
+    """
+    Checks if `object` is a float or int and wraps this in a list, returns the
+    original object if it is not a string.
+    
+    Parameters
+    ----------
+    object : Any
+        Object to check.
+    
+    Returns
+    -------
+    list[str] or Any
+        List if input is string; otherwise the input unchanged.
+    """
+    if isinstance(object, (int, float)):
+        return [object]
     else:
         return object
 
