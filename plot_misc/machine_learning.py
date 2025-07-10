@@ -965,10 +965,10 @@ class DecisionCurve(object):
              ax: plt.Axes | None = None,
              col_dict: dict[str,str] | None = None,
              line_dict: dict[str,str] | None = None,
-             lowess_frac: float | None = None,
+             smoother: Callable | None = lowess,
              linewidth:float=0.8,
              figsize:tuple[float,float]=(6, 6),
-             kwargs_lowess:dict[str,Any] | None = None,
+             kwargs_smoother:dict[str,Any] | None = None,
              kwargs_plot:dict[str,Any] | None = None,
              ) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -992,13 +992,16 @@ class DecisionCurve(object):
             Set to `Nonetype` to use a solid line for all models.
         linewidth : `float`, default 0.8
             Width of the decision curve lines.
-        lowess_frac: `float` or `None`, default `NoneType`
-            Set this to a value between 0 and 1 to use a lowess smoothed
-            curve. Set to `NoneType` to use the raw values instead.
+        smoother : `callable` or `None`, default `lowess`
+            A smoothing function such as `lowess` from `statsmodels`, or any
+            user-defined callable accepting `y`, `x`, and keyword arguments.
+            The function should return the predicted y on the risk scale. If
+            `None`, the raw y-values will be plotted against the predicted
+            scores. This can be used to plot pre-computed data.
         figsize : `tuple` [`float`,`float`], default (6, 6),
             The figure size in inches, when ax is `None`.
-        kwargs_lowess : `dict` [`str`,`any`] or `None`, default None
-            Additional keyword arguments passed to the `lowess` function
+        kwargs_smoother : `dict` [`str`,`any`] or `None`, default None
+            Additional keyword arguments passed to a `smoother` function
             (e.g., `it`, `delta`, `return_sorted`).
         kwargs_plot : `dict` [`str`,`any`] or `None`, default None
             Additional keyword arguments passed to `ax.plot`.
@@ -1023,7 +1026,6 @@ class DecisionCurve(object):
         -----
         - The y-axis represents net benefit.
         - The x-axis represents risk thresholds (typically between 0 and 1).
-        - `lowess_frac` may improve interpretability but introduces smoothing bias.
         """
         
         # make sure net_benefit is available
@@ -1033,7 +1035,7 @@ class DecisionCurve(object):
         is_type(ax, (type(None), plt.Axes))
         is_type(line_dict, (type(None), dict))
         is_type(col_dict, (type(None), dict))
-        is_type(lowess_frac, (float, int, type(None)))
+        is_type(smoother, (type(None), Callable))
         if line_dict is None:
             line_dict = {j:'-' for j in self.MODEL_NAMES }
         if self.NUMBER_OF_MODELS != len(line_dict):
@@ -1055,7 +1057,7 @@ class DecisionCurve(object):
                 )
             )
         # map None to empty dict
-        kwargs_lowess = kwargs_lowess or {}
+        kwargs_smoother = kwargs_smoother or {}
         kwargs_plot = kwargs_plot or {}
         # #### should we create a figure and axis
         if ax is None:
@@ -1070,19 +1072,29 @@ class DecisionCurve(object):
         # plot a line per model
         for model in modelnames:
             single_model_df = self.NET_BENEFIT.loc[model]
+            # sorting ascending
+            single_model_df = single_model_df.sort_values(
+                by=NamesDC.THRESHOLD)
             X = single_model_df[NamesDC.THRESHOLD].to_numpy()
             Y = single_model_df[NamesDC.NETBENEFIT].to_numpy()
             # do we need to use a lowess
-            if lowess_frac is not None:
-                new_kwargs_lowess = _update_kwargs(
-                    update_dict=kwargs_lowess,
-                    return_sorted=False,
-                    it=3,
-                    frac=lowess_frac,
-                )
-                Y_PLOT=lowess(Y, X,
-                              **new_kwargs_lowess,
+            if smoother is not None:
+                if smoother is lowess:
+                    # making sure we get a single vector
+                    kwargs_smoother = _update_kwargs(
+                        update_dict=kwargs_smoother,
+                        return_sorted=False,
+                    )
+                Y_PLOT=smoother(Y, X,
+                              **kwargs_smoother,
                               )
+                # raising an error if needed
+                if hasattr(Y_PLOT, 'shape'):
+                    if len(Y_PLOT.shape) == 2 and Y_PLOT.shape[1] != 1:
+                        raise IndexError(
+                            '`Y_PLOT` should be a column vector '
+                            f'the current shape is: {Y_PLOT.shape}.'
+                        )
             else:
                 Y_PLOT = Y
             # The actual plotting

@@ -319,11 +319,11 @@ class TestDecisionCurve(object):
             outcome=DC_OUTCOME, modelnames=DC_MODELNAMES,
             thresholds=list(np.linspace(0.0, 0.3, 100))
         )
-        f, ax = nb_obj.plot(figsize=(3,3),
+        _, ax = nb_obj.plot(figsize=(3,3),
                             col_dict=COL_DICT,
                             line_dict=LINE_DICT,
-                            linewidth=1, lowess_frac=1/3,
-                            kwargs_lowess={'it':3},
+                            linewidth=1,
+                            kwargs_smoother={'it':3, 'frac':1/3},
                             )
         assert len(ax.lines) == 4
         assert np.round(np.max(ax.lines[1].get_ydata()), 2) == 0.12
@@ -338,7 +338,7 @@ class TestDecisionCurve(object):
             outcome=DC_OUTCOME, modelnames=DC_MODELNAMES,
             thresholds=list(np.linspace(0.0, 0.3, 100))
         )
-        _, _ = nb_obj.plot(ax=ax)
+        _, _ = nb_obj.plot(ax=ax, smoother=None)
         assert len(ax.lines) == 4
         assert np.round(np.max(ax.lines[1].get_ydata()), 2) == 0.12
         assert np.round(np.min(ax.lines[1].get_ydata()), 2) == -0.01
