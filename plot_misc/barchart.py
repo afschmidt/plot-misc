@@ -11,15 +11,23 @@ from plot_misc.errors import (
     Error_MSG,
 )
 from typing import Any, Optional
+from plot_misc.constants import Real
 
-# NOTE updates the pytests when ready.
+# # NOTE updates the pytests when ready.
+# from plot_misc.example_data import examples
+# data_w = examples.load_barchart_data()
+# data = data_w.T.copy()
+# label = 'labels'
+# total_col = 'total'
+# data[label] = data_w.T.index
+# data[total_col] = data.drop(columns=[label]).sum(axis=1)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def bar(data:pd.DataFrame, label:str, column:str,
         error_max:str | None = None, error_min:str | None = None,
         colours:list[str]=['tab:blue', 'tab:pink'], transparancy:float=0.7,
-        wd:float=1.0, edgecolor:str='black',
-        horizontal:bool = False, figsize:tuple = (2,2),
+        wd:Real=1.0, edgecolor:str='black',
+        horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
         ax:plt.Axes | None = None,
         kwargs_bar:dict[str, Any] | None = None,
         kwargs_error:dict[str, Any] | None = None,
@@ -42,9 +50,9 @@ def bar(data:pd.DataFrame, label:str, column:str,
     colours : `list` [`str`]
         A list of colours, can be a single or multiple values. The colours will
         get recycled if there are fewer than the number of bars.
-    transparancy : `str`, default 0.7
+    transparancy : `float`, default 0.7
         For the alpha of the bars.
-    wd : `str`, default 1.0
+    wd : `float` or `int`, default 1.0
         A float to specify bar widths.
     edgecolor : `str`, default `black`
         The bar edgecolor.
@@ -148,10 +156,12 @@ def bar(data:pd.DataFrame, label:str, column:str,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE Update the docstring to explain how kwargs are passed to
+# barchart.bar first and how we can pass kwargs to matplotlib.bar as well.
 def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
               colours:list[str]=['tab:blue', 'tab:pink'],
-              transparancy:float=0.7, wd:float=1.0, edgecolor:str='black',
-              horizontal:bool = False, figsize:tuple = (2,2),
+              transparancy:float=0.7, wd:Real=1.0, edgecolor:str='black',
+              horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
               ax:plt.Axes | None = None, **kwargs:Optional[Any],
               ) -> tuple[plt.Figure, plt.Axes]:
     '''
@@ -170,7 +180,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
         List with the number of colours equal to len(columns).
     transparancy : `float`, default 0.7
         Degree of transparancy, between 0 and 1 (solid).
-    wd : `float`, default 1.0
+    wd : `float` or `int`, default 1.0
         Bar width.
     edgecolor : `str`, default `black`
         The colour of the bar edge line.
@@ -245,14 +255,19 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
-                 total_col: str | None = None,
-                 colours:list[str]=['grey', 'tab:blue'],
-                 transparancy:list[float]=[0.7, 0.9], wd:list[float]=[1, 0.6],
-                 edgecolor:list[str]=['black', 'black'],
+def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
+                 subtotal_col: str | None = None,
+                 colours:tuple[str,str]=('grey','tab:blue'),
+                 transparancy:tuple[float,float]=(0.7,0.9),
+                 wd:tuple[float,float]=(1,0.6),
+                 edgecolor:tuple[str,str]=('black', 'black'),
+                 zorder:tuple[int,int] = (2,3),
+                 horizontal:bool=False,
+                 figsize:tuple[Real,Real] = (2,2),
+                 ax:plt.Axes | None = None,
                  total_kwargs_dict:dict[str,Any] | None = None,
                  subtotal_kwargs_dict:dict[str, Any] | None = None,
-                 ) -> plt.Axes:
+                 ) -> tuple[plt.Figure,plt.Axes]:
     '''
     A bar chart with a total column and overplotted subtotal columns.
     The first entry of each argument refers to the subtotal chart, the second
@@ -260,25 +275,32 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
     
     Arguments
     ---------
-    df : pd.DataFrame
-    label : str
+    data : `pd.DataFrame`
+        The input data.
+    label : `str`
         The column name with the axes labels you want to use.
-    subtotal_col : str
+    total_col : `str`
         The column name with the (y-axis) values (floats/int) that need to be
         plotted.
-    total_col : str, default `NoneType`
+    subtotal_col : `str` or `None`, default `NoneType`
         The column name with the (y-axis) values (floats/int) that need to be
         plotted. Skip total_col by setting it to None (default).
-    colours : List of strings
+    colours : `tuple` [`str`,`str`], default ("grey", "tab:blue")
         A list of colours of the bars.
-    transparancy : List of floats
+    transparancy : `tuple` [`float`,`float`], default (0.7, 0.9)
         For the alpha of the bars.
-    wd : List of floats
-        A float to specify bar widths.
-    edgecolor : List of strings
+    wd : `tuple` [`real`,`real`], default (1.0, 0.6)
+        The bar widths.
+    edgecolor : `tuple` [`str`,`str`], default ("black", "black")
         The bar edgecolor.
-    ax : plt.Axes
-        The pyplot.axes objct.
+    horizontal : `bool`, default `False`
+        Whether plot a horizontal barchart.
+    zorder : `tuple` [`int`,`int`], default (2,3)
+        The order the total and subtotal bars are plotted.
+    figsize : `tuple` [`float`, `float`], default (2, 2),
+        The figure size in inches, when ax is set to None.
+    ax : `plt.Axes` or `None`, default `None`
+        The pyplot.axes object.
     *_kwargs_dict : dict, default None,
         Optional arguments supplied to the various plotting functions:
             total_kwargs_dict    --> ax.bar
@@ -289,50 +311,86 @@ def subtotal_bar(df:pd.DataFrame, label:str, subtotal_col:str, ax:plt.Axes,
     plt.Axes
     '''
     # ### check input
-    is_df(df)
-    is_type(ax, plt.Axes, 'ax')
-    is_type(label, str, 'label')
-    is_type(subtotal_col, str, 'subtotal_col')
-    is_type(total_col, (str, type(None)), 'total_col')
-    is_type(colours, list, 'colours')
-    is_type(transparancy, list, 'transparancy')
-    is_type(wd, list, 'wd')
-    is_type(edgecolor, list, 'edgecolor')
-    is_type(total_kwargs_dict, (dict,type(None)), 'total_kwargs_dict')
-    is_type(subtotal_kwargs_dict, (dict,type(None)), 'subtotal_kwargs_dict')
-    if any(df.isna().any()):
-        raise ValueError(Error_MSG.MISSING_DF.format('df'))
+    is_df(data)
+    is_type(label, str)
+    is_type(ax, (type(None), plt.Axes))
+    is_type(total_col, str)
+    is_type(subtotal_col, (str, type(None)))
+    is_type(zorder, tuple)
+    is_type(colours, tuple)
+    is_type(transparancy, tuple)
+    is_type(wd, tuple)
+    is_type(edgecolor, tuple)
+    is_type(horizontal, bool)
+    is_type(total_kwargs_dict, (dict,type(None)))
+    is_type(subtotal_kwargs_dict, (dict,type(None)))
+    if any(data.isna().any()):
+        raise ValueError(Error_MSG.MISSING_DF.format('data'))
+    # ### should we create a figure and axis
+    if ax is None:
+        f, ax = plt.subplots(figsize=figsize)
+    else:
+        f = ax.figure
     # mapping None to empty dicts
     total_kwargs_dict = total_kwargs_dict or {}
     subtotal_kwargs_dict = subtotal_kwargs_dict or {}
     # get labels
-    labels = df[label]
+    labels = data[label]
     # counts
-    subtotal = df[subtotal_col]
-    # plot subtotal
-    new_subtotal_kwargs = _update_kwargs(
-        update_dict=subtotal_kwargs_dict, edgecolor=edgecolor[0], width=wd[0],
-        color=colours[0], alpha=transparancy[0],
+    total = data[total_col]
+    # #### plot total
+    # checking whether something is passed to kwargs_bar
+    kwargs_bar = total_kwargs_dict.pop("kwargs_bar", {})
+    new_total_kwargs_bar = _update_kwargs(
+        update_dict = kwargs_bar,
+        zorder=zorder[0],
     )
-    ax.bar(labels, height=subtotal, **new_subtotal_kwargs,
+    new_total_kwargs = _update_kwargs(
+        update_dict=total_kwargs_dict,
+        label=label,
+        column=total_col,
+        colours=[colours[0]],
+        transparancy=transparancy[0],
+        wd=wd[0],
+        edgecolor=edgecolor[0],
+        horizontal=horizontal,
+        kwargs_bar = new_total_kwargs_bar,
+    )
+    bar(
+        pd.DataFrame({total_col:total, label:labels}),
+        ax=ax,
+         **new_total_kwargs,
            )
-    # plot total
-    if not total_col is None:
-        total = df[total_col]
+    # plot subtotal
+    if not subtotal_col is None:
+        subtotal = data[subtotal_col]
         # updating kwargs
-        new_total_kwargs = _update_kwargs(
-            update_dict=total_kwargs_dict,
-            edgecolor=edgecolor[1], width=wd[1], color=colours[1],
-            alpha=transparancy[1],
+        kwargs_bar2 = subtotal_kwargs_dict.pop("kwargs_bar", {})
+        new_subtotal_kwargs_bar = _update_kwargs(
+            update_dict = kwargs_bar2,
+            zorder=zorder[1],
         )
-        # running ax.bar
-        ax.bar(labels,height=total, **new_total_kwargs,
+        new_subtotal_kwargs = _update_kwargs(
+            update_dict=subtotal_kwargs_dict,
+            label=label,
+            column=subtotal_col,
+            colours=[colours[1]],
+            transparancy=transparancy[1],
+            wd=wd[1],
+            edgecolor=edgecolor[1],
+            horizontal=horizontal,
+            kwargs_bar = new_subtotal_kwargs_bar,
+        )
+        bar(
+            pd.DataFrame({subtotal_col:subtotal, label:labels}),
+            ax=ax,
+             **new_subtotal_kwargs,
                )
     # removing spines
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     # return
-    return ax
+    return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def group_bar(df:pd.DataFrame, label:str, columns:list[str],
