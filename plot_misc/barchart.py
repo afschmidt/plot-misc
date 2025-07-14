@@ -47,7 +47,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
         column name for the upper value of the error segement.
     error_min : ``str` default `NoneType`
         column name for the lower value of the error segement.
-    colours : `list` [`str`]
+    colours : `list` [`str`], default ['tab:blue', 'tab:pink']
         A list of colours, can be a single or multiple values. The colours will
         get recycled if there are fewer than the number of bars.
     transparancy : `float`, default 0.7
@@ -72,6 +72,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
     fig : plt.Figure
     ax : plt.Axes
     '''
+    # check input
     is_df(data)
     is_type(label, str)
     is_type(column, str)
@@ -156,8 +157,6 @@ def bar(data:pd.DataFrame, label:str, column:str,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE Update the docstring to explain how kwargs are passed to
-# barchart.bar first and how we can pass kwargs to matplotlib.bar as well.
 def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
               colours:list[str]=['tab:blue', 'tab:pink'],
               transparancy:float=0.7, wd:Real=1.0, edgecolor:str='black',
@@ -340,13 +339,13 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
     total = data[total_col]
     # #### plot total
     # checking whether something is passed to kwargs_bar
-    kwargs_bar = total_kwargs_dict.pop("kwargs_bar", {})
     new_total_kwargs_bar = _update_kwargs(
-        update_dict = kwargs_bar,
+        update_dict = total_kwargs_dict,
         zorder=zorder[0],
     )
-    new_total_kwargs = _update_kwargs(
-        update_dict=total_kwargs_dict,
+    bar(
+        pd.DataFrame({total_col:total, label:labels}),
+        ax=ax,
         label=label,
         column=total_col,
         colours=[colours[0]],
@@ -354,24 +353,19 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
         wd=wd[0],
         edgecolor=edgecolor[0],
         horizontal=horizontal,
-        kwargs_bar = new_total_kwargs_bar,
+        kwargs_bar=new_total_kwargs_bar,
     )
-    bar(
-        pd.DataFrame({total_col:total, label:labels}),
-        ax=ax,
-         **new_total_kwargs,
-           )
     # plot subtotal
     if not subtotal_col is None:
         subtotal = data[subtotal_col]
         # updating kwargs
-        kwargs_bar2 = subtotal_kwargs_dict.pop("kwargs_bar", {})
         new_subtotal_kwargs_bar = _update_kwargs(
-            update_dict = kwargs_bar2,
+            update_dict = subtotal_kwargs_dict,
             zorder=zorder[1],
         )
-        new_subtotal_kwargs = _update_kwargs(
-            update_dict=subtotal_kwargs_dict,
+        bar(
+            pd.DataFrame({subtotal_col:subtotal, label:labels}),
+            ax=ax,
             label=label,
             column=subtotal_col,
             colours=[colours[1]],
@@ -380,11 +374,6 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
             edgecolor=edgecolor[1],
             horizontal=horizontal,
             kwargs_bar = new_subtotal_kwargs_bar,
-        )
-        bar(
-            pd.DataFrame({subtotal_col:subtotal, label:labels}),
-            ax=ax,
-             **new_subtotal_kwargs,
                )
     # removing spines
     ax.spines['top'].set_visible(False)
@@ -393,83 +382,130 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def group_bar(df:pd.DataFrame, label:str, columns:list[str],
-        ax:plt.Axes, errors:list[str]=None, csiz:float=2,
-        colours:list[str]=['tab:blue', 'tab:pink'], transparancy:float=0.7,
-        wd:float=1, edgecolor:str='black', **kwargs:Optional[Any],
-        ) -> plt.Axes:
-    '''
-    Plot a barchart with sequentially coloured bars.
+def group_bar(data:pd.DataFrame, label:str, columns:list[str],
+              errors_max:list[str] | None = None,
+              errors_min:list[str] | None = None,
+              colours:list[str]=['tab:blue', 'tab:pink'], transparancy:float=0.7,
+              wd:Real=1.0, edgecolor:str='black',
+              horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
+              ax:plt.Axes | None = None,
+              kwargs_bar:dict[str, Any] | None = None,
+              kwargs_error:dict[str, Any] | None = None,
+              ) -> tuple[plt.Figure,plt.Axes]:
+    """
+    Plot a grouped bar chart with sequentially coloured bars and optional
+    error bars.
+    
+    The function expects the data organised in a wide format where the
+    unique group names are provides one time in the `label` column and the
+    values which should be plotted
+    (e.g. the values for `day 0`, `day 10`, `day 25`) provided as multiple
+    column names.
     
     Arguments
     ---------
-    df : pd.DF
-    label : str
-        The column name with the axes labels you want to use.
-    columns : list
-        The column names with the (y-axis) values (floats/int) that need to be
-        plotted.
-    errors : list
-        The column names with the (y-axis) values (floats/int) of the
-        error-bars.
-    colours : list
-        A list of colours, can be a single or multiple values (will get
-        recycled).
-    colours : str
-        A list of colours of the bars.
-    transparancy : str, default 0.7
-        For the alpha of the bars.
-    wd : str, default 1.0
+    data : `pd.DataFrame`
+        DataFrame containing the values to plot. Must include a column
+        identifying the grouping variable (`label`) and one or more numeric
+        columns for bar heights (`columns`).
+    label : `str`
+        Column name used to label the bar groups on the axis.
+    column : `list` [`str`]
+        List of column names to plot as grouped bars within each group.
+    errors_max : `list` [`str`] or `None`, default `NoneType`
+        Column names in `data` containing the upper values of the error bars.
+        Should be structured similarly to `columns` if used.
+    errors_min : `list` [`str`] or `None` default `NoneType`
+        Column names in `data` containing the lower values of the error bars.
+    colours : `list` [`str`], default ['tab:blue', 'tab:pink']
+        Colours for the bars. Recycled if fewer colours than `columns`.
+    transparancy : `float`, default 0.7
+        Alpha transparency for the bars.
+    wd : `float` or `int`, default 1.0
         A float to specify bar widths.
-    edgecolor : str, default `black`
-        The bar edgecolor.
-    ax : plt.Axes
-        The pyplot.axes objct.
-    kwargs : any
-        Arbitrary keyword arguments for `ax.bar`.
+    edgecolor : `str`, default `black`
+        Colour of the border lines around bars.
+    horizontal : `bool`, default `False`
+        Whether plot a horizontal barchart.
+    ax : `plt.ax`, default `NoneType`
+        The pyplot.axes object.
+    figsize : `tuple` [`float`, `float`], default (2, 2),
+        The figure size in inches, when ax is set to None.
+    kwargs_bar : `any`
+        Arbitrary keyword arguments for `ax.bar` or `ax.barh`.
+    kwargs_error : `any`
+        Arbitrary keyword arguments for `ax.hlines` or `ax.vlines`.
     
     Returns
     -------
-    plt.Axes
-    '''
+    fig : plt.Figure
+        The matplotlib Figure object.
+    ax : plt.Axes
+        The matplotlib Axes object with the plot.
+    """
+    # constants
+    OFFSET_COL = "__offset__"
+    # check input - most will be done by bar, just keeping the minimum
+    is_df(data)
+    is_type(columns, list)
+    is_type(errors_max, (type(None),list))
+    is_type(errors_min, (type(None),list))
+    is_type(horizontal, bool)
+    is_type(ax, (type(None), plt.Axes))
+    is_type(kwargs_bar, (type(None), dict))
+    is_type(kwargs_error, (type(None), dict))
+    # ### should we create a figure and axis
+    if ax is None:
+        f, ax = plt.subplots(figsize=figsize)
+    else:
+        f = ax.figure
     # ### check input
-    if any(df.isna().any()):
-        raise ValueError(Error_MSG.MISSING_DF.format('df'))
-    # get labels
-    labels = df[label]
-    # updating kwargs
-    new_kwargs = _update_kwargs(update_dict=kwargs, edgecolor=edgecolor,
-                                width=wd, alpha=transparancy, capsize=csiz,
-                                )
-    # set x-axis
-    x_ax = np.arange(df.shape[0])
-    xtic = np.arange(df.shape[0])
-    for i in range(len(columns)):
-        # identify column and color
-        column = columns[i]
-        color = colours[i]
-        if errors is not None:
-            error = errors[i]
-            # actual plotting
-            ax.bar(x_ax,height=df[column],color=color,yerr=df[error],
-                    **new_kwargs,
-                   )
-        else:
-            # actual plotting
-            ax.bar(x_ax,height=df[column],color=color,**new_kwargs,
-                   )
-        # update middle of bars
-        if i > 0:
-            xtic = [x + (wd / 2) for x in xtic]
-        # update x-axis
-        x_ax = [x + wd for x in x_ax]
-    # define x-axis ticks in the middle
-    ax.set_xticks(xtic)
-    # add x-axis labels
-    ax.set_xticklabels(labels)
-    # removing spines
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    if any(data.isna().any()):
+        raise ValueError(Error_MSG.MISSING_DF.format('data'))
+    # ### prepare the loop
+    # the number of bars for each group
+    n_bars = len(columns)
+    # the number of groups
+    base = np.arange(data.shape[0])
+    # the total width of all the bars in a single group
+    group_width = wd * n_bars
+    # the group labels
+    label_values = data[label]
+    # the tick positions
+    tick_pos = base + (group_width - wd) / 2
+    # looping
+    for i, column in enumerate(columns):
+        # the location of the bar
+        offset = base + i * wd
+        df_offset = data.copy()
+        df_offset[OFFSET_COL] = offset
+        # cycling the colours
+        col = colours[i % len(colours)]
+        # the limits
+        err_max = errors_max[i] if errors_max else None
+        err_min = errors_min[i] if errors_min else None
+        _ = bar(
+            data=df_offset,
+            label=OFFSET_COL,
+            column=column,
+            error_max=err_max,
+            error_min=err_min,
+            colours=[col],
+            transparancy=transparancy,
+            wd=wd,
+            edgecolor=edgecolor,
+            horizontal=horizontal,
+            figsize=figsize,
+            ax=ax,
+            kwargs_bar=kwargs_bar,
+            kwargs_error=kwargs_error,
+        )
+    # labels
+    if not horizontal:
+        ax.set_xticks(tick_pos)
+        ax.set_xticklabels(label_values)
+    else:
+        ax.set_yticks(tick_pos)
+        ax.set_yticklabels(label_values)
     # return
-    return ax
-
+    return f, ax
