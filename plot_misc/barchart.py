@@ -339,8 +339,6 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
     is_type(horizontal, bool)
     is_type(total_kwargs_dict, (dict,type(None)))
     is_type(subtotal_kwargs_dict, (dict,type(None)))
-    if any(data.isna().any()):
-        raise ValueError(Error_MSG.MISSING_DF.format('data'))
     # ### should we create a figure and axis
     if ax is None:
         f, ax = plt.subplots(figsize=figsize)
@@ -473,9 +471,6 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
         f, ax = plt.subplots(figsize=figsize)
     else:
         f = ax.figure
-    # ### check input
-    if any(data.isna().any()):
-        raise ValueError(Error_MSG.MISSING_DF.format('data'))
     # ### prepare the loop
     # the number of bars for each group
     n_bars = len(columns)

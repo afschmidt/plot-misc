@@ -1,10 +1,11 @@
 """
 testing the `barchart` module
 """
+import pytest
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import plot_misc.barchart as barchart
-from plot_misc.constants import UtilsNames as UNames
 from plot_misc.example_data import examples
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -29,7 +30,7 @@ class TestStackBar(object):
     Testing functions for the `stack_bar` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_stack_bar(self):
+    def test_default(self):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
@@ -45,6 +46,35 @@ class TestStackBar(object):
         assert patch[1].get_linewidth() == 2.0
         assert len([p.get_y() for p in patch]) ==\
             TABLE_T.iloc[:,:-1].shape[0] * TABLE_T.iloc[:,:-1].shape[1]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_wo_ax(self):
+        # running the function
+        _, ax = barchart.stack_bar(TABLE_T, label=LABELS,
+                                   columns=TABLE_T.columns[:-1].to_list(),
+                                   wd=0.6, edgecolor=EDGECOLOUR, colours=COLOURS,
+                                   horizontal=True, **{'linewidth':2},
+                                   )
+        # asserting - getting the raw data is more difficult here will confirm
+        # the length instead
+        patch=ax.patches
+        assert all(p.get_height() == 0.6 for p in patch)
+        assert all(p.get_linewidth() == 2.0 for p in patch)
+        assert len([p.get_x() for p in patch]) ==\
+            TABLE_T.iloc[:,:-1].shape[0] * TABLE_T.iloc[:,:-1].shape[1]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_error(self):
+        TABLE_N = TABLE_T.copy()
+        TABLE_N.iloc[1,1] = np.nan
+        # input data with nan
+        with pytest.raises(ValueError):
+            _, _ = barchart.stack_bar(TABLE_N, label=LABELS,
+                                       columns=TABLE_T.columns[:-1].to_list(),
+                                       )
+        # insufficient colours
+        with pytest.raises(AttributeError):
+            _, _ = barchart.stack_bar(TABLE_T, label=LABELS,
+                                       columns=TABLE_T.columns[:-1].to_list(),
+                                       )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # stack_bar horizontal
@@ -81,7 +111,6 @@ class TestTotalBar(object):
     def test_default(self):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
-        fig, ax2 = plt.subplots(1, figsize=(1, 1))
         # running the function
         _, ax = barchart.subtotal_bar(TABLE_T, label=LABELS,
                                 subtotal_col=TABLE_T.columns.to_list()[1],
@@ -92,7 +121,7 @@ class TestTotalBar(object):
         _, ax2 = barchart.subtotal_bar(TABLE_T, label=LABELS,
                                 total_col=TABLE_T.columns.to_list()[2],
                                 wd=(0.1,),
-                                ax=ax2, total_kwargs_dict={'linewidth':0.8},
+                                total_kwargs_dict={'linewidth':0.8},
                                 )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead
@@ -118,16 +147,44 @@ class TestBar(object):
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
         _, ax = barchart.bar(TABLE_T, label=LABELS,
-                                column=TABLE_T.columns.to_list()[0],
-                                wd=0.2, edgecolour=EDGECOLOUR, colours=COLOURS,
-                                ax=ax, kwargs_bar={'linewidth':1.2},
-                                )
+                             column=TABLE_T.columns.to_list()[0],
+                             error_max=TABLE_T.columns.to_list()[1],
+                             error_min=TABLE_T.columns.to_list()[2],
+                             wd=0.2, edgecolour=EDGECOLOUR, colours=COLOURS,
+                             ax=ax, kwargs_bar={'linewidth':1.2},
+                             )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead
         patch=ax.patches
         assert patch[0].get_width() == 0.2
         assert patch[1].get_linewidth() == 1.2
         assert len([p.get_y() for p in patch]) == TABLE_T.shape[0]
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_horizontal(self):
+        # running the function
+        _, ax = barchart.bar(TABLE_T, label=LABELS,
+                             column=TABLE_T.columns.to_list()[0],
+                             error_max=TABLE_T.columns.to_list()[1],
+                             error_min=TABLE_T.columns.to_list()[2],
+                             wd=0.2, edgecolour=EDGECOLOUR, colours=COLOURS,
+                             horizontal=True,
+                             kwargs_bar={'linewidth':1.2},
+                             )
+        # asserting - getting the raw data is more difficult here will confirm
+        # the length instead
+        patch=ax.patches
+        assert patch[0].get_height() == 0.2
+        assert patch[1].get_linewidth() == 1.2
+        assert len([p.get_x() for p in patch]) == TABLE_T.shape[0]
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_error(self):
+        TABLE_N = TABLE_T.copy()
+        TABLE_N.iloc[1,1] = np.nan
+        with pytest.raises(ValueError):
+            _, _ = barchart.bar(TABLE_N, label=LABELS,
+                                column=TABLE_T.columns.to_list()[0],
+                                )
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # bar
@@ -151,3 +208,18 @@ class TestGroupBar(object):
         assert patch[0].get_width() == 0.6
         assert patch[1].get_linewidth() == 1
         assert len([p.get_y() for p in patch]) == GROUP.shape[0] * len(GENES)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_horizontal(self):
+        # running the function
+        _, ax = barchart.group_bar(GROUP, label=GR_LAB,
+                                   columns=COLS,
+                                   wd=0.6, edgecolour=EDGECOLOUR, colours=GR_COL,
+                                   horizontal=True,
+                                   kwargs_bar={'linewidth':1},
+                                   )
+        # asserting - getting the raw data is more difficult here will confirm
+        # the length instead
+        patch=ax.patches
+        assert patch[0].get_height() == 0.6
+        assert patch[1].get_linewidth() == 1
+        assert len([p.get_x() for p in patch]) == GROUP.shape[0] * len(GENES)
