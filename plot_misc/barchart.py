@@ -1,5 +1,25 @@
 """
-A collection of various bar chart functions, based on matplotlib.
+Bar chart plotting tools using matplotlib.
+
+This module provides a collection of flexible bar chart functions based on
+`matplotlib`, including standard, grouped, stacked, and subtotal bar plots.
+These functions offer fine control over visual elements such as bar width,
+transparency, edge colouring, error bars, and group positioning.
+
+Functions
+---------
+bar(data, label, column, ...)
+    Plot a standard bar chart from a single column of values.
+
+stack_bar(data, label, columns, ...)
+    Plot a stacked bar chart from multiple columns in a DataFrame.
+
+subtotal_bar(data, label, total_col, subtotal_col, ...)
+    Plot a bar chart of totals with optionally overlaid subtotals.
+
+group_bar(data, label, columns, ...)
+    Plot a grouped bar chart with multiple bars per group, optionally
+    with error bars.
 """
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,51 +33,41 @@ from plot_misc.errors import (
 from typing import Any, Optional
 from plot_misc.constants import Real
 
-# # NOTE updates the pytests when ready.
-# from plot_misc.example_data import examples
-# data_w = examples.load_barchart_data()
-# data = data_w.T.copy()
-# label = 'labels'
-# total_col = 'total'
-# data[label] = data_w.T.index
-# data[total_col] = data.drop(columns=[label]).sum(axis=1)
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def bar(data:pd.DataFrame, label:str, column:str,
         error_max:str | None = None, error_min:str | None = None,
-        colours:list[str]=['tab:blue', 'tab:pink'], transparancy:float=0.7,
-        wd:Real=1.0, edgecolor:str='black',
+        colours:list[str]=['tab:blue', 'tab:pink'], transparency:float=0.7,
+        wd:Real=1.0, edgecolour:str='black',
         horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
         ax:plt.Axes | None = None,
         kwargs_bar:dict[str, Any] | None = None,
         kwargs_error:dict[str, Any] | None = None,
         ) -> tuple[plt.Figure, plt.Axes]:
-    '''
-    Plot a barchart with sequentially coloured bars.
+    """
+    Plot a vertical or horizontal bar chart with optional error bars.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     data : `pd.DataFrame`
-        A table containing columns for the bar heights and bar labels.
+        DataFrame containing bar heights and axis labels.
     label : `str`
-        The column name with the axes labels you want to use.
+        The column name for the axes labels.
     column : `str`
-        The column name containing the bar height values.
+        The column name for the bar height values.
     error_max : `str`, default `NoneType`
-        column name for the upper value of the error segement.
+        column name for the upper value of the error line segment.
     error_min : ``str` default `NoneType`
-        column name for the lower value of the error segement.
+        column name for the lower value of the error line segment.
     colours : `list` [`str`], default ['tab:blue', 'tab:pink']
-        A list of colours, can be a single or multiple values. The colours will
-        get recycled if there are fewer than the number of bars.
-    transparancy : `float`, default 0.7
-        For the alpha of the bars.
+        Colours for the bars; recycled if shorter than the number of bars.
+    transparency : `float`, default 0.7
+        Alpha transparency level for the bars (0 to 1).
     wd : `float` or `int`, default 1.0
-        A float to specify bar widths.
-    edgecolor : `str`, default `black`
-        The bar edgecolor.
+        The bar width.
+    edgecolour : `str`, default `black`
+        The bar edgecolour.
     horizontal : `bool`, default `False`
-        Whether plot a horizontal barchart.
+        Whether plot a horizontal bar chart.
     ax : `plt.ax`, default `NoneType`
         The pyplot.axes object.
     figsize : `tuple` [`float`, `float`], default (2, 2),
@@ -70,16 +80,18 @@ def bar(data:pd.DataFrame, label:str, column:str,
     Returns
     -------
     fig : plt.Figure
+        Matplotlib figure object.
     ax : plt.Axes
-    '''
+        Matplotlib axes with the rendered bar plot.
+    """
     # check input
     is_df(data)
     is_type(label, str)
     is_type(column, str)
     is_type(colours, list)
-    is_type(transparancy, float)
+    is_type(transparency, float)
     is_type(wd, (float, int))
-    is_type(edgecolor, str)
+    is_type(edgecolour, str)
     is_type(horizontal, bool)
     is_type(ax, (type(None), plt.Axes))
     is_type(error_min, (type(None), str))
@@ -103,9 +115,9 @@ def bar(data:pd.DataFrame, label:str, column:str,
     if horizontal == False:
         # plotting vertical bar chart
         new_kwargs = _update_kwargs(update_dict=kwargs_bar,
-                                    edgecolor=edgecolor,
+                                    edgecolor=edgecolour,
                                     width=wd, color=colours,
-                                    alpha=transparancy,
+                                    alpha=transparency,
                                     zorder=2,
                                     )
         bars = ax.bar(labels, height=data[column], **new_kwargs,
@@ -113,9 +125,9 @@ def bar(data:pd.DataFrame, label:str, column:str,
     else:
         # plotting horizontal bar chart
         new_kwargs = _update_kwargs(update_dict=kwargs_bar,
-                                    edgecolor=edgecolor,
+                                    edgecolor=edgecolour,
                                     height=wd, color=colours,
-                                    alpha=transparancy,
+                                    alpha=transparency,
                                     zorder=2,
                                     )
         bars = ax.barh(labels, width=data[column], **new_kwargs,
@@ -159,30 +171,29 @@ def bar(data:pd.DataFrame, label:str, column:str,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
               colours:list[str]=['tab:blue', 'tab:pink'],
-              transparancy:float=0.7, wd:Real=1.0, edgecolor:str='black',
+              transparency:float=0.7, wd:Real=1.0, edgecolour:str='black',
               horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
               ax:plt.Axes | None = None, **kwargs:Optional[Any],
               ) -> tuple[plt.Figure, plt.Axes]:
-    '''
-    Function for a bar chart, removes top and left spines.
+    """
+    Plot a stacked bar chart with each bar divided into segments.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     data : `pd.DataFrame`
-        A table containing columns for the bar heights and bar labels.
+        DataFrame containing bar segment values and axis labels.
     label : `str`
-        The column name of the axis labels.
+        Column name used for bar labels.
     columns : `list` [`str`]
-        The column names of the bar heights.
-        List of column names in `data`.
+        Column names representing bar segments to stack.
     colours : `list` [`str`]
-        List with the number of colours equal to len(columns).
-    transparancy : `float`, default 0.7
-        Degree of transparancy, between 0 and 1 (solid).
+        List of colours for each stack segment.
+    transparency : `float`, default 0.7
+        Degree of transparency, between 0 and 1 (solid).
     wd : `float` or `int`, default 1.0
-        Bar width.
-    edgecolor : `str`, default `black`
-        The colour of the bar edge line.
+        The bar width.
+    edgecolour : `str`, default `black`
+        Colour for bar borders.
     horizontal : `bool`, default `False`
         Whether plot a horizontal barchart.
     ax : `plt.ax`, default `NoneType`
@@ -195,16 +206,18 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
     Returns
     -------
     fig : plt.Figure
+        Matplotlib figure object.
     ax : plt.Axes
-    '''
+        Axes with the stacked bar chart.
+    """
     # ### check input
     is_df(data)
     is_type(label, str)
     is_type(columns, list)
     is_type(colours, list)
-    is_type(transparancy, float)
+    is_type(transparency, float)
     is_type(wd, (float, int))
-    is_type(edgecolor, str)
+    is_type(edgecolour, str)
     is_type(horizontal, bool)
     is_type(ax, (type(None), plt.Axes))
     # ### should we create a figure and axis
@@ -231,17 +244,17 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
         if horizontal == False:
             # plotting vertical bar chart
             new_kwargs = _update_kwargs(update_dict=kwargs,
-                                        edgecolor=edgecolor,
+                                        edgecolor=edgecolour,
                                         width=wd, color=colours[idx],
-                                        alpha=transparancy,
+                                        alpha=transparency,
                                         )
             ax.bar(labels, height=data[name], bottom=left, **new_kwargs,
                    )
         else:
             # horizontal bar chart
-            new_kwargs = _update_kwargs(update_dict=kwargs, edgecolor=edgecolor,
+            new_kwargs = _update_kwargs(update_dict=kwargs, edgecolor=edgecolour,
                                         height=wd, color=colours[idx],
-                                        alpha=transparancy,
+                                        alpha=transparency,
                                         )
             ax.barh(labels, width=data[name], left=left, **new_kwargs,
                     )
@@ -257,9 +270,9 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
 def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
                  subtotal_col: str | None = None,
                  colours:tuple[str,str]=('grey','tab:blue'),
-                 transparancy:tuple[float,float]=(0.7,0.9),
+                 transparency:tuple[float,float]=(0.7,0.9),
                  wd:tuple[float,float]=(1,0.6),
-                 edgecolor:tuple[str,str]=('black', 'black'),
+                 edgecolour:tuple[str,str]=('black', 'black'),
                  zorder:tuple[int,int] = (2,3),
                  horizontal:bool=False,
                  figsize:tuple[Real,Real] = (2,2),
@@ -267,48 +280,51 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
                  total_kwargs_dict:dict[str,Any] | None = None,
                  subtotal_kwargs_dict:dict[str, Any] | None = None,
                  ) -> tuple[plt.Figure,plt.Axes]:
-    '''
-    A bar chart with a total column and overplotted subtotal columns.
-    The first entry of each argument refers to the subtotal chart, the second
-    to the total chart.
+    """
+    Plot total bars with overlaid subtotal bars (e.g., for highlighting).
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     data : `pd.DataFrame`
-        The input data.
+        The input data containing total and (optionally) subtotal values.
     label : `str`
-        The column name with the axes labels you want to use.
+        Column name for axis labels.
     total_col : `str`
-        The column name with the (y-axis) values (floats/int) that need to be
-        plotted.
+        Column containing values for the base (total) bars.
     subtotal_col : `str` or `None`, default `NoneType`
-        The column name with the (y-axis) values (floats/int) that need to be
-        plotted. Skip total_col by setting it to None (default).
+        Column containing values for (smaller) overlaid subtotal bars.
     colours : `tuple` [`str`,`str`], default ("grey", "tab:blue")
-        A list of colours of the bars.
-    transparancy : `tuple` [`float`,`float`], default (0.7, 0.9)
-        For the alpha of the bars.
+        Colours for the total and subtotal bars.
+    transparency : `tuple` [`float`,`float`], default (0.7, 0.9)
+        Alpha levels for bars.
     wd : `tuple` [`real`,`real`], default (1.0, 0.6)
         The bar widths.
-    edgecolor : `tuple` [`str`,`str`], default ("black", "black")
-        The bar edgecolor.
+    edgecolour : `tuple` [`str`,`str`], default ("black", "black")
+        The bar edgecolours.
     horizontal : `bool`, default `False`
-        Whether plot a horizontal barchart.
+        Whether plot a horizontal bar chart.
     zorder : `tuple` [`int`,`int`], default (2,3)
         The order the total and subtotal bars are plotted.
     figsize : `tuple` [`float`, `float`], default (2, 2),
         The figure size in inches, when ax is set to None.
     ax : `plt.Axes` or `None`, default `None`
         The pyplot.axes object.
-    *_kwargs_dict : dict, default None,
-        Optional arguments supplied to the various plotting functions:
-            total_kwargs_dict    --> ax.bar
-            subtotal_kwargs_dict --> ax.bar
+    total_kwargs_dict : `dict` [`str`,`any`] or `None`, default None
+        Additional arguments passed to barchart.bar().
+    subtotal_kwargs_dict : `dict` [`str`,`any`] or `None`, default None
+        Additional arguments passed to barchart.bar().
     
     Returns
     -------
-    plt.Axes
-    '''
+    fig : plt.Figure
+        Matplotlib figure object.
+    ax : plt.Axes
+        Axes with the plotted bars.
+    
+    Notes
+    -----
+    Plot total bars with overlaid subtotal bars (e.g., for highlighting).
+    """
     # ### check input
     is_df(data)
     is_type(label, str)
@@ -317,9 +333,9 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
     is_type(subtotal_col, (str, type(None)))
     is_type(zorder, tuple)
     is_type(colours, tuple)
-    is_type(transparancy, tuple)
+    is_type(transparency, tuple)
     is_type(wd, tuple)
-    is_type(edgecolor, tuple)
+    is_type(edgecolour, tuple)
     is_type(horizontal, bool)
     is_type(total_kwargs_dict, (dict,type(None)))
     is_type(subtotal_kwargs_dict, (dict,type(None)))
@@ -349,9 +365,9 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
         label=label,
         column=total_col,
         colours=[colours[0]],
-        transparancy=transparancy[0],
+        transparency=transparency[0],
         wd=wd[0],
-        edgecolor=edgecolor[0],
+        edgecolour=edgecolour[0],
         horizontal=horizontal,
         kwargs_bar=new_total_kwargs_bar,
     )
@@ -369,9 +385,9 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
             label=label,
             column=subtotal_col,
             colours=[colours[1]],
-            transparancy=transparancy[1],
+            transparency=transparency[1],
             wd=wd[1],
-            edgecolor=edgecolor[1],
+            edgecolour=edgecolour[1],
             horizontal=horizontal,
             kwargs_bar = new_subtotal_kwargs_bar,
                )
@@ -385,16 +401,16 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
 def group_bar(data:pd.DataFrame, label:str, columns:list[str],
               errors_max:list[str] | None = None,
               errors_min:list[str] | None = None,
-              colours:list[str]=['tab:blue', 'tab:pink'], transparancy:float=0.7,
-              wd:Real=1.0, edgecolor:str='black',
+              colours:list[str]=['tab:blue', 'tab:pink'],
+              transparency:float=0.7,
+              wd:Real=1.0, edgecolour:str='black', bar_spacing:Real = 0,
               horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
               ax:plt.Axes | None = None,
               kwargs_bar:dict[str, Any] | None = None,
               kwargs_error:dict[str, Any] | None = None,
               ) -> tuple[plt.Figure,plt.Axes]:
     """
-    Plot a grouped bar chart with sequentially coloured bars and optional
-    error bars.
+    Plot a grouped bar chart with optional error bars.
     
     The function expects the data organised in a wide format where the
     unique group names are provides one time in the `label` column and the
@@ -402,16 +418,14 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     (e.g. the values for `day 0`, `day 10`, `day 25`) provided as multiple
     column names.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     data : `pd.DataFrame`
-        DataFrame containing the values to plot. Must include a column
-        identifying the grouping variable (`label`) and one or more numeric
-        columns for bar heights (`columns`).
+        DataFrame with a group label column and multiple value columns.
     label : `str`
-        Column name used to label the bar groups on the axis.
+        Column name for group labels.
     column : `list` [`str`]
-        List of column names to plot as grouped bars within each group.
+        Value columns to plot as grouped bars.
     errors_max : `list` [`str`] or `None`, default `NoneType`
         Column names in `data` containing the upper values of the error bars.
         Should be structured similarly to `columns` if used.
@@ -419,12 +433,12 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
         Column names in `data` containing the lower values of the error bars.
     colours : `list` [`str`], default ['tab:blue', 'tab:pink']
         Colours for the bars. Recycled if fewer colours than `columns`.
-    transparancy : `float`, default 0.7
-        Alpha transparency for the bars.
+    transparency : `float`, default 0.7
+        Alpha of the bar fill.
     wd : `float` or `int`, default 1.0
-        A float to specify bar widths.
-    edgecolor : `str`, default `black`
-        Colour of the border lines around bars.
+        The bar widths.
+    edgecolour : `str`, default `black`
+        The bar edge colours.
     horizontal : `bool`, default `False`
         Whether plot a horizontal barchart.
     ax : `plt.ax`, default `NoneType`
@@ -432,9 +446,9 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     figsize : `tuple` [`float`, `float`], default (2, 2),
         The figure size in inches, when ax is set to None.
     kwargs_bar : `any`
-        Arbitrary keyword arguments for `ax.bar` or `ax.barh`.
+        Keyword arguments passed to `kwargs_bar` in barchart.bar().
     kwargs_error : `any`
-        Arbitrary keyword arguments for `ax.hlines` or `ax.vlines`.
+        Keyword arguments passed to `kwargs_error` in barchart.bar().
     
     Returns
     -------
@@ -468,16 +482,20 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     # the number of groups
     base = np.arange(data.shape[0])
     # the total width of all the bars in a single group
-    group_width = wd * n_bars
+    spacing_per_bar = bar_spacing * wd
+    total_spacing = spacing_per_bar * (n_bars - 1)
+    group_width = wd * n_bars + total_spacing
+    # group_width = wd * n_bars
     # the group labels
     label_values = data[label]
     # the tick positions
     tick_pos = base + (group_width - wd) / 2
     # looping
+    df_offset = data.copy()
     for i, column in enumerate(columns):
         # the location of the bar
-        offset = base + i * wd
-        df_offset = data.copy()
+        # offset = base + i * wd
+        offset = base + i * (wd + spacing_per_bar)
         df_offset[OFFSET_COL] = offset
         # cycling the colours
         col = colours[i % len(colours)]
@@ -491,9 +509,9 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
             error_max=err_max,
             error_min=err_min,
             colours=[col],
-            transparancy=transparancy,
+            transparency=transparency,
             wd=wd,
-            edgecolor=edgecolor,
+            edgecolour=edgecolour,
             horizontal=horizontal,
             figsize=figsize,
             ax=ax,
