@@ -78,21 +78,21 @@ class TestTotalBar(object):
     Testing functions for the `total_bar` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_stack_barh(self):
+    def test_default(self):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         fig, ax2 = plt.subplots(1, figsize=(1, 1))
         # running the function
-        ax = barchart.subtotal_bar(TABLE_T, label=LABELS,
-                                total_col=TABLE_T.columns.to_list()[1],
-                                subtotal_col=TABLE_T.columns.to_list()[2],
-                                wd=[0.6, 0.4],
-                                ax=ax, total_kwargs_dict={'linewidth':2},
+        _, ax = barchart.subtotal_bar(TABLE_T, label=LABELS,
+                                subtotal_col=TABLE_T.columns.to_list()[1],
+                                total_col=TABLE_T.columns.to_list()[2],
+                                wd=(0.6, 0.4),
+                                ax=ax, subtotal_kwargs_dict={'linewidth':2},
                                 )
-        ax2 = barchart.subtotal_bar(TABLE_T, label=LABELS, total_col=None,
-                                subtotal_col=TABLE_T.columns.to_list()[2],
-                                wd=[0.1],
-                                ax=ax2, subtotal_kwargs_dict={'linewidth':0.8},
+        _, ax2 = barchart.subtotal_bar(TABLE_T, label=LABELS,
+                                total_col=TABLE_T.columns.to_list()[2],
+                                wd=(0.1,),
+                                ax=ax2, total_kwargs_dict={'linewidth':0.8},
                                 )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead
@@ -113,13 +113,13 @@ class TestBar(object):
     Testing functions for the `bar` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_bar(self):
+    def test_default(self):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
         _, ax = barchart.bar(TABLE_T, label=LABELS,
                                 column=TABLE_T.columns.to_list()[0],
-                                wd=0.2, edgecolor=EDGECOLOUR, colours=COLOURS,
+                                wd=0.2, edgecolour=EDGECOLOUR, colours=COLOURS,
                                 ax=ax, kwargs_bar={'linewidth':1.2},
                                 )
         # asserting - getting the raw data is more difficult here will confirm
@@ -136,14 +136,14 @@ class TestGroupBar(object):
     Testing functions for the `group_bar` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_group_bar(self):
+    def test_default(self):
         # supplying external axes
         fig, ax = plt.subplots(1, figsize=(1, 1))
         # running the function
-        ax = barchart.group_bar(GROUP, label=GR_LAB,
-                                columns=COLS, errors=ERRS,
-                                wd=0.6, edgecolor=EDGECOLOUR, colours=GR_COL,
-                                ax=ax, **{'linewidth':1},
+        _, ax = barchart.group_bar(GROUP, label=GR_LAB,
+                                columns=COLS,
+                                wd=0.6, edgecolour=EDGECOLOUR, colours=GR_COL,
+                                ax=ax, kwargs_bar={'linewidth':1},
                                 )
         # asserting - getting the raw data is more difficult here will confirm
         # the length instead
