@@ -401,7 +401,8 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
               errors_min:list[str] | None = None,
               colours:list[str]=['tab:blue', 'tab:pink'],
               transparency:float=0.7,
-              wd:Real=1.0, edgecolour:str='black', bar_spacing:Real = 0,
+              wd:Real=1.0, edgecolour:str='black',
+              bar_spacing:Real = 0, group_spacing:Real = 1,
               horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
               ax:plt.Axes | None = None,
               kwargs_bar:dict[str, Any] | None = None,
@@ -475,21 +476,19 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     # the number of bars for each group
     n_bars = len(columns)
     # the number of groups
-    base = np.arange(data.shape[0])
+    base = np.arange(data.shape[0]) * group_spacing
     # the total width of all the bars in a single group
     spacing_per_bar = bar_spacing * wd
     total_spacing = spacing_per_bar * (n_bars - 1)
-    group_width = wd * n_bars + total_spacing
-    # group_width = wd * n_bars
     # the group labels
     label_values = data[label]
     # the tick positions
+    group_width = wd * n_bars + total_spacing
     tick_pos = base + (group_width - wd) / 2
     # looping
     df_offset = data.copy()
     for i, column in enumerate(columns):
         # the location of the bar
-        # offset = base + i * wd
         offset = base + i * (wd + spacing_per_bar)
         df_offset[OFFSET_COL] = offset
         # cycling the colours
