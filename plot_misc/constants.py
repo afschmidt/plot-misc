@@ -6,10 +6,15 @@ functional context. These constants are intended to ensure consistency
 in labelling, plotting, and data management across modules.
 """
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS_NAME = '__CLASS_NAME'
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # an alias to int or float type hint
 Real = int | float
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Forest plot
 class ForestNames(object):
@@ -21,6 +26,7 @@ class ForestNames(object):
     a_col                          = 'a_col'
     g_col                          = 'g_col'
     y_col                          = 'y_axis'
+    forest_data                    = 'data'
     strata_del                     = 'strata_del'
     group_del                      = 'group_del'
     order_col                      = 'order'
@@ -38,6 +44,7 @@ class ForestNames(object):
     data_table                     = 'data_table'
     EmpericalSupport_Coverage      = 'coverage'
     EmpericalSupport_Compatability = 'compatibility'
+    EmpericalSupportResults        = 'results_'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names

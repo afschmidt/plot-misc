@@ -1,12 +1,15 @@
 """
 testing the `forest` module
 """
+import pytest
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plot_misc.forest as forest
 import plot_misc.example_data.examples as examples
 from plot_misc.constants import ForestNames as FNames
+from matplotlib.colors import to_rgba
+from matplotlib.collections import PathCollection
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # CONSTANT
@@ -48,6 +51,28 @@ DATA_SET_Y_COORD = pd.DataFrame({
 })
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class TestEmpericalSupportPlotResults(object):
+    def test_emperical_support_plot_results_initialisation(self):
+        # Mock data
+        estimate = 0.42
+        df = pd.DataFrame({
+            FNames.ESTIMATE: [estimate] * 3,
+            FNames.LOWER_BOUND: [0.1, 0.15, 0.2],
+            FNames.UPPER_BOUND: [0.6, 0.65, 0.7],
+            FNames.PVALUE: [0.05, 0.01, 0.001],
+            FNames.CI: [0.95, 0.99, 0.999],
+        })
+        # Initialise class
+        result = forest.EmpericalSupportPlotResults(
+            **{FNames.ESTIMATE: estimate, FNames.data_table: df}
+        )
+        # Assertions
+        assert isinstance(result.estimate, float)
+        assert np.isclose(result.estimate, estimate)
+        assert isinstance(result.data_table, pd.DataFrame)
+        assert result.data_table.shape == (3, 5)
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 class TestOrderRow(object):
     '''
     Test the `order_row` function
@@ -69,7 +94,19 @@ class TestOrderRow(object):
             list(ORDER_INNER.values())[0]
         assert list(res2[GROUP].unique()) == list(ORDER_OUTER.values())[0]
         assert list(res2[MODEL].unique()) != list(ORDER_INNER.values())[0]
-
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_order_row_errors(self):
+        data_in = data1.copy()
+        # error 1
+        with pytest.raises(AttributeError):
+            _ = forest.order_row(data_in, order_outer={'t1': 'test', 't2':'wrong'},
+                                 order_inner=ORDER_INNER,
+                                 )
+        # error 2
+        with pytest.raises(AttributeError):
+            _ = forest.order_row(data_in, order_inner={'t1': 'test', 't2':'wrong'},
+                                 order_outer=ORDER_INNER,
+                                 )
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -111,46 +148,45 @@ class TestSetYCoordinates(object):
         print(data_out)
         assert data_out['y_axis'].to_list() ==\
             [1.0, 1.0, 3.0, 6.0, 6.0, 6.0, 9.0, 9.0, 9.0, 11.0]
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# NOTE the function has been depricated - remove tests
-# # assign_distance
-# class TestAssignDistance(object):
-#     '''
-#     Test the `_assign_distance` function
-#     '''
-#     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def test_assign_distance_default(self):
-#         # removing y_axis
-#         data_in = data1.copy()
-#         del data_in[FNames.y_col]
-#         # getting y_axis
-#         res = forest.assign_distance(data_in, group=GROUP)
-#         # test
-#         assert FNames.y_col in res.columns
-#         assert res[FNames.y_col].mean() == 59.0
-#         assert sum(res[FNames.y_col].isnull()) == 0
-#         # testing if the y-axis values are the distinct per model
-#         assert list(res[res['model'] == 'PGS only'][FNames.y_col]) != \
-#             list(res[res['model'] == 'PGS plus'][FNames.y_col])
-#     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def test_assign_distance_custom(self):
-#         # removing y_axis
-#         data_in = data1.copy()
-#         del data_in[FNames.y_col]
-#         # getting y_axis
-#         res = forest.assign_distance(data_in, group=GROUP, strata='model',
-#                                       start=2,
-#                                       sort_dict=SORT_DICT,
-#                                       )
-#         # test
-#         assert list(res[GROUP].unique()) == list(SORT_DICT.keys())
-#         # testing if the y-axis values are the same per model
-#         assert list(res[res['model'] == 'PGS only'][FNames.y_col]) == \
-#             list(res[res['model'] == 'PGS plus'][FNames.y_col])
-#         assert res[FNames.y_col].mean() == 24.0
-#         assert res[FNames.y_col].min() == 2
-#         assert sum(res[FNames.y_col].isnull()) == 0
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_set_y_coordinates_errors(self):
+        data = DATA_SET_Y_COORD.copy()
+        data_dupli = data.loc[np.repeat(data.index, 2)]
+        # error 1
+        with pytest.raises(ValueError):
+            _ = forest.set_y_coordinates(
+                data, group='group', group_by_strata='subgroup', between_pad=3,
+                sort_dict='wrong',
+            )
+        # error 2
+        with pytest.raises(KeyError):
+            _ = forest.set_y_coordinates(
+                data_dupli, group='group', group_by_strata='subgroup', between_pad=3,
+            )
+        # error 3
+        with pytest.raises(ValueError):
+            _= forest.set_y_coordinates(
+                data, group=None, group_by_strata='subgroup', between_pad=3,
+            )
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_set_y_coordinates_sort_dict(self):
+        data = DATA_SET_Y_COORD.copy()
+        sort_order = {'B': 0, 'A': 1, 'C': 2}
+        data_out = forest.set_y_coordinates(data, group='group', between_pad=3,
+                                            sort_dict=sort_order,)
+        data_out2 = forest.set_y_coordinates(data, group='group', between_pad=3,
+                                            group_by_strata='subgroup',
+                                            sort_dict=sort_order,)
+        # now the dataframe is internally sorted by alphabet prior to
+        # setting the y_coordinates
+        assert data_out['y_axis'].to_list() ==\
+            [1.0, 3.0, 5.0, 8.0, 10.0, 12.0, 15.0, 17.0, 19.0, 21.0]
+        assert data_out['group'].to_list() ==\
+            ['B', 'B', 'B', 'A', 'A', 'A', 'C', 'C', 'C', 'C']
+        assert data_out2['y_axis'].to_list() ==\
+            [1.0, 1.0, 1.0, 4.0, 6.0, 4.0, 9.0, 9.0, 9.0, 11.0]
+        assert data_out2['group'].to_list() ==\
+            ['B', 'B', 'B', 'A', 'A', 'A', 'C', 'C', 'C', 'C']
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_forest
@@ -160,22 +196,23 @@ class TestPlotForest(object):
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest(self):
-        f, ax = plt.subplots(1, figsize=(15, 15))
-        _, ax, _ = forest.plot_forest(df=data2,
-                                      x_col=POINT, lb_col=LB, ub_col=UB,
-                                      s_col=SHAPE_NAME, a_col=ALPHA_NAME,
-                                      c_col=COL_NAME, ci_colour='black',
-                                      g_col='evaluated_outcome', s_size_col= 19,
-                                      ci_lwd=2,
-                                      ax=ax,
-                                      kwargs_scatter_dict={'edgecolors':'black',
-                                                           'zorder':1},
-                                      kwargs_plot_ci_dict={'zorder':2,
-                                                           'solid_capstyle':'round',
-                                                           'linestyle':'-.',
-                                                           'alpha':'row[a_col_name]',
-                                                           }
-                                      )
+        _, ax = plt.subplots(1, figsize=(15, 15))
+        forest_p = forest.ForestPlot(data=data2,
+                                     x_col=POINT, lb_col=LB, ub_col=UB,
+                                     g_col='evaluated_outcome',
+                                     ax=ax,
+                                     )
+        _, ax = forest_p.plot(s_size_col= 19,
+                            s_col=SHAPE_NAME, a_col=ALPHA_NAME,
+                            c_col=COL_NAME, ci_colour='black',
+                            ci_lwd=2,
+                            kwargs_scatter_dict={'edgecolors':'black',
+                                                 'zorder':1},
+                            kwargs_plot_ci_dict={'zorder':2,
+                                                 'solid_capstyle':'round',
+                                                 'linestyle':'-.',
+                                                 }
+                            )
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -192,17 +229,22 @@ class TestPlotForest(object):
         assert lines[4].get_solid_capstyle() == 'round'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_noci_forest(self):
-        f, ax = plt.subplots(1, figsize=(15, 15))
-        _, ax, _ = forest.plot_forest(df=data2,
-                                   x_col=POINT,
-                                   s_col=SHAPE_NAME, a_col=ALPHA_NAME,
-                                   c_col=COL_NAME, ci_colour='black',
-                                   g_col='evaluated_outcome', s_size_col= 19,
-                                   ci_lwd=2,
-                                   ax=ax,
-                                   kwargs_scatter_dict={'edgecolors':'black',
-                                                        'zorder':1},
-                                   )
+        _, ax = plt.subplots(1, figsize=(15, 15))
+        forest_p = forest.ForestPlot(data=data2,
+                                     x_col=POINT,
+                                     g_col='evaluated_outcome',
+                                     ax=ax,
+                                     )
+        _, ax = forest_p.plot(
+            s_col=SHAPE_NAME,
+            a_col=ALPHA_NAME,
+            c_col=COL_NAME,
+            ci_colour='black',
+            s_size_col= 19,
+            ci_lwd=2,
+            kwargs_scatter_dict={'edgecolors':'black',
+                                 'zorder':1},
+        )
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -213,12 +255,14 @@ class TestPlotForest(object):
             list([al.get_alpha() for al in collect])
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_simple_forest_wo_ax(self):
-        _, ax, _ = forest.plot_forest(df=data2,
-                                   x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME, c_col=COL_NAME,
-                                   a_col=ALPHA_NAME,
-                                   g_col='evaluated_outcome',
-                                   )
+        forest_p = forest.ForestPlot(data=data2,
+                                      x_col=POINT, lb_col=LB, ub_col=UB,
+                                      g_col='evaluated_outcome',
+                                      )
+        _, ax = forest_p.plot(
+            s_col=SHAPE_NAME, c_col=COL_NAME,
+            a_col=ALPHA_NAME,
+        )
         # check the points are correct
         assert list(data2[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -237,15 +281,17 @@ class TestPlotForest(object):
         assert lines[3].get_color() == 'indianred'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_complex_forest(self):
-        _, ax, _ = forest.plot_forest(df=data1,
-                                   x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME, c_col=COL_NAME,
-                                   a_col=ALPHA_NAME, ci_colour='black',
-                                   g_col='evaluated_outcome',
-                                   connect_shape=True,
-                                   kwargs_scatter_dict={'edgecolors':'black'},
-                                   kwargs_connect_segments_dict={'zorder':1},
-                                   )
+        forest_p = forest.ForestPlot(data=data1,
+                                     x_col=POINT, lb_col=LB, ub_col=UB,
+                                     g_col='evaluated_outcome',
+                                     )
+        _, ax = forest_p.plot(
+            s_col=SHAPE_NAME, c_col=COL_NAME,
+            a_col=ALPHA_NAME, ci_colour='black',
+            connect_shape=True,
+            kwargs_scatter_dict={'edgecolors':'black'},
+            kwargs_connect_segments_dict={'zorder':1},
+        )
         # check the points are correct
         assert list(data1[POINT]) ==\
             [list(cl.get_offsets().data[0])[0] for cl in ax.collections]
@@ -263,27 +309,38 @@ class TestPlotForest(object):
         assert lines[3].get_lw() == 2.0
         assert lines[3].get_color() == 'black'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_forest_return_other(self):
+    def test_forest_attributes(self):
         '''
-        evaluating the returned 'other' tuple
+        evaluating attributes
         '''
         # not retruning anything
-        _, ax, log = forest.plot_forest(df=data2,
-                                   x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME, c_col=COL_NAME,
-                                   a_col=ALPHA_NAME,
-                                   )
-        assert len(log.__getattribute__(FNames.span)) == 0
-        # retruning something
-        _, ax, log = forest.plot_forest(df=data2,
-                                   x_col=POINT, lb_col=LB, ub_col=UB,
-                                   s_col=SHAPE_NAME, c_col=COL_NAME,
-                                   a_col=ALPHA_NAME,
-                                   span=True, span_return=True,
-                                   )
-        assert len(log.__getattribute__(FNames.span)) != 0
-        assert isinstance(log.__getattribute__(FNames.span), dict)
-        assert isinstance(log.__getattribute__(FNames.span), dict)
+        forest_p = forest.ForestPlot(data=data2,
+                                     x_col=POINT, lb_col=LB, ub_col=UB,
+                                     )
+        assert len(forest_p.span_dict) == 0
+        forest_p.plot(
+            s_col=SHAPE_NAME, c_col=COL_NAME,
+            a_col=ALPHA_NAME,
+            ylim=(0, 100),
+        )
+        assert len(forest_p.span_dict) > 0
+        assert isinstance(forest_p.span_dict, dict)
+        assert all(isinstance(k, int) for k in forest_p.span_dict)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_forest_marker_aesthetics(self):
+        '''
+        evaluating _marker_aesthetics
+        '''
+        forest_p = forest.ForestPlot(data=data2,
+                                     x_col=POINT, lb_col=LB, ub_col=UB,
+                                     )
+        with pytest.warns(RuntimeWarning):
+            col_names = forest_p._marker_aesthetics(
+                s_col='.',c_col ='green',  a_col=0.5,
+                verbose=True,
+            )
+        assert col_names == ['s_col', 'c_col', 'a_col']
+        
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # plot_table
@@ -312,11 +369,101 @@ class TestPlotTable(object):
         assert ax.texts[-1].get_fontsize() == 6
         assert ax.texts[1].get_fontsize() == 5
         assert ax.texts[1].get_horizontalalignment() == 'left'
-
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_table_errors(self):
+        # figure
+        _, ax = plt.subplots(1, figsize=(5,5))
+        # string
+        data2[STRING_COL] = data2[POINT].map('{:,.2f}'.format)
+        ax.set_ylim(min(data2.y_axis.to_list()), max(data2.y_axis.to_list()))
+        # error 1
+        with pytest.raises(ValueError):
+            _ = forest.plot_table(data2, annoteheader=STRING_HEAD,
+                                  string_col=STRING_COL, ax=ax,
+                                  yticklabel=['hi', 'hi2'],
+                                  )
+        # error 2
+        with pytest.raises(ValueError):
+            _ = forest.plot_table(data2, annoteheader=STRING_HEAD,
+                                  string_col=STRING_COL, ax=ax,
+                                  ytickloc=[0.05],
+                                  )
+        # error 3
+        with pytest.raises(IndexError):
+            _ = forest.plot_table(data2, annoteheader=STRING_HEAD,
+                                  string_col=STRING_COL, ax=ax,
+                                  yticklabel=['hi', 'hi2'],
+                                  ytickloc=[0.05],
+                                  )
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_padding(self):
+        # figure
+        _, ax = plt.subplots(1, figsize=(5,5))
+        L = 'left '; R=' right!'
+        # string
+        data2[STRING_COL] = data2[POINT].map('{:,.2f}'.format)
+        ax.set_ylim(min(data2.y_axis.to_list()), max(data2.y_axis.to_list()))
+        # the function to test
+        _ = forest.plot_table(data2, string_col=STRING_COL, ax=ax,
+                              ytickloc = [1, 2, 3],
+                              yticklabel = ["row1", "row2", "row3"],
+                              l_yticklab_pad=L,
+                              r_yticklab_pad=R,
+                              )
+        # labels
+        labels = [lbl.get_text() for lbl in ax.yaxis.get_ticklabels()]
+        assert all(L in l for l in labels)
+        assert all(R in l for l in labels)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_table_nan_string(self):
+        """When a string is nan should replace this by an empty string """
+        # figure
+        _, ax = plt.subplots(1, figsize=(5,5))
+        # string
+        data2[STRING_COL] = data2[POINT].map('{:,.2f}'.format)
+        data2.loc[0, STRING_COL] = np.nan
+        # the function to test
+        _ = forest.plot_table(data2, annoteheader=STRING_HEAD,
+                              string_col=STRING_COL, ax=ax,
+                              halignment_text='left',
+                              halignment_header='center',
+                              size_text=5, size_header=6,
+                              negative_padding=2,
+                              )
+        # assert
+        assert any(t.get_text() == '' for t in ax.texts)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_table_span(self):
+        """Running with span"""
+        # simply checking if the Rectangle colours match `cols`
+        cols=('white', 'lightgrey')
+        # figure
+        _, ax = plt.subplots(1, figsize=(5,5))
+        # string
+        data2[STRING_COL] = data2[POINT].map('{:,.2f}'.format)
+        # span
+        span_dict = {0: { 'min': 1.0, 'max': 8.0,
+            'kwargs': {'color':cols[0], 'zorder': 0} },
+                     1: { 'min': 8.0, 'max': 18.0,
+                         'kwargs': {'color':cols[1], 'zorder': 0}
+                     } }
+        # the function to test
+        _ = forest.plot_table(data2, annoteheader=STRING_HEAD,
+                                      string_col=STRING_COL, ax=ax,
+                                      halignment_text='left',
+                                      halignment_header='center',
+                                      size_text=5, size_header=6,
+                                      negative_padding=2,
+                                      span=span_dict,
+                              )
+        # assert
+        rect = [p for p in ax.patches if isinstance(p, plt.Rectangle)]
+        expect_cols = [to_rgba(col) for col in cols]
+        assert all(r.get_facecolor() in expect_cols for r in rect)
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # EmpericalSupport
-class EmpericalSupport(object):
+class TestEmpericalSupport(object):
     """
     Testing the `EmpericalSupport` function.
     """
@@ -337,7 +484,7 @@ class EmpericalSupport(object):
              'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
              'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
         )
-        _, ax = forest.EmpericalSupport.plot_empirical_support(
+        _, ax = forest.EmpericalSupport._plot_empirical_support(
             table, lb_col='lower_bound', ub_col='upper_bound',
             support_col='confidence_interval',
             estimate=None)
@@ -352,13 +499,58 @@ class EmpericalSupport(object):
             elif i == 1:
                 assert list(line.get_xdata()) == table['upper_bound'].to_list()
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_empirical_support_estimate(self):
+        table=pd.DataFrame(
+            {'estimate': {0: -2, 1: -2, 2: -2},
+             'lower_bound': {0: -2.5, 1: -2.25631031310892,
+                             2: -2.05066942062716},
+             'upper_bound': {0: -2.5, 1: -1.7436896868910798,
+                             2: -1.9493305793728402},
+             'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
+             'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
+        )
+        _, ax = forest.EmpericalSupport._plot_empirical_support(
+            table, lb_col='lower_bound', ub_col='upper_bound',
+            support_col='confidence_interval',
+            estimate=-2)
+        # assert there should be only one dot
+        dots = [art for art in ax.collections if isinstance(art, PathCollection)]
+        assert len(dots) == 1
+        assert dots[0].get_offsets().data[0][0] == -2
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_empirical_support_estimate_error(self):
+        """Raising an error when the lower and upper limits do not agree"""
+        table=pd.DataFrame(
+            {'estimate': {0: -2, 1: -2, 2: -2},
+             'lower_bound': {0: -5000, 1: -2.25631031310892,
+                             2: -2.05066942062716},
+             'upper_bound': {0: -2.5, 1: -1.7436896868910798,
+                             2: -1.9493305793728402},
+             'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
+             'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
+        )
+        with pytest.raises(IndexError):
+            _ = forest.EmpericalSupport._plot_empirical_support(
+                table, lb_col='lower_bound', ub_col='upper_bound',
+                support_col='confidence_interval',
+                estimate=-2)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_plot_tree(self):
         est = 0.2; m=100
         space=forest.EmpericalSupport(estimate=est, standard_error=0.001,
                                       alpha=list(np.linspace(1, 0.00001, m))
                                       )
-        _, ax, results = space.plot_tree()
+        _, ax = space.plot_tree()
         # assert
         assert len(ax.lines) == 2
-        assert results.estimate == est
-        assert results.data_table.shape == m
+        assert space.estimate == est
+        assert space.table.shape[0] == m
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_annotate_ci(self):
+        est = 0.2; m=100
+        space=forest.EmpericalSupport(estimate=est, standard_error=0.001,
+                                      alpha=list(np.linspace(1, 0.00001, m))
+                                      )
+        _, ax = space.plot_tree(annotate_ci=[0.6, 0.7, 0.2])
+        # assert - 5 lines isntead of 2 due to the annotations
+        assert len(ax.lines) == 5

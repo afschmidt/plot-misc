@@ -155,7 +155,8 @@ def are_columns_in_df(
     df : `pandas.DataFrame`
         DataFrame to test.
     expected_columns: `str` or `list` [`str`]
-        Expected column name(s).
+        Expected column name(s). For easy of use any `None` entries will be
+        filtered out before applying the test.
     warning : bool, default False
         raises a warning instead of an error.
     
@@ -172,6 +173,8 @@ def are_columns_in_df(
     # constant
     message = "The following columns are missing from the pandas.DataFrame: {}"
     res = True
+    # filtering out any potential None names
+    expected_columns = [c for c in expected_columns if c is not None]
     # tests
     expected_columns_set: Set[str] = set(expected_columns) if isinstance(
         expected_columns, list

@@ -38,6 +38,10 @@ class TestAreColumnsInDF(object):
         assert are_columns_in_df(df, ['a']) is True
         assert are_columns_in_df(df, 'a') is True
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_are_columns_in_df_none(self):
+        df = pd.DataFrame({'a': [1], 'b': [2]})
+        assert are_columns_in_df(df, ['a', None]) is True
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_are_columns_in_df_missing_with_error(self):
         df = pd.DataFrame({'a': [1]})
         with pytest.raises(InputValidationError):

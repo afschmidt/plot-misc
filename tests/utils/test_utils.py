@@ -1,7 +1,9 @@
 """
 testing the `utils` module
 """
+import warnings
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import pytest
 from plot_misc.constants import (
@@ -13,6 +15,7 @@ from plot_misc.errors import (
 from matplotlib.text import Text
 from plot_misc.example_data import examples
 from plot_misc.utils.utils import (
+    Results,
     calc_matrices,
     _dict_string_argument,
     adjust_labels,
@@ -296,3 +299,44 @@ class Test_Annotate_axis_midpoints(object):
             annotate_axis_midpoints(ax=ax, labels=["Too few"],
                                     axis='x', gap=2)
 
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class TestResults(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_results_default(self):
+        # Set up expected arguments
+        set_args = ['estimate', 'ci', 'array_data', 'dict', 'tupl', 'sers',
+                    'tab']
+        estimate = 0.712
+        ci = (0.60, 0.84)
+        array_data = np.array([1, 2, 3, 4, 5, 6, 7])
+        dict_in = {'hi' : 2}
+        tupl = (2, 4, 0, 0, 0)
+        sers = pd.Series(tupl)
+        tab = pd.DataFrame(sers)
+        # Create the results object
+        result = Results(set_args=set_args, estimate=estimate, ci=ci,
+                         array_data=array_data, dict=dict_in, tupl=tupl,
+                         sers=sers, tab=tab,)
+        # Check attribute assignment
+        assert result.estimate == estimate
+        assert result.ci == ci
+        assert isinstance(result.array_data, np.ndarray)
+        # Check string representation
+        s = str(result)
+        assert isinstance(s, str)
+        assert "results class" in s.lower()
+        # Check repr formatting
+        r = repr(result)
+        assert 'estimate=0.712' in r
+        assert '[0.600, 0.840]' in r or '(0.600, 0.840)' in r
+        assert 'array' in r
+        # Check warning for missing key
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            r2 = Results(set_args=['missing'])
+            assert hasattr(r2, 'missing')
+            assert w, "Expected warning for missing key"
+            assert "argument 'missing' is set to 'None'" in str(w[0].message)
+        # Check AttributeError for unknown kwargs
+        with pytest.raises(AttributeError):
+            Results(set_args=['x'], foo=42)

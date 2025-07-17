@@ -48,11 +48,13 @@ segment_labelled(x, y, ax, label=None, ...)
 """
 
 import re
+import warnings
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
+import numbers
 from typing import (
     Any,
     Literal,
@@ -61,6 +63,7 @@ from typing import (
 
 from plot_misc.constants import (
     UtilsNames,
+    CLASS_NAME,
 )
 from plot_misc.errors import (
     is_type,
@@ -1056,4 +1059,108 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         place_text(spine_coord_e, offset, label_e, new_kwargs_end)
     # #### return
     return ax
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class Results(object):
+    '''
+    A general results class
+    '''
+    # /////////////////////////////////////////////////////////////////////////
+    # Initiation the class
+    # NOTE include * to force all named arguments to be named (no positional)
+    # args when calling innit.
+    def __init__(self,*, set_args: list[str], **kwargs:Any):
+        """
+        Initialise a `Results` instance.
+        
+        Raises
+        ------
+        AttributeError
+            If an unrecognised keyword is provided.
+        """
+        SET_ARGS = '_setargs'
+        setattr(self,SET_ARGS, set_args)
+        # now set values
+        for k in kwargs.keys():
+            if k not in getattr(self, SET_ARGS):
+                raise AttributeError("unrecognised argument '{0}'".format(k))
+        # Loops over `SET_ARGS`, assigns the kwargs content to name `s`.
+        # if argument is missing in kwargs, print a warning.
+        for s in getattr(self, SET_ARGS):
+            try:
+                setattr(self, s, kwargs[s])
+            except KeyError:
+                warnings.warn("argument '{0}' is set to 'None'".format(s))
+                setattr(self, s, None)
+    # /////////////////////////////////////////////////////////////////////////
+    def __str__(self) -> str:
+        # assigns a back up name if clas_name is not provided
+        CLASS_NAME_ = getattr(self, CLASS_NAME, type(self).__name__)
+        return f"A `{CLASS_NAME_}` results class."
+    # /////////////////////////////////////////////////////////////////////////
+    def __repr__(self) -> str:
+        CLASS_NAME_ = getattr(self, CLASS_NAME, type(self).__name__)
+        args = getattr(self, '_setargs')
+        parts = []
+        # join the keys and values
+        for arg in args:
+            # skip
+            if arg == CLASS_NAME:  # pragma: no cover
+                continue
+            # format value
+            value = getattr(self, arg, None)
+            if isinstance(value, float):
+                formatted = f"{value:.3f}"
+                # check for confidnece intervals
+            elif (
+                isinstance(value, (list, tuple)) and\
+                all(isinstance(v, numbers.Real) for v in value) and\
+                len(value) == 2
+            ):
+                formatted = f"[{value[0]:.3f}, {value[1]:.3f}]"
+                if isinstance(value, tuple):
+                    formatted = f"({value[0]:.3f}, {value[1]:.3f})"
+                    
+                # check for array like objects
+            elif isinstance(value, (list, tuple, np.ndarray, pd.Series)):
+                formatted = self._repr_summary(value)
+            else:
+                formatted = repr(value)
+            parts.append(f"  {arg}={formatted}")
+        # return a pretty string
+        body = "\n".join(parts)
+        return f"{CLASS_NAME_}\n{body}\n"
+    # /////////////////////////////////////////////////////////////////////////
+    def _repr_summary(self, value, max_items=6, precision=3, ):
+        """A repr summary for array like objects"""
+        if isinstance(value, np.ndarray):
+            array_str = np.array2string(
+                value,
+                precision=precision,
+                threshold=max_items,
+                edgeitems=3,
+                suppress_small=True
+            )
+            # Indent continuation lines
+            indent_str = ' ' * 2
+            lines = array_str.splitlines()
+            if len(lines) > 1:  # pragma: no cover
+                indented_array = (f"\n{indent_str}  ").join(lines)
+            else:
+                indented_array = lines[0]
+            return (
+                f"array({indented_array}, shape={value.shape}, "
+                f"dtype={value.dtype})"
+            )
+        elif isinstance(value, (list, tuple)):
+            sample = value[:max_items]
+            suffix = ", ..." if len(value) > max_items else ""
+            items = ', '.join(repr(v) for v in sample)
+            return f"{type(value).__name__}([{items}{suffix}])"
+        elif isinstance(value, pd.Series):
+            sample = value.iloc[:max_items].tolist()
+            suffix = ", ..." if len(value) > max_items else ""
+            return (f"Series([{', '.join(repr(v) for v in sample)}{suffix}], "
+                    f"name={value.name})")
+        return repr(value)  # pragma: no cover
 

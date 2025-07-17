@@ -1,6 +1,7 @@
 """
 testing the `volcano` module
 """
+import pytest
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -59,6 +60,7 @@ class TestPlotVolcano(object):
                             point_label='label',
                             index_label=index,
                             lsize=20,
+                            adjust=True,
                             label_kwargs_dict={
                                 'arrowprops':dict(arrowstyle='->', color='red')
                             },
@@ -72,3 +74,21 @@ class TestPlotVolcano(object):
         lines=ax.lines
         assert list(lines[0].get_xdata()) == [0, 0]
         assert lines[0].get_color() == 'lightcoral'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_plot_volcano_warning(self):
+        with pytest.warns(SyntaxWarning):
+            _ = plt_volcano(DATA,
+                            y_column='pvalue_log10', x_column='point',
+                            ylim = YLIM, msize=ANNOT_SIZE[3],
+                            alpha=SIGNIFICANCE,
+                            adjust=True,
+                            )
+        with pytest.raises(IndexError):
+            _ = plt_volcano(DATA,
+                            y_column='pvalue_log10', x_column='point',
+                            ylim = YLIM, msize=ANNOT_SIZE[3],
+                            alpha=SIGNIFICANCE,
+                            adjust=True,
+                            point_label='wrong',
+                            )
+
