@@ -144,6 +144,8 @@ def is_df(df: Any) -> bool:
     return is_type(df, pd.DataFrame)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE add test for expected_columns being a str and that it raises an error
+# with the intact tsring rather than each letter individually.
 def are_columns_in_df(
     df: pd.DataFrame, expected_columns: list[str] | str, warning: bool=False,
 ) -> bool:
@@ -174,6 +176,7 @@ def are_columns_in_df(
     message = "The following columns are missing from the pandas.DataFrame: {}"
     res = True
     # filtering out any potential None names
+    expected_columns = string_to_list(expected_columns)
     expected_columns = [c for c in expected_columns if c is not None]
     # tests
     expected_columns_set: Set[str] = set(expected_columns) if isinstance(

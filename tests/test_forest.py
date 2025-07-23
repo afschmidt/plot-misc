@@ -141,7 +141,7 @@ class TestSetYCoordinates(object):
     def test_set_y_coordinates_strata(self):
         data = DATA_SET_Y_COORD.copy()
         data_out = forest.set_y_coordinates(
-            data, group='group', group_by_strata='subgroup', between_pad=3,
+            data, group='group', strata_within_group='subgroup', between_pad=3,
         )
         # sort by group to confirm y_axis values are actually grouped
         data_out = data_out.sort_values('group')
@@ -155,18 +155,19 @@ class TestSetYCoordinates(object):
         # error 1
         with pytest.raises(ValueError):
             _ = forest.set_y_coordinates(
-                data, group='group', group_by_strata='subgroup', between_pad=3,
-                sort_dict='wrong',
+                data, group='group', strata_within_group='subgroup',
+                between_pad=3, sort_dict='wrong',
             )
         # error 2
         with pytest.raises(KeyError):
             _ = forest.set_y_coordinates(
-                data_dupli, group='group', group_by_strata='subgroup', between_pad=3,
+                data_dupli, group='group', strata_within_group='subgroup',
+                between_pad=3,
             )
         # error 3
         with pytest.raises(ValueError):
             _= forest.set_y_coordinates(
-                data, group=None, group_by_strata='subgroup', between_pad=3,
+                data, group=None, strata_within_group='subgroup', between_pad=3,
             )
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_set_y_coordinates_sort_dict(self):
@@ -175,7 +176,7 @@ class TestSetYCoordinates(object):
         data_out = forest.set_y_coordinates(data, group='group', between_pad=3,
                                             sort_dict=sort_order,)
         data_out2 = forest.set_y_coordinates(data, group='group', between_pad=3,
-                                            group_by_strata='subgroup',
+                                            strata_within_group='subgroup',
                                             sort_dict=sort_order,)
         # now the dataframe is internally sorted by alphabet prior to
         # setting the y_coordinates

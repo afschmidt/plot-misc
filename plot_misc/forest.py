@@ -173,7 +173,7 @@ def order_row(data:pd.DataFrame, order_outer:dict[str,list[str]],
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def set_y_coordinates(data:pd.DataFrame,
                       group: str | None = None,
-                      group_by_strata: str | None = None,
+                      strata_within_group: str | None = None,
                       within_pad:Real=2,
                       between_pad:Real= 4,
                       start:Real=1,
@@ -205,21 +205,21 @@ def set_y_coordinates(data:pd.DataFrame,
             y       7
             y       9
             
-    group_by_strata : `str` or `None` , default `NoneType`
+    strata_within_group : `str` or `None` , default `NoneType`
         A column in `data` providing additional grouping information.
         Use this to ensure that rows with distinct strata values but the same
         group value receive the same y-coordinate.
         
         >>> `for within_pad = 2; between_pad = 4; start = 1`
-        >>> group       group_by_strata     y # pragma: no cover
-            x           a                   1
-            x           a                   3
-            x           b                   1
-            x           b                   3
-            y           a                   7
-            y           a                   9
-            y           b                   7
-            y           b                   9
+        >>> group       strata_within_group     y # pragma: no cover
+            x           a                       1
+            x           a                       3
+            x           b                       1
+            x           b                       3
+            y           a                       7
+            y           a                       9
+            y           b                       7
+            y           b                       9
         
     within_pad : `float`, default 2.0
         The distance between point estimates.
@@ -244,7 +244,7 @@ def set_y_coordinates(data:pd.DataFrame,
     Raises
     ------
     ValueError
-        If `group_by_strata` is provided without `group`, or if `sort_dict`
+        If `strata_within_group` is provided without `group`, or if `sort_dict`
         is invalid.
     KeyError
         If the input index is not unique.
@@ -253,7 +253,7 @@ def set_y_coordinates(data:pd.DataFrame,
     # check input
     is_df(df)
     is_type(group, (type(None), str))
-    is_type(group_by_strata, (type(None), str))
+    is_type(strata_within_group, (type(None), str))
     is_type(new_col, str)
     is_type(start, (int, float))
     is_type(within_pad, (int, float))
@@ -269,11 +269,11 @@ def set_y_coordinates(data:pd.DataFrame,
     # check group and group_by_strata
     if group is not None:
         cols = [group]
-    if (group_by_strata is not None) & (group is None):
+    if (strata_within_group is not None) & (group is None):
         raise ValueError('please also provide `group` when using '
-                         '`group_by_strata`.')
-    if group_by_strata is not None:
-        cols = cols + [group_by_strata]
+                         '`strata_within_group`.')
+    if strata_within_group is not None:
+        cols = cols + [strata_within_group]
     are_columns_in_df(df, expected_columns=cols)
     # sort index to group column values together
     if sort_dict is None:
@@ -288,8 +288,8 @@ def set_y_coordinates(data:pd.DataFrame,
         df[order] = df[group].map(sort_dict)
         # by_list
         by_list = [order]
-        if group_by_strata is not None:
-            by_list.append(group_by_strata)
+        if strata_within_group is not None:
+            by_list.append(strata_within_group)
         # sort by values
         df.sort_values(by=by_list, inplace=True)
         del df[order]
@@ -301,7 +301,7 @@ def set_y_coordinates(data:pd.DataFrame,
         for idx in df.index:
             y_coords[idx] = current_y
             current_y +=within_pad
-    elif group_by_strata is None:
+    elif strata_within_group is None:
         # ONLY GROUP, NO STRATA
         for g in df[group].unique():
             sub = df[df[group] == g]
@@ -322,8 +322,8 @@ def set_y_coordinates(data:pd.DataFrame,
         current_y = start
         for g in df[group].unique():
             sub = df[df[group] == g]
-            for s in sub[group_by_strata].unique():
-                strat = sub[sub[group_by_strata] == s]
+            for s in sub[strata_within_group].unique():
+                strat = sub[sub[strata_within_group] == s]
                 # update start after each strata itt.
                 start = current_y
                 for idx in strat.index:

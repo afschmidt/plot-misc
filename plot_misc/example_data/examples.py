@@ -551,7 +551,7 @@ def load_calibration_bins(**kwargs):
 def load_incidence_matrix_data(**kwargs):
     """
     Loads a table linking genes to traits, represented by a `1` with a `0`
-    for genes and traits without a potential assocaition.
+    for genes and traits without a potential association.
     
     Returns
     -------
@@ -581,3 +581,57 @@ def load_percentage_data(**kwargs):
     # returns
     return data
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_mace_associations(**kwargs):
+    """
+    Loads a table with hazard ratio's for the associations of one standard
+    deviation change in LDL-C or Apo-B with the time to major adverse
+    cardiovascular event (MACE).
+    
+    The follow columns are incluced:
+     1  index (model) : a string combining the expoure and the type of Cox
+     regression model employed.
+            Model 2 is simply adjusted for cardiovascular risk factors, where
+            the remaining models are simply subgroup specific associations,
+            with the relevant subgroups indicated by the `Model` column.
+     2  covariate : the exposure.
+        Either LDL-C or Apo-B, ignore the unit in brackets, all variables
+        were standardised to a mean of zero and standard deviation of 1 prior
+        analysis.
+     3  coef : the log hazard ratio.
+     4  exp(coef) : the hazard ratio.
+     5  se(coef) : the standard error of coef.
+     6  coef lower 95% : the lower bound of the confidence intterval.
+     7  coef upper 95% : the upper bound of the confidence interval.
+     8  p : the p-value of coef.
+     9  PH p-value : the `proportional hazards` assumption p-value.
+        Small p-values point towards possible violations of the proportional
+        hazards assumption.
+    10  Interaction p-value : The interaction p-value comparing the coef of
+     two subgroups.
+    11  events : the total number of incidencent MACE.
+    12  total sample size : the total sample size.
+    13  outcome : the outcome as a string.
+    14  Model : the model as a string.
+    15  Exposure : the expousre as a string.
+    16  covariates : a comma delimited string of the covariates used in each
+     model.
+    17  col : the dot colour in hex code.
+    18  Comparison : the  comparison as a string.
+    19  round : the necessary rounding.
+    20  string_estimates : the hazard ratio and confidence interval as a
+     formatted string.
+    21  string_interaction_pval: the interaction p-value as a formatted string.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    df = pd.read_csv(
+        os.path.join(_ROOT_DATASETS_DIR, 'mace_associations.tsv.gz'),
+        sep='\t', index_col=0, **kwargs,
+    )
+    # return
+    return df
