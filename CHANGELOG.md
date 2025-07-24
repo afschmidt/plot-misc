@@ -1,6 +1,37 @@
 # Changelog
 
-## v1.1.1 - 29-03-2024
+## v2.0.0 - 24-07-2025
+
+### Fixed
+
+- Minor bug fixes. 
+
+### Added
+
+- Expanded code based to publish package on conda. 
+- `annotate_axis_midpoints` was added to `utils.utils`. The function adds a string placed exactly in the mid of two points. Useful to create headers in plots with lots of groups. 
+- Added `Real` type hint to replace `int | float`. 
+- Included further pytests for modules with low coverage (below 80%). 
+- Included a `raising issues` tutorial.
+
+### Changed
+
+- The entire documentation has been refactored to be numpy compliant. 
+- All notebooks have been updated showcasing the new functionality.
+- The following modules were refactored, where needed replacing function by classes: `barchart`, `forest`, `incidencematrix`, `pychart`. 
+- `assign_distance` can now deal with groups of different sizes. 
+- moved much of the function and classes outside the constants module into the `errors.py` module instead. 
+- The plot-table now standardise the x-axis to the `[0, 1]` range to improve alignments.
+
+### Deprecated
+
+_Nothing_. 
+
+### Removed
+
+- `assign_distance` is replaced by `set_y_coordinates`. 
+
+## v1.1.1 - 29-03-2025
 
 ### Fixed
 
