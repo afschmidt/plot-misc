@@ -1,5 +1,28 @@
 # Changelog
 
+
+## v2.0.1 - 29-07-2025
+
+### Fixed
+
+- Upgraded adjustText to 1.3 or higer to deal with an error where the `lim` keyward was incorrectly passed to FancyArrowPatch. 
+
+### Added
+
+_Nothing_. 
+
+### Changed
+
+- Slightly changed the pyproject.toml and meta.yaml file to handle the license correctly (changed to US spelling instead of licence). 
+
+### Deprecated
+
+_Nothing_. 
+
+### Removed
+
+_Nothing_. 
+
 ## v2.0.0 - 24-07-2025
 
 ### Fixed
