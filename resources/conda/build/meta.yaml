@@ -62,7 +62,7 @@ about:
   license_family: GPL
   license_file: LICENSE
   dev_url: https://gitlab.com/SchmidtAF/plot-misc
-  doc_url: https://plot-misc-schmidtaf-6fe7fe661165600d9bcec51453cda9ae221ca6d696.gitlab.io/
+  doc_url: https://schmidtaf.gitlab.io/plot-misc/
 
 extra:
   recipe-maintainers:
