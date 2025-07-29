@@ -52,8 +52,8 @@ The output will indicate the location; look for something like
 
 ### Build the package prompting for the build number
 
-The `build_prompt.sh` script to similarly create the conda build but 
-now additionally receive a prompt whether to change the build number 
+The `build_prompt.sh` script similarly creates the conda build but 
+now additionally prompts the user whether to change the build number 
 in the meta.yaml file. _Note_: this will change the meta.yaml file 
 so please remember to commit the updated file. 
 
