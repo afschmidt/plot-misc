@@ -46,10 +46,16 @@ Ensure the package environment is active, then from the build directory run:
 ```sh
 conda build .
 ```
-
 This will build your package locally. 
 The output will indicate the location; look for something like
 `${HOME}/miniconda/envs/<PACKAGE_NAME>/conda-bld/noarch/<PACKAGE_NAME>-<PACKAGE_VERSION>-py_<BUILD_VERSION>.conda` . 
+
+### Build the package prompting for the build number
+
+The `build_prompt.sh` script to similarly create the conda build but 
+now additionally receive a prompt whether to change the build number 
+in the meta.yaml file. _Note_: this will change the meta.yaml file 
+so please remember to commit the updated file. 
 
 ## Upload to conda 
 

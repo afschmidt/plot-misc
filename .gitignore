@@ -34,7 +34,7 @@ tags
 !.tex
 !.[R|r]nw
 # local folders
-**/build/
+docs/build/
 /dist/
 /venv/
 /__pycache__/

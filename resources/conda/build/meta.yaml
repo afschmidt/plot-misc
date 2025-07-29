@@ -11,7 +11,8 @@ source:
 
 build:
   noarch: python
-  number: 0
+  number: 1
+  script: ./install.sh
 
 requirements:
   host:
