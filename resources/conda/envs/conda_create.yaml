@@ -34,8 +34,14 @@ dependencies:
   - numpydoc
   # other
   - bump2version=1.*
+  # for conda
   - python-build
   - conda-build
   - anaconda-client
+  # for pypi
+  - twine 
+  - build
+  - setuptools
+  - wheel
 
 
