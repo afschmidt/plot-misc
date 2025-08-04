@@ -63,6 +63,7 @@ from typing import (
 
 from plot_misc.constants import (
     UtilsNames,
+    Real,
     CLASS_NAME,
 )
 from plot_misc.errors import (
@@ -74,9 +75,111 @@ from plot_misc.utils.formatting import _nlog10_func
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Class
+class Results(object):
+    '''
+    A general results class
+    '''
+    # /////////////////////////////////////////////////////////////////////////
+    # Initiation the class
+    # NOTE include * to force all named arguments to be named (no positional)
+    # args when calling innit.
+    def __init__(self,*, set_args: list[str], **kwargs:Any):
+        """
+        Initialise a `Results` instance.
+        
+        Raises
+        ------
+        AttributeError
+            If an unrecognised keyword is provided.
+        """
+        SET_ARGS = '_setargs'
+        setattr(self,SET_ARGS, set_args)
+        # now set values
+        for k in kwargs.keys():
+            if k not in getattr(self, SET_ARGS):
+                raise AttributeError("unrecognised argument '{0}'".format(k))
+        # Loops over `SET_ARGS`, assigns the kwargs content to name `s`.
+        # if argument is missing in kwargs, print a warning.
+        for s in getattr(self, SET_ARGS):
+            try:
+                setattr(self, s, kwargs[s])
+            except KeyError:
+                warnings.warn("argument '{0}' is set to 'None'".format(s))
+                setattr(self, s, None)
+    # /////////////////////////////////////////////////////////////////////////
+    def __str__(self) -> str:
+        # assigns a back up name if clas_name is not provided
+        CLASS_NAME_ = getattr(self, CLASS_NAME, type(self).__name__)
+        return f"A `{CLASS_NAME_}` results class."
+    # /////////////////////////////////////////////////////////////////////////
+    def __repr__(self) -> str:
+        CLASS_NAME_ = getattr(self, CLASS_NAME, type(self).__name__)
+        args = getattr(self, '_setargs')
+        parts = []
+        # join the keys and values
+        for arg in args:
+            # skip
+            if arg == CLASS_NAME:  # pragma: no cover
+                continue
+            # format value
+            value = getattr(self, arg, None)
+            if isinstance(value, float):
+                formatted = f"{value:.3f}"
+                # check for confidnece intervals
+            elif (
+                isinstance(value, (list, tuple)) and\
+                all(isinstance(v, numbers.Real) for v in value) and\
+                len(value) == 2
+            ):
+                formatted = f"[{value[0]:.3f}, {value[1]:.3f}]"
+                if isinstance(value, tuple):
+                    formatted = f"({value[0]:.3f}, {value[1]:.3f})"
+                    
+                # check for array like objects
+            elif isinstance(value, (list, tuple, np.ndarray, pd.Series)):
+                formatted = self._repr_summary(value)
+            else:
+                formatted = repr(value)
+            parts.append(f"  {arg}={formatted}")
+        # return a pretty string
+        body = "\n".join(parts)
+        return f"{CLASS_NAME_}\n{body}\n"
+    # /////////////////////////////////////////////////////////////////////////
+    def _repr_summary(self, value, max_items=6, precision=3, ):
+        """A repr summary for array like objects"""
+        if isinstance(value, np.ndarray):
+            array_str = np.array2string(
+                value,
+                precision=precision,
+                threshold=max_items,
+                edgeitems=3,
+                suppress_small=True
+            )
+            # Indent continuation lines
+            indent_str = ' ' * 2
+            lines = array_str.splitlines()
+            if len(lines) > 1:  # pragma: no cover
+                indented_array = (f"\n{indent_str}  ").join(lines)
+            else:
+                indented_array = lines[0]
+            return (
+                f"array({indented_array}, shape={value.shape}, "
+                f"dtype={value.dtype})"
+            )
+        elif isinstance(value, (list, tuple)):
+            sample = value[:max_items]
+            suffix = ", ..." if len(value) > max_items else ""
+            items = ', '.join(repr(v) for v in sample)
+            return f"{type(value).__name__}([{items}{suffix}])"
+        elif isinstance(value, pd.Series):
+            sample = value.iloc[:max_items].tolist()
+            suffix = ", ..." if len(value) > max_items else ""
+            return (f"Series([{', '.join(repr(v) for v in sample)}{suffix}], "
+                    f"name={value.name})")
+        return repr(value)  # pragma: no cover
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class MatrixHeatmapResults(object):
+class MatrixHeatmapResults(Results):
     '''
     Results container for annotated heatmap matrices returned by
     `calc_matrices`.
@@ -120,22 +223,10 @@ class MatrixHeatmapResults(object):
         UtilsNames.value_point,
         UtilsNames.source_data,
     ]
+    # /////////////////////////////////////////////////////////////////////////
     # Initiation the class
     def __init__(self, **kwargs):
-        """
-        Initialise
-        """
-        for k in kwargs.keys():
-            if k not in self.__class__.SET_ARGS:
-                raise AttributeError("unrecognised argument '{0}'".format(k))
-        # Loops over `SET_ARGS`, assigns the kwargs content to name `s`.
-        # if argument is missing in kwargs, print a warning.
-        for s in self.__class__.SET_ARGS:
-            try:
-                setattr(self, s, kwargs[s])
-            except KeyError:
-                warnings.warn("argument '{0}' is set to 'None'".format(s))
-                setattr(self, s, None)
+        super().__init__(set_args=self.SET_ARGS, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MidpointNormalize(mpl.colors.Normalize):
@@ -161,7 +252,7 @@ class MidpointNormalize(mpl.colors.Normalize):
         Central value that maps to 0.5 on the colour scale.
     clip : `bool`, default False
         If True, data outside vmin/vmax is clipped to the endpoints.
-
+    
     Methods
     -------
     inverse(value)
@@ -178,8 +269,6 @@ class MidpointNormalize(mpl.colors.Normalize):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def __call__(self, value:float, clip:bool | None = None):
         is_type(clip, (type(None), bool))
-        # I'm ignoring masked values and all kinds of edge cases to make a
-        # simple example...
         # Note also that we must extrapolate beyond vmin/vmax
         if clip is None:
             clip = self.clip  # honour the value passed to __init__
@@ -271,7 +360,7 @@ def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
     return dict_string
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def plot_span(start_span:float, stop_span:float, ax:plt.Axes,
+def plot_span(start_span:Real, stop_span:Real, ax:plt.Axes,
               horizontal:bool=True, **kwargs:Optional[Any],
               ):
     """
@@ -441,7 +530,7 @@ def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
-                     log:bool=True, ptrun:float=16, digits:str='3',
+                     log:bool=True, ptrun:Real=16, digits:str='3',
                      symbol:str='★') -> tuple[pd.DataFrame,
                                                 pd.DataFrame,
                                                 pd.DataFrame,
@@ -465,7 +554,7 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
         or -log10 transformed.
     log : `bool`, default is `True`
         should the `pval` matrix be -log10 transformed.
-    ptrun : `float`, default 16
+    ptrun : `float` or `int`, default 16
         Truncation threshold for p-values.
     digits : `str`, default `3`
         the number of significant digits the effect matrix should be rounded.
@@ -540,9 +629,9 @@ def calc_matrices(data:pd.DataFrame,
                   outcome_col:str,
                   point_col:str='point',
                   pvalue_col:str='pvalue',
-                  alpha:float=-1*np.log10(0.05),
+                  alpha:Real=-1*np.log10(0.05),
                   sig_numbers:int=2,
-                  ptrun:float=16,
+                  ptrun:Real=16,
                   annotate:str | None='star',
                   without_log:bool=False,
                   mask_na:bool=True,
@@ -570,11 +659,11 @@ def calc_matrices(data:pd.DataFrame,
     pvalue_col : `str`, default 'pvalue'
         Column name with p-values. Note p-values are expected to range between
         0 and 1.
-    alpha : `float`, default `-1*np.log(0.05)`
+    alpha : `float` or `int`, default `-1*np.log(0.05)`
         The significance cut-off.
     sig_numbers : `int`, default 2
         The number of significant numbers the cell annotations should have.
-    ptrun : `float`, default 16
+    ptrun : `float` or `int`, default 16
         P-values smaller than 10^(-ptrun) are truncated.
     annotate : `str`, default 'star'
         Annotation style to return. Options:
@@ -604,8 +693,8 @@ def calc_matrices(data:pd.DataFrame,
     is_type(outcome_col, str)
     is_type(point_col, str)
     is_type(pvalue_col, str)
-    is_type(alpha, float)
-    is_type(sig_numbers, (float, int))
+    is_type(alpha, (int, float))
+    is_type(sig_numbers, int)
     is_type(without_log, bool)
     is_type(mask_na, bool)
     ### subsetting data
@@ -673,7 +762,7 @@ def calc_matrices(data:pd.DataFrame,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NOTE see if this can be used for volcano as well
 def adjust_labels(annotations:list, axis:plt.Axes,
-               min_distance:float=0.1):
+               min_distance:Real=0.1):
     """
     Adjust positions of overlapping annotations to prevent collision.
     
@@ -686,7 +775,7 @@ def adjust_labels(annotations:list, axis:plt.Axes,
         List of matplotlib ax.annotate objects.
     axis : `plt.Axes`
         The axis where annotations are drawn.
-    min_distance : `float`, default 0.1
+    min_distance : `float` or `int`, default 0.1
         Minimum allowable distance between annotations in data coordinates.
     
     Returns
@@ -817,9 +906,9 @@ def segment_labelled(
     x:tuple[float, float], y:tuple[float, float], ax:plt.Axes,
     label: str | None = None,
     endpoints_marker: str | mpath.Path=mpath.Path.unit_circle(),
-    endpoints_size:float=8, endpoints_c:str='orangered', segment_c='black',
-    label_fontsize:float=10, label_background_c='white',
-    overrule_angle: float | None = None,
+    endpoints_size:Real=8, endpoints_c:str='orangered', segment_c='black',
+    label_fontsize:Real=10, label_background_c='white',
+    overrule_angle: Real | None = None,
     calc_angle_after_trans:bool=True,
     kwargs_segment:dict[Any, Any]={},
     kwargs_text:dict[Any, Any]={},
@@ -841,17 +930,17 @@ def segment_labelled(
         The matplotlib axis.
     endpoints_marker : `str`, default `unit_circle`
         The marker of the line segment endpoints.
-    endpoints_size : `float`, default 30
+    endpoints_size : `float` or `int`, default 30
         The marker size.
     endpoints_c : `str`, default `orangered`
         The marker colour.
     segment_c : `str`, default `black`
         The segment line colour
-    label_fontsize : `float`, default 20
+    label_fontsize : `float` or `int`, default 20
         The label font size.
     label_background_c : `str`, default `white`
         The label background colour.
-    overrule_angle : `float`, default `NoneType`
+    overrule_angle : `float` or `int`, default `NoneType`
         Use this to overrule the internally calculated angle against which the
         label will be plotted.
     calc_angle_after_trans : `bool`, default `True`
@@ -926,9 +1015,9 @@ def segment_labelled(
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
                             axis:Literal['x','y']='y',
-                            gap:int | float=6,
-                            offset:float | None = None,
-                            padding:float = 0.0,
+                            gap:Real=6,
+                            offset:Real | None = None,
+                            padding:Real = 0.0,
                             start_label:dict[str, float] | None = None,
                             end_label:dict[str, float] | None = None,
                             text_kwargs:dict[str, any] | None = None,
@@ -1059,108 +1148,4 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         place_text(spine_coord_e, offset, label_e, new_kwargs_end)
     # #### return
     return ax
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-class Results(object):
-    '''
-    A general results class
-    '''
-    # /////////////////////////////////////////////////////////////////////////
-    # Initiation the class
-    # NOTE include * to force all named arguments to be named (no positional)
-    # args when calling innit.
-    def __init__(self,*, set_args: list[str], **kwargs:Any):
-        """
-        Initialise a `Results` instance.
-        
-        Raises
-        ------
-        AttributeError
-            If an unrecognised keyword is provided.
-        """
-        SET_ARGS = '_setargs'
-        setattr(self,SET_ARGS, set_args)
-        # now set values
-        for k in kwargs.keys():
-            if k not in getattr(self, SET_ARGS):
-                raise AttributeError("unrecognised argument '{0}'".format(k))
-        # Loops over `SET_ARGS`, assigns the kwargs content to name `s`.
-        # if argument is missing in kwargs, print a warning.
-        for s in getattr(self, SET_ARGS):
-            try:
-                setattr(self, s, kwargs[s])
-            except KeyError:
-                warnings.warn("argument '{0}' is set to 'None'".format(s))
-                setattr(self, s, None)
-    # /////////////////////////////////////////////////////////////////////////
-    def __str__(self) -> str:
-        # assigns a back up name if clas_name is not provided
-        CLASS_NAME_ = getattr(self, CLASS_NAME, type(self).__name__)
-        return f"A `{CLASS_NAME_}` results class."
-    # /////////////////////////////////////////////////////////////////////////
-    def __repr__(self) -> str:
-        CLASS_NAME_ = getattr(self, CLASS_NAME, type(self).__name__)
-        args = getattr(self, '_setargs')
-        parts = []
-        # join the keys and values
-        for arg in args:
-            # skip
-            if arg == CLASS_NAME:  # pragma: no cover
-                continue
-            # format value
-            value = getattr(self, arg, None)
-            if isinstance(value, float):
-                formatted = f"{value:.3f}"
-                # check for confidnece intervals
-            elif (
-                isinstance(value, (list, tuple)) and\
-                all(isinstance(v, numbers.Real) for v in value) and\
-                len(value) == 2
-            ):
-                formatted = f"[{value[0]:.3f}, {value[1]:.3f}]"
-                if isinstance(value, tuple):
-                    formatted = f"({value[0]:.3f}, {value[1]:.3f})"
-                    
-                # check for array like objects
-            elif isinstance(value, (list, tuple, np.ndarray, pd.Series)):
-                formatted = self._repr_summary(value)
-            else:
-                formatted = repr(value)
-            parts.append(f"  {arg}={formatted}")
-        # return a pretty string
-        body = "\n".join(parts)
-        return f"{CLASS_NAME_}\n{body}\n"
-    # /////////////////////////////////////////////////////////////////////////
-    def _repr_summary(self, value, max_items=6, precision=3, ):
-        """A repr summary for array like objects"""
-        if isinstance(value, np.ndarray):
-            array_str = np.array2string(
-                value,
-                precision=precision,
-                threshold=max_items,
-                edgeitems=3,
-                suppress_small=True
-            )
-            # Indent continuation lines
-            indent_str = ' ' * 2
-            lines = array_str.splitlines()
-            if len(lines) > 1:  # pragma: no cover
-                indented_array = (f"\n{indent_str}  ").join(lines)
-            else:
-                indented_array = lines[0]
-            return (
-                f"array({indented_array}, shape={value.shape}, "
-                f"dtype={value.dtype})"
-            )
-        elif isinstance(value, (list, tuple)):
-            sample = value[:max_items]
-            suffix = ", ..." if len(value) > max_items else ""
-            items = ', '.join(repr(v) for v in sample)
-            return f"{type(value).__name__}([{items}{suffix}])"
-        elif isinstance(value, pd.Series):
-            sample = value.iloc[:max_items].tolist()
-            suffix = ", ..." if len(value) > max_items else ""
-            return (f"Series([{', '.join(repr(v) for v in sample)}{suffix}], "
-                    f"name={value.name})")
-        return repr(value)  # pragma: no cover
 

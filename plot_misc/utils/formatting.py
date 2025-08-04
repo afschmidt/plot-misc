@@ -10,11 +10,10 @@ performance evaluation plots.
 
 Functions
 ---------
-format_estimates(point, se=None, lower=None, upper=None, alpha=0.05,
-                 round=2, exp=False)
+format_estimates(point, se=None, lower=None, upper=None, alpha=0.05, ...)
     Formats a point estimate and confidence interval into a compact string.
 
-sci_notation(number, sig_fig=2, max=1e-100)
+sci_notation(number, sig_fig=2, ...)
     Converts a float into scientific notation with superscript exponents.
 
 format_roc(observed, predicted, **kwargs)
@@ -54,7 +53,7 @@ from sklearn.metrics import (
 MAXLOG10=20
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def _nlog10_func(p:pd.Series, max:float | int=MAXLOG10):
+def _nlog10_func(p:pd.Series, max:Real=MAXLOG10):
     """
     Compute -log10(p-values), with truncation.
     
@@ -84,8 +83,8 @@ def _nlog10_func(p:pd.Series, max:float | int=MAXLOG10):
     return nlog10
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def format_estimates(point:float, se: float | None=None,
-                     lower: float | None=None, upper: float | None=None,
+def format_estimates(point:Real, se: float | None=None,
+                     lower: Real | None=None, upper: Real | None=None,
                      alpha:float=0.05, round:int=2, exp:bool=False
                       ) -> str:
     """
@@ -93,13 +92,13 @@ def format_estimates(point:float, se: float | None=None,
     
     Parameters
     ----------
-    point : `float`
+    point : `float` or `int`
         Point estimate.
     se : `float` or `None`, default `NoneType`
         Standard error of the point estimate.
-    lower : `float` or `None`, default `NoneType`
+    lower : `float`, `int` or `None`, default `NoneType`
         Lower bound of the confidence interval.
-    upper : `float` or `None`, default `NoneType`
+    upper : `float`, `int` or `None`, default `NoneType`
         Upper bound of the confidence interval.
     alpha : `float`, default 0.05
         Significance level used to compute confidence interval if `se` is given.
@@ -122,10 +121,10 @@ def format_estimates(point:float, se: float | None=None,
     is_type(round, int)
     is_type(alpha, float)
     is_type(point, float)
-    if se == None and not ( isinstance(lower, float) and isinstance(upper, float) ):
+    if se == None and not (isinstance(lower, float) and isinstance(upper, float)):
             raise TypeError('Please supply either an `se`, or both  `lower` '
                             'and `upper`.')
-    if isinstance(se, float) and not ( lower == None and upper == None):
+    if isinstance(se, float) and not (lower == None and upper == None):
             raise TypeError('Please supply either an `se`, or both  `lower` '
                             'and `upper`.')
     if isinstance(se, float) and isinstance(lower, float) and\
@@ -217,8 +216,9 @@ def _superscriptinate(number:str) -> str:
         .replace('+', '⁺').replace('.','·').replace(',','˒')
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def sci_notation(number:float | int, sig_fig:int=2,
-                 max:float=np.float_power(10, -100)) -> str:
+def sci_notation(number: Real, sig_fig:int=2,
+                 max:Real | None = None, min:Real | None = None,
+                 ) -> str:
     """
     Convert a number to scientific notation with superscript exponent.
     
@@ -228,9 +228,12 @@ def sci_notation(number:float | int, sig_fig:int=2,
         A number.
     sig_fig : `int`, default 2
         The number of significant digits after the decimal point.
-    max `float`, default 10^{-100}
-        the float value below which values get truncated to the max
-        (i.e., winsorised)
+    max `float`, `int` or `None`, default `None`.
+        the float value below which values get truncated to the supplied maximum
+        value (i.e., winsorised)
+    min `float`, `int` or `None`, default `None`.
+        the float value below which values get truncated to the supplied minimum
+        value (i.e., winsorised)
     
     Returns
     -------
@@ -239,14 +242,20 @@ def sci_notation(number:float | int, sig_fig:int=2,
     
     Notes
     -----
-    Will automatically truncates values if too small to print.
+    Will truncates values if too small/large to print.
     
     Examples
     --------
     >>> sci_notation(2465640, sig_fig=4)
     '2.4656×10⁶
     """
-    if number < max:
+    # check input
+    is_type(number, Real)
+    is_type(min, (type(None), Real))
+    is_type(max, (type(None), Real))
+    if min is not None and number < min:
+        number = min
+    if max is not None and number > max:
         number = max
     # getting string
     ret_string = "{0:.{1:d}e}".format(number, sig_fig)
