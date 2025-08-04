@@ -39,6 +39,9 @@ set -ex
 $PYTHON -m pip install . -vv
 ```
 
+_NOTE_: include a `conda_build_config.yaml` to specify the build 
+packages used, for example numpy 1.23. 
+
 ## Build the conda package locally
 
 Ensure the package environment is active, then from the build directory run:
