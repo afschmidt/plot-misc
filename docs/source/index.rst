@@ -39,6 +39,7 @@ Content
    :caption: Project admin
 
    contributing
+   design_philosophy
    raising_issues
 
 

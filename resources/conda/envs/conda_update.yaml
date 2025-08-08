@@ -33,12 +33,11 @@ dependencies:
   # other
   - bump2version=1.*
   # for conda
-  # - python-build
   - conda-build
   - anaconda-client
   - conda-verify
   # for pypi
+  - python-build
   - twine 
-  # - build
   - setuptools
   - wheel
