@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plot-misc"
-version = "2.0.2"
+version = "2.0.3"
 description = "Various plotting templates built on top of matplotlib"
 readme = "README.md"
 authors = [{ name = "A Floriaan Schmidt", email = "floriaanschmidt@gmail.com" }]
