@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.0.3 - 08-08-2025
+
+### Fixed
+
+_Nothing_
+
+### Added
+
+_Nothing_
+
+### Changed
+
+- Updated the sci_notation parameters to include both `max` and `min` windsoring. 
+- `MatrixHeatmapResults` now inherits from the general `Results` class.
+- Improved the documentation - added a design_philosophy.rst to explain how the design philosophy of the module and explain 
+ how code contributions can best adhere to this. 
+- Introduced the `Real` type hint for the `utils` code. 
+
+### Deprecated
+
+_Nothing_ 
+
+### Removed
+
+_Nothing_
 
 ## v2.0.1 - 29-07-2025
 
