@@ -11,15 +11,7 @@ authors = [{ name = "A Floriaan Schmidt", email = "floriaanschmidt@gmail.com" }]
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 requires-python = ">=3.10, <3.13"
-dependencies = [
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "seaborn",
-    "scipy",
-    "scikit-learn",
-    "adjustText"
-]
+dynamic = ["dependencies", "optional-dependencies"]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -29,11 +21,15 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy"
 ]
 
-[project.optional-dependencies]
-dev = ["twine", "build"]
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.dynamic.optional-dependencies]
+dev = { file = ["requirements-dev.txt"] }
 
 [project.urls]
 Homepage = "https://gitlab.com/SchmidtAF/plot-misc"
+Documentation = "https://schmidtaf.gitlab.io/plot-misc/"
 
 [tool.setuptools.packages.find]
 include = ["plot_misc*"]

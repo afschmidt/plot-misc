@@ -31,6 +31,7 @@ pip install -r resources/ci_cd/sphinx.txt
 
 # Package requirements
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 
 # Install the package being built/tested
