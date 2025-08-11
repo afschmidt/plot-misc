@@ -83,6 +83,14 @@ def bar(data:pd.DataFrame, label:str, column:str,
         Matplotlib figure object.
     ax : plt.Axes
         Matplotlib axes with the rendered bar plot.
+    
+    Notes
+    -----
+    This function is essentially a helper function for the more complicated
+    bar charts in this module and simply wraps matplotlib's bar function.
+    It is included as a public function to allow people to use the same
+    interface when working with plot-misc. If one is exclusively looking to
+    use `bar` it is advisable to simply revert to matplotlib's offering.
     """
     # check input
     is_df(data)
@@ -235,30 +243,30 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
                              'number of colours ({1}).'.format(
                                  len(columns), len(colours)))
     # get labels
-    labels = data[label]
+    # labels = data[label]
     # get columns
     fields=columns
     # actual plotting
     left = len(data) * [0]
     for idx, name in enumerate(fields):
+        new_kwargs = _update_kwargs(update_dict=kwargs,
+                                    edgecolor=edgecolour,
+                                    color=colours[idx],
+                                    alpha=transparency,
+                                    )
         if horizontal == False:
-            # plotting vertical bar chart
-            new_kwargs = _update_kwargs(update_dict=kwargs,
-                                        edgecolor=edgecolour,
-                                        width=wd, color=colours[idx],
-                                        alpha=transparency,
+            new_kwargs = _update_kwargs(new_kwargs, bottom=left,
                                         )
-            ax.bar(labels, height=data[name], bottom=left, **new_kwargs,
-                   )
         else:
-            # horizontal bar chart
-            new_kwargs = _update_kwargs(update_dict=kwargs, edgecolor=edgecolour,
-                                        height=wd, color=colours[idx],
-                                        alpha=transparency,
+            new_kwargs = _update_kwargs(new_kwargs, left=left,
                                         )
-            ax.barh(labels, width=data[name], left=left, **new_kwargs,
+        # The actual plotting
+        # NOTE adding wd here because it bar assigns it to either width or
+        # height depending on horizontal.
+        _, ax = bar(data=data, label=label, column=name, horizontal=horizontal,
+                    wd=wd, ax=ax, kwargs_bar=new_kwargs,
                     )
-        # update the locations
+        # updating the coordinate where the last bar stops
         left = left + data[name]
     # removing spines
     ax.spines['right'].set_visible(False)

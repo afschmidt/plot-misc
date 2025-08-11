@@ -21,15 +21,15 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy"
 ]
 
+[project.urls]
+Homepage = "https://gitlab.com/SchmidtAF/plot-misc"
+Documentation = "https://schmidtaf.gitlab.io/plot-misc/"
+
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.dynamic.optional-dependencies]
 dev = { file = ["requirements-dev.txt"] }
-
-[project.urls]
-Homepage = "https://gitlab.com/SchmidtAF/plot-misc"
-Documentation = "https://schmidtaf.gitlab.io/plot-misc/"
 
 [tool.setuptools.packages.find]
 include = ["plot_misc*"]
