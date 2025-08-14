@@ -1,5 +1,5 @@
 # A collection of plotting functions
-__version__: `2.0.3`
+__version__: `2.0.4`
 
 This repository collects plotting modules written on top of `matplotlib`.
 The functions are intended to set up light-touch, basic illustrations that
