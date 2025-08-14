@@ -1,5 +1,31 @@
 # Changelog
 
+
+## v2.0.4 - 14-08-2025
+
+### Fixed
+
+- Added missing versioning in the pyproject.toml for the required and optional packages.
+
+### Added
+
+_Nothing_
+
+### Changed
+
+- Improved the example notebooks and documentation.
+- Brought the docker requirements image in line with the current software versions. 
+- stack_bar now uses bar internally instead of matplotlib.Axes.bar. 
+- split the requirements.txt into requirements.txt and requirements-dev.txt, updating the CI/CD scripts to pip install both. 
+
+### Deprecated
+
+_Nothing_ 
+
+### Removed
+
+_Nothing_
+
 ## v2.0.3 - 08-08-2025
 
 ### Fixed
