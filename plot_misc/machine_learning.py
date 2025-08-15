@@ -79,7 +79,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
              ax:plt.Axes | None=None,
              kwargs_lines_dict:dict[Any,Any] | None=None,
              kwargs_plot_dict:dict[Any,Any] | None=None,
-             ) -> tuple[plt.Axes, plt.Figure]:
+             ) -> tuple[plt.Figure, plt.Axes]:
     """
     Plots a lollipop chart.
     
@@ -960,7 +960,6 @@ class DecisionCurve(object):
         self.NET_BENEFIT = results
         self.CALCULATED=True
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    # NOTE add smoother paramter to allow for a different smoothing function.
     def plot(self,
              ax: plt.Axes | None = None,
              col_dict: dict[str,str] | None = None,

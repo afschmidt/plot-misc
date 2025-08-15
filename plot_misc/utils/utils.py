@@ -70,6 +70,7 @@ from plot_misc.errors import (
     is_type,
     InputValidationError,
     Error_MSG,
+    same_len,
 )
 from plot_misc.utils.formatting import _nlog10_func
 
@@ -1015,9 +1016,10 @@ def segment_labelled(
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
                             axis:Literal['x','y']='y',
-                            gap:Real=6,
+                            gap:Real | None =6,
                             offset:Real | None = None,
                             padding:Real = 0.0,
+                            midpoints:list[Real] | None = None,
                             start_label:dict[str, float] | None = None,
                             end_label:dict[str, float] | None = None,
                             text_kwargs:dict[str, any] | None = None,
@@ -1036,8 +1038,12 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         A list of labels for each midpoint.
     axis : {'x', 'y'}, default 'y'
         Which axis to analyse and annotate.
-    gap : `int` or `float`, default 6
+    gap : `int`, `float`, `None`, default 6
         The exact space between tick values to trigger annotation.
+    midpoints : `list` [`int` | `float`] or `None`, default `None`
+        Set this to skip the automatic midpoint calculation using `gap` and
+        instead use the user supplied locations. Use this when the number of
+        dots on the axis is unequal.
     offset : float, default `NoneType`
         The position of the label **orthogonal to the axis**, given in **axes
         coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
@@ -1073,11 +1079,18 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
     is_type(axis, str)
     is_type(labels, list)
     is_type(gap, (int, float))
+    is_type(midpoints, (list, type(None)))
     is_type(offset, (type(None), int, float))
     is_type(start_label, (type(None), dict))
     is_type(end_label, (type(None), dict))
     if axis in ['y', 'x'] == False:
         raise ValueError('`axis` is limited to `x` or `y`.')
+    if midpoints is not None and gap is None:
+        warnings.warn("`gap` is ignored when `midpoints` is supplied.")
+    if midpoints is None and gap is None:
+        warnings.warn("Please supply either `midpoints` or `gap`.")
+    if midpoints is not None:
+        same_len(midpoints, labels)
     # setting defaults
     if offset is None:
         offset = -0.01 if axis == 'y' else -0.02
@@ -1122,25 +1135,34 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         place_text = lambda pos, spine_coord, label, kwargs: ax.text(
             x=pos, y=spine_coord, s=label, **kwargs)
     #  #### Identify exact-sized gaps
-    gap_indices = [
-        i for i in range(len(ticks) - 1)
-        if abs(ticks[i + 1] - ticks[i]) == gap
-    ]
-    n_expected = len(gap_indices)
-    if isinstance(labels, list) and len(labels) != n_expected:
-        raise IndexError(
-            f"Expected {n_expected} labels for gap = {gap}, "
-            f"but received {len(labels)}."
-        )
+    if midpoints is None:
+        gap_indices = [
+            i for i in range(len(ticks) - 1)
+            if abs(ticks[i + 1] - ticks[i]) == gap
+        ]
+        n_expected = len(gap_indices)
+        if isinstance(labels, list) and len(labels) != n_expected:
+            raise IndexError(
+                f"Expected {n_expected} labels for gap = {gap}, "
+                f"but received {len(labels)}.\n\n"
+                f"These are the gap indices: {gap_indices}.\n"
+                f"These are the tick locations: {ticks}."
+                
+            )
     # #### Adding optional start label
     if start_label:
         label_s, spine_coord_s = list(start_label.items())[0]
         place_text(spine_coord_s, offset, label_s, new_kwargs_start)
     # ##### Midpoint labels
-    for j, i in enumerate(gap_indices):
-        mid = (ticks[i] + ticks[i + 1]) / 2
-        label_text = labels(j) if callable(labels) else labels[j]
-        place_text(mid+padding, offset, label_text, new_kwargs)
+    if midpoints is None:
+        for j, i in enumerate(gap_indices):
+            mid = (ticks[i] + ticks[i + 1]) / 2
+            label_text = labels(j) if callable(labels) else labels[j]
+            place_text(mid+padding, offset, label_text, new_kwargs)
+    else:
+        for j, mid in enumerate(midpoints):
+            label_text = labels(j) if callable(labels) else labels[j]
+            place_text(mid+padding, offset, label_text, new_kwargs)
     # #### Adding optional end label
     if end_label:
         # mid_e = (ticks[i + 1] + ticks[-1]) / 2
