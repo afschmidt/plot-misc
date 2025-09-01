@@ -21,9 +21,9 @@ group_bar(data, label, columns, ...)
     Plot a grouped bar chart with multiple bars per group, optionally
     with error bars.
 """
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,

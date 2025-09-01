@@ -635,3 +635,58 @@ def load_mace_associations(**kwargs):
     )
     # return
     return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def create_survival_data(nrows: int = 50,
+                              random_seed: int = 42,
+                              initial_n: int = 1000) -> pd.DataFrame:
+    """
+    Create pilot survival analysis data for testing.
+    
+    Parameters
+    ----------
+    nrows : int, default 50
+        Number of time points to generate
+    random_seed : int, default 42
+        Random seed for reproducibility
+    initial_n : int, default 1000
+        Initial number of subjects at risk at time zero
+        
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with survival data including survival estimates,
+        confidence intervals, and at-risk counts
+    """
+    np.random.seed(random_seed)
+    
+    # Create time points
+    time_points = np.linspace(0, 100, nrows)
+    
+    # Generate decreasing survival function with some noise
+    base_survival = np.exp(-time_points * 0.02)  # Exponential decay
+    noise = np.random.normal(0, 0.01, nrows)
+    survival = np.clip(base_survival + noise, 0, 1)
+    
+    # Ensure monotonic decrease
+    survival = np.minimum.accumulate(survival)
+    
+    # Generate confidence intervals
+    ci_width = 0.05 * survival  # CI width proportional to survival
+    lower_ci = np.clip(survival - ci_width, 0, 1)
+    upper_ci = np.clip(survival + ci_width, 0, 1)
+    
+    # Generate at-risk numbers directly from survival probabilities
+    at_risk = (survival * initial_n).astype(int)
+    
+    # Create DataFrame
+    df = pd.DataFrame({
+        'survival_estimate': survival,
+        'lower_ci_95': lower_ci,
+        'upper_ci_95': upper_ci,
+        'at_risk': at_risk,
+        'time': time_points
+    })
+    
+    df.set_index('time', inplace=True)
+    return df
