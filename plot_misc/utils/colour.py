@@ -22,6 +22,12 @@ Palettes include:
     - `gwas_catalog`: muted and earthy tones
     - `bnf`: strong hues matching British National Formulary colours
     - `distinct8`: eight distinguishable primary colours
+    - `green9` : sequential colorbrewer scheme
+    - `purple9` : sequential colorbrewer scheme
+    - `red9` : sequential colorbrewer scheme
+    - `orange9` : sequential colorbrewer scheme
+    - `blue9` : sequential colorbrewer scheme
+    - `black9` : sequential colorbrewer scheme
 """
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -168,4 +174,95 @@ class Colours(object):
             '#E6194B', '#F58231', '#FFE119', '#BFEF45', '#3CB44B',
             '#42D4F4', '#4363D8', '#911EB4',
         ]
+        # /////////////////////////////////////////////////////////////////////////
+    @property
+    def green9(self):
+        """
+        Green9 palette (ColorBrewer sequential scheme).
+        
+        Returns
+        -------
+        list of str
+            Hex color codes.
+        """
+        return [
+            '#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476',
+            '#41ab5d', '#238b45', '#006d2c', '#00441b'
+        ]
+    # /////////////////////////////////////////////////////////////////////////
+    @property
+    def purple9(self):
+        """
+        Purple9 palette (ColorBrewer sequential scheme).
+        
+        Returns
+        -------
+        list of str
+            Hex color codes.
+        """
+        return [
+            '#fcfbfd', '#efedf5', '#dadaeb', '#bcbddc', '#9e9ac8',
+            '#807dba', '#6a51a3', '#54278f', '#3f007d'
+        ]
+    # /////////////////////////////////////////////////////////////////////////
+    @property
+    def blue9(self):
+        """
+        Blue9 palette (ColorBrewer sequential scheme).
+        
+        Returns
+        -------
+        list of str
+            Hex color codes.
+        """
+        return [
+            '#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6',
+            '#4292c6', '#2171b5', '#08519c', '#08306b'
+        ]
+    # /////////////////////////////////////////////////////////////////////////
+    @property
+    def red9(self):
+        """
+        Red9 palette (ColorBrewer sequential scheme).
+        
+        Returns
+        -------
+        list of str
+            Hex color codes.
+        """
+        return [
+            '#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a',
+            '#ef3b2c', '#cb181d', '#a50f15', '#67000d'
+        ]
+    # /////////////////////////////////////////////////////////////////////////
+    @property
+    def orange9(self):
+        """
+        Orange9 palette (ColorBrewer sequential scheme).
+        
+        Returns
+        -------
+        list of str
+            Hex color codes.
+        """
+        return [
+            '#fff5eb', '#fee6ce', '#fdd0a2', '#fdae6b', '#fd8d3c',
+            '#f16913', '#d94801', '#a63603', '#7f2704'
+        ]
+    # /////////////////////////////////////////////////////////////////////////
+    @property
+    def black9(self):
+        """
+        Black9 palette (ColorBrewer sequential scheme).
+        
+        Returns
+        -------
+        list of str
+            Hex color codes.
+        """
+        return [
+            '#ffffff', '#f0f0f0', '#d9d9d9', '#bdbdbd', '#969696',
+            '#737373', '#525252', '#252525', '#000000'
+        ]
+        
 
