@@ -637,9 +637,11 @@ def load_mace_associations(**kwargs):
     return df
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def create_survival_data(nrows: int = 50,
-                              random_seed: int = 42,
-                              initial_n: int = 1000) -> pd.DataFrame:
+def create_survival_data(nrows:int = 50,
+                         survival_rate:float = 0.02,
+                         ci_width:float=0.15,
+                         random_seed:int = 42,
+                         initial_n:int = 1000) -> pd.DataFrame:
     """
     Create pilot survival analysis data for testing.
     
@@ -664,7 +666,7 @@ def create_survival_data(nrows: int = 50,
     time_points = np.linspace(0, 100, nrows)
     
     # Generate decreasing survival function with some noise
-    base_survival = np.exp(-time_points * 0.02)  # Exponential decay
+    base_survival = np.exp(-time_points * survival_rate)  # Exponential decay
     noise = np.random.normal(0, 0.01, nrows)
     survival = np.clip(base_survival + noise, 0, 1)
     
@@ -672,7 +674,7 @@ def create_survival_data(nrows: int = 50,
     survival = np.minimum.accumulate(survival)
     
     # Generate confidence intervals
-    ci_width = 0.05 * survival  # CI width proportional to survival
+    ci_width = ci_width * survival  # CI width proportional to survival
     lower_ci = np.clip(survival - ci_width, 0, 1)
     upper_ci = np.clip(survival + ci_width, 0, 1)
     

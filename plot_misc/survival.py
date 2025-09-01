@@ -1,48 +1,52 @@
 """
 TODO
 """
-import pandas as pd
+import warnings
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
     is_df,
     are_columns_in_df,
-    Error_MSG,
 )
 from typing import Any, Optional
 from plot_misc.constants import Real
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def plot_time_to_event(data: pd.DataFrame,
-                            survival_col: str,
-                            time_col: str | None = None,
-                            lower_ci_col: str | None = None,
-                            upper_ci_col: str | None = None,
-                            xlim: tuple[Real,Real] | None = None,
-                            line_colour: str = 'steelblue',
-                            line_width: Real = 2,
-                            line_style: str = '-',
-                            line_colour_ci: str | None = None,
-                            line_width_ci: Real | None = None,
-                            line_style_ci: str | None = None,
-                            figsize:tuple[Real,Real] = (2,2),
-                            ax:plt.Axes | None = None,
-                            margins:tuple[Real,Real] = (0,0),
-                            add:bool = False,
-                            kwargs_surv:dict[str,Any] | None = None,
-                            kwargs_ci:dict[str,Any] | None = None,
-                            ) -> tuple[plt.Figure, plt.Axes]:
+def plot_step_wise(data: pd.DataFrame,
+                   estimate_col: str,
+                   time_col: str | None = None,
+                   lower_ci_col: str | None = None,
+                   upper_ci_col: str | None = None,
+                   xlim: tuple[Real,Real] | None = None,
+                   line_colour: str = 'steelblue',
+                   line_width: Real = 2,
+                   line_style: str = '-',
+                   line_colour_ci: str | None = None,
+                   line_width_ci: Real | None = None,
+                   line_style_ci: str | None = None,
+                   fill:bool = False,
+                   fill_alpha:float = 0.8,
+                   fill_colour: str | None = None,
+                   figsize:tuple[Real,Real] = (2,2),
+                   ax:plt.Axes | None = None,
+                   margins:tuple[Real,Real] = (0.01,0.01),
+                   add:bool = False,
+                   kwargs_est:dict[str,Any] | None = None,
+                   kwargs_ci:dict[str,Any] | None = None,
+                   ) -> tuple[plt.Figure, plt.Axes]:
     """
-    Create a Kaplan-Meier survival curve plot.
+    Provides a step-wise illustration of an esimation function such as
+    the survival function or the cummulative hazard.
     
     Parameters
     ----------
     data : `pd.DataFrame`
         DataFrame with survival data and time as index
-    survival_col : `str`
-        Column name containing survival probabilities
+    estimate_col : `str`
+        Column name containing estimates.
     time_col : `str` or `None`
         The name of the time column, will default to the index if set to
         `None`.
@@ -51,11 +55,11 @@ def plot_time_to_event(data: pd.DataFrame,
     upper_ci_col : `str` or `None`, default `None`
         Column name containing upper confidence interval
     line_colour : `str`, default '#2E86AB'
-        Colour for the survival curve
+        Colour for the step-wise line.
     line_width : `Real`, default 2
-        Width of the survival curve line
+        Width of the line
     line_style : `str`, default '-'
-        Line style for survival curve
+        Line style of the line
     line_colour_ci : `str` or `None`, default `None`
         Colour for confidence interval lines
     line_width_ci : `float` or `None`, default `None`
@@ -68,16 +72,16 @@ def plot_time_to_event(data: pd.DataFrame,
         The figure size in inches, when ax is set to None.
     xlim : `tuple` [`Real`,`Real`] or `None`, default `None`
         The x-axis limits.
-    margins : `tuple` [`Real`,`Real`], default (0, 0)
+    margins : `tuple` [`Real`,`Real`], default (0.01,0.01)
         Margins for x and y axes
     add : `bool`, default `False`
         Whether to add to existing axis
-        
+    
     Returns
     -------
     plt.Figure
         The matplotlib figure object
-        
+    
     Raises
     ------
     InputValidationError
@@ -86,25 +90,31 @@ def plot_time_to_event(data: pd.DataFrame,
         When setting `add` to True without supplying an `ax` object.
     """
     is_df(data)
-    is_type(survival_col, str)
+    is_type(estimate_col, str)
     is_type(time_col, (type(None), str))
     is_type(lower_ci_col, (type(None), str))
     is_type(upper_ci_col, (type(None), str))
     is_type(line_colour, (type(None), str))
-    is_type(line_width, (type(None), str))
+    is_type(line_width, (type(None), float, int))
     is_type(line_style, (type(None), str))
     is_type(line_colour_ci, (type(None), str))
-    is_type(line_width_ci, (type(None), str))
+    is_type(line_width_ci, (type(None), float, int))
     is_type(line_style_ci, (type(None), str))
+    is_type(fill, bool)
+    is_type(fill_colour, (type(None), str))
+    is_type(fill_alpha, (type(None), float))
     is_type(ax, (type(None), plt.Axes))
-    is_type(xlim, tuple)
+    is_type(xlim, (type(None), tuple))
     is_type(margins, tuple)
     is_type(add, bool)
+    is_type(figsize, tuple)
+    is_type(kwargs_ci, (type(None), dict))
+    is_type(kwargs_est, (type(None), dict))
     # Validate required columns
     are_columns_in_df(
-        data, [survival_col, time_col, lower_ci_col, upper_ci_col],)
+        data, [estimate_col, time_col, lower_ci_col, upper_ci_col],)
     # mapping None to empty dicts
-    kwargs_surv = kwargs_surv or {}
+    kwargs_est = kwargs_est or {}
     kwargs_ci = kwargs_ci or {}
     # ### should we create a figure and axis
     if add == False:
@@ -123,17 +133,18 @@ def plot_time_to_event(data: pd.DataFrame,
     else:
         time_ = data[time_col].values
     # estimates
-    survival = data[survival_col].values
+    estimate = data[estimate_col].values
     # ### plotting
     # Main survival curve (step function)
-    new_kwargs_surv = _update_kwargs(
-        update_dict=kwargs_surv,
+    new_kwargs_est = _update_kwargs(
+        update_dict=kwargs_est,
         where='post', linewidth=line_width,
-        linestyle=line_style, color=line_colour,)
-    ax.step(time_, survival, **new_kwargs_surv,)
+        linestyle=line_style, color=line_colour,
+        zorder=10,)
+    ax.step(time_, estimate, **new_kwargs_est,)
     # add confidence intervals
-    if line_colour is None:
-        line_colour = line_colour
+    if line_colour_ci is None:
+        line_colour_ci = line_colour
     if line_style_ci is None:
         line_style_ci = line_style
     if line_width_ci is None:
@@ -143,9 +154,29 @@ def plot_time_to_event(data: pd.DataFrame,
             new_kwargs_ci = _update_kwargs(
                 update_dict=kwargs_ci,
                 where='post', linewidth=line_width_ci,
-                linestyle=line_style_ci, color=line_colour_ci,)
+                linestyle=line_style_ci, color=line_colour_ci,
+                zorder=10,)
             ci_ = data[ci_col].values
             ax.step(time_, ci_, **new_kwargs_ci,)
+    # add shaded area between limits
+    if fill == True:
+        if fill_colour is None:
+            fill_colour = line_colour
+        fill_lims = [estimate, estimate]
+        if lower_ci_col is not None:
+            fill_lims[0] = data[lower_ci_col].values
+        if upper_ci_col is not None:
+            fill_lims[1] = data[upper_ci_col].values
+        # only plot the fill if the limits are different
+        if not np.array_equal(fill_lims[0], fill_lims[1]):
+            ax.fill_between(time_, fill_lims[0], fill_lims[1],
+                            step='post', alpha=fill_alpha, color=fill_colour,
+                            zorder=1,
+                            )
+        else:
+            warnings.warn("`fill` is `True`, but the supplied confidence "
+                          "intervals are all None type."
+                          )
     # Formatting
     if add == False:
         ax.margins(*margins)
