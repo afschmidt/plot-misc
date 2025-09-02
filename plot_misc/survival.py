@@ -11,7 +11,7 @@ from plot_misc.errors import (
     is_df,
     are_columns_in_df,
 )
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 from plot_misc.constants import (
     ForestNames as FNames,
     Real,
@@ -39,46 +39,76 @@ def plot_step_wise(data: pd.DataFrame,
                    add:bool = False,
                    kwargs_est:dict[str,Any] | None = None,
                    kwargs_ci:dict[str,Any] | None = None,
+                   kwargs_fill:dict[str,Any] | None = None,
                    ) -> tuple[plt.Figure, plt.Axes]:
     """
-    Provides a step-wise illustration of an esimation function such as
-    the survival function or the cummulative hazard.
+    Create a step-wise plot for estimation functions such as survival
+    curves or cumulative hazard functions.
+    
+    A step-wise function is a piecewise constant function that maintains
+    a constant value over intervals and changes value only at specific
+    time points, creating a characteristic "step" appearance. This is
+    particularly useful in survival analysis where estimates like the
+    Kaplan-Meier survival function remain constant between observed
+    event times and only change (step down) when events occur.
     
     Parameters
     ----------
     data : `pd.DataFrame`
-        DataFrame with survival data and time as index
+        dataFrame with survival data and time as index
     estimate_col : `str`
-        Column name containing estimates.
+        column name containing the estimates (e.g., survival probabilities,
+        cumulative hazard rates, or other step functions).
     time_col : `str` or `None`
-        The name of the time column, will default to the index if set to
+        the name of the time column, will default to the index if set to
         `None`.
     lower_ci_col : `str` or `None`, default `None`
-        Column name containing lower confidence interval
+        column name containing lower confidence interval
     upper_ci_col : `str` or `None`, default `None`
-        Column name containing upper confidence interval
-    line_colour : `str`, default '#2E86AB'
-        Colour for the step-wise line.
+        column name containing upper confidence interval
+    line_colour : `str`, default `steelblue`
+        colour for the step-wise line.
     line_width : `Real`, default 2
-        Width of the line
+        width of the line
     line_style : `str`, default '-'
         Line style of the line
     line_colour_ci : `str` or `None`, default `None`
-        Colour for confidence interval lines
+        colour for confidence interval lines
     line_width_ci : `float` or `None`, default `None`
-        Width of confidence interval lines
+        width of confidence interval lines
     line_style_ci : `str` or `None`, default `None`
         Line style for confidence intervals
-    ax : `plt.ax`, default `None`
+    fill : `bool`, default `False`
+        whether to fill the area between confidence intervals or the main line
+        if only one side of the confidence interval is supplied.
+    fill_alpha : `float`, default 0.8
+        the ransparency value for the filled confidence interval
+        area, where 0 is fully transparent and 1 is fully opaque.
+    fill_colour : `str` or `None`, default `None`
+        colour for the filled confidence interval area. If None, uses
+        the same colour as the main line.
+    ax : `plt.Axes`, default `None`
         The pyplot.axes object.
     figsize : `tuple` [`Real`, `Real`], default (2, 2),
         The figure size in inches, when ax is set to None.
     xlim : `tuple` [`Real`,`Real`] or `None`, default `None`
         The x-axis limits.
     margins : `tuple` [`Real`,`Real`], default (0.01,0.01)
-        Margins for x and y axes
+        Fractional margins for x and y axes as (x_margin, y_margin).
+        Only applied when add is False.
     add : `bool`, default `False`
-        Whether to add to existing axis
+        whether to add the plot to an existing axes without modifying
+        axis properties like margins and limits. Requires ax to be
+        provided.
+    kwargs_est : `dict` or `None`, default `None`
+        additional keyword arguments passed to `ax.step` function for the
+        the main line plotting function.
+    kwargs_ci : `dict` or `None`, default `None`
+        additional keyword arguments passed to `ax.step` function for the
+        confidence interval line plotting function.
+    kwargs_fill : `dict` or `None`, default `None`
+        additional keyword arguments passed to `ax.fill` function plotting the
+        area between the confidence intervals.
     
     Returns
     -------
@@ -113,12 +143,14 @@ def plot_step_wise(data: pd.DataFrame,
     is_type(figsize, tuple)
     is_type(kwargs_ci, (type(None), dict))
     is_type(kwargs_est, (type(None), dict))
+    is_type(kwargs_fill, (type(None), dict))
     # Validate required columns
     are_columns_in_df(
         data, [estimate_col, time_col, lower_ci_col, upper_ci_col],)
     # mapping None to empty dicts
     kwargs_est = kwargs_est or {}
     kwargs_ci = kwargs_ci or {}
+    kwargs_fill = kwargs_fill or {}
     # ### should we create a figure and axis
     if add == False:
         if ax is None:
@@ -172,10 +204,13 @@ def plot_step_wise(data: pd.DataFrame,
             fill_lims[1] = data[upper_ci_col].values
         # only plot the fill if the limits are different
         if not np.array_equal(fill_lims[0], fill_lims[1]):
+            new_kwargs_fill = _update_kwargs(
+                update_dict=kwargs_fill,
+                step='post', alpha=fill_alpha, color=fill_colour,
+                zorder=1,
+            )
             ax.fill_between(time_, fill_lims[0], fill_lims[1],
-                            step='post', alpha=fill_alpha, color=fill_colour,
-                            zorder=1,
-                            )
+                            **new_kwargs_fill,)
         else:
             warnings.warn("`fill` is `True`, but the supplied confidence "
                           "intervals are all None type."
@@ -188,26 +223,21 @@ def plot_step_wise(data: pd.DataFrame,
     return f, ax
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# import plot_misc.example_data.examples as examples
-# surv_table = examples.create_survival_data(nrows=24)
-# surv_table = examples.create_survival_data(nrows=20)
-# extract_follow_up_data(surv_table, at_risk_col='at_risk', points=4)
-# extract_follow_up_data(surv_table, at_risk_col='at_risk', points=[0, 20, 40, 80, 100, 120])
 def extract_follow_up(data: pd.DataFrame,
-                           at_risk_col: str,
-                           time_col: str | None = None,
-                           points: int | list[float] = 3,
-                           output_col: str = 'group_1',
-                           thousands_sep: str = ',',
-                           ) -> pd.DataFrame:
+                      at_risk_col: str,
+                      time_col: str | None = None,
+                      points: int | list[Real] = 3,
+                      output_col: str = 'group_1',
+                      thousands_sep: str = ',',
+                      ) -> pd.DataFrame:
     """
     Extract follow-up data for specific time points from survival analysis
     data.
     
-    For each requested time point, finds the closest available time point that
-    is less than or equal to the requested time and extracts the corresponding
-    at-risk count. Time points beyond the study's maximum follow-up time return
-    zero at-risk counts.
+    This function extracts at-risk counts at specified time points from
+    survival data, commonly used for creating "Numbers at Risk" tables
+    beneath (for example) Kaplan-Meier plots or for summarising follow-up data
+    at key time intervals (e.g., 1, 3, 5-year follow-up).
     
     Parameters
     ----------
@@ -220,8 +250,13 @@ def extract_follow_up(data: pd.DataFrame,
         Column name containing time values. If None, uses the DataFrame index
         as time values.
     points : int or list[float], default 3
-        Either an integer specifying the number of evenly spaced time points
-        to extract, or a list of specific time points to query.
+        Specification of time points to extract:
+        
+        - If int: Number of evenly spaced time points to extract from the
+          data's time range. For example, points=4 with data spanning 0-100
+          would extract at times [0, 33, 67, 100].
+        - If list: Specific time points to query. Values can extend beyond
+          the data's time range (returns 0 at-risk for future times).
     output_col : `str`, default `group_1`
         Prefix for output column names. Creates columns named
         '{output_col}_at_risk', '{output_col}_at_risk_format', etc.
@@ -249,7 +284,14 @@ def extract_follow_up(data: pd.DataFrame,
     InputValidationError
         If required columns are not found in DataFrame or if input types
         are invalid.
-        
+    
+    Notes
+    -----
+    The function uses a "floor" approach for time matching: for each requested
+    time point, it finds the latest available time that is ≤ the requested
+    time. Time points beyond the study's maximum follow-up time return
+    zero at-risk counts.
+    
     Examples
     --------
     >>> # Create sample survival data
@@ -259,7 +301,6 @@ def extract_follow_up(data: pd.DataFrame,
     >>> at_risk_counts = [1000, 950, 890, 820, 740, 650, 540, 420, 280, 120]
     >>> data = pd.DataFrame({'at_risk': at_risk_counts}, index=time_points)
     
-    >>> # Extract 5 evenly spaced time points
     >>> result = extract_follow_up_data(data, 'at_risk', points=5)
     >>> print(result)
        time  group_1_at_risk group_1_at_risk_format  group_1_raw_time
@@ -296,6 +337,9 @@ def extract_follow_up(data: pd.DataFrame,
             closest_times = time_points
             at_risk_points = at_risk[indices]
     else:
+        # is a list, should not be empty
+        if len(points) == 0:
+            raise ValueError("points list cannot be empty")
         # list of specific time points
         time_points = np.array(points)
         closest_times = np.zeros_like(time_points, dtype=float)
@@ -353,71 +397,94 @@ def plot_table(
     data:pd.core.frame.DataFrame,
     ax: plt.Axes, string_col: str | list[str],
     x_col:str='time', yloc:Real | list[Real] | None=None,
-    yticklabel: str | list[str] | None = None,
     halignment_text:str="center",
     valignment_text:str="center",
     size_text:Real=10,
     size_xticklabel:Real=10,
-    xticklabel: Sequence[str] | None = None,
-    xtickloc: Sequence[Real] | None = None,
+    yticklabel: str | list[str] | None = None,
+    xticklabel: list[str] | None = None,
+    xtickloc: list[Real] | None = None,
     pad_first:Real = 0.0,
     pad_last:Real = 0.0,
-    l_xticklab_pad:str | None = None,
-    r_xticklab_pad:str | None = None,
     kwargs_text_dict:dict[Any,Any] | None = None,
     kwargs_xticklabel_dict:dict[Any,Any] | None = None,
 ) -> plt.Axes:
     """
-    Plot a bottom-aligned annotation table alongside a survival plot or similar
-    structured figure, using `ax.text` and x-axis coordinates.
+    Create a table-like annotation beneath a plot.
+    
+    The table is positioned using data coordinates for x-axis alignment and
+    axis coordinates for y-axis positioning, allowing precise alignment with
+    plot elements above.
     
     Parameters
     ----------
     data : `pd.DataFrame`
-        Pandas DataFrame containg `string_col` that should be plotted.
-        margin of error, etc.
-    ax : plt.axes
-            Axes to operate on.
+        DataFrame containg `string_col` that should be plotted.
+    ax : `plt.Axes`
+        Matplotlib Axes object where the table will be plotted.
     string_col : `str` or `list` [`str`],
-            The the column name that should be plotted. Should contain a
-            `string` value.
-    y_col : `str`, default 'y_axis'
-        Column in `dataframe` containing the vertical coordinates.
-    xloc: `real`, default 0.5
-        The position of the text **orthogonal to the axis**, given in **axes
-        coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
-        place the label outside the axis bounds.
+        Column name(s) containing the values to display in the table.
+        Each column becomes a row in the resulting table. Values should
+        be strings or convertible to strings for display.
+    x_col : `str`, default 'time'
+        Column in `dataframe` containing the x-axis coordinates.
+    yloc : `Real`, `list` [`Real`] or `None`, default `None`
+        y-axis positions for table rows in axes coordinates (0-1 range).
+        The list must match the length of string_col. If None, rows are evenly
+        spaced vertically.
     halignment_text : `str`, default "center"
         Horizontal alignment of the table text (`left`, `center`, `right`).
     valignment_text : `str`, default "center"
         Vertical alignment of the table text (`top`, `center`, `bottom`).
     size_text : `real`, default 10
         The font size for the table text.
-    size_yticklabel : `real`, default 10
-        Font size of the y-axis tick labels (if used).
-    yticklabel : `list` [`str`] or `None`, default `None`
-        A list of string containing the y-axis labels. Should match the length
-        of `ytickloc`.
-    ytickloc : `list` [`real`] or `None`, default `None`
-        A list of real values defining the y-axis locations for the ticks.
-    l_yticklab_pad : str or `None`, default `None`
-        Optional prefix to be added to each y-axis label.
-    r_yticklab_pad : str or `None`, default `None`
-        Optional suffix to be added to each y-axis label.
-    span : `dict` [`int`, `dict` [`str`, `any`]] or `None`, default `NoneType`
-        Whether you want to add an optional span. Supply a dictionary with
-        k many unique keys and next dictionaries containing `min` and
-        `max` coordinates and `kwargs`. This will all be supplied to
-        `merit_helper.utils.utils.plot_span`.
+    size_xticklabel : `Real`, default 10
+        Font size of the x-axis tick labels (if used).
+    yticklabel : `str`, `list` [`str`] or  `None`, default `None`
+        Labels for table rows (y-axis tick labels). If provided, must
+        match the length of string_col. Typically contains group names
+        or row descriptions.
+    xticklabel : `list` [`str`] or `None`, default `None`
+        A list of string containing the x-axis labels. Should match the length
+        of `xtickloc`.
+    xtickloc : `list` [`real`] or `None`, default `None`
+        A list of real values defining the x-axis locations for the ticks.
+    pad_first : `Real`, default 0.0
+        Horizontal padding applied to the first column entries.
+    pad_last : `Real`, default 0.0
+        Horizontal padding applied to the last column entries.
     kwargs_text_dict : `dict` [`any`,`any`] or `None`, default `None`
-        Additional arguments passed to `ax.text` for table entries.
-    kwargs_yticklabel_dict : `dict` [`any`,`any`] or `None`, default `None`
-        Additional arguments passed to `ax.set_yticklabels`.
+        Additional keyword arguments passed to ax.text() for table entries.
+        Allows fine-tuning of text appearance (colour, weight, etc.).
+    kwargs_xticklabel_dict : `dict` [`any`,`any`] or `None`, default `None`
+        Additional keyword arguments passed to ax.set_xticklabels() for
+        x-axis labels.
     
     Returns
     -------
     plt.Axes
         The axis object with the table rendered.
+    
+    Raises
+    ------
+    ValueError
+        If yticklabel and string_col have different lengths, if yloc and
+        string_col have different lengths, if xticklabel and xtickloc
+        have different lengths, if xticklabel is provided without xtickloc
+        or vice versa.
+    InputValidationError
+        If required columns are not found in the DataFrame or input types
+        are invalid.
+    
+    Notes
+    -----
+    The function uses matplotlib's axis transforms to position text:
+    - X-coordinates use data coordinates (matching the main plot)
+    - Y-coordinates use axes coordinates (0-1 range for consistent spacing)
+    
+    This hybrid coordinate system allows the table to align with plot data
+    while maintaining consistent vertical spacing regardless of
+    data values.
     """
     # ################### do check and set defaults
     is_df(data)
@@ -428,10 +495,12 @@ def plot_table(
     is_type(halignment_text, str)
     is_type(valignment_text, str)
     is_type(size_text, (int, float))
-    is_type(l_xticklab_pad, (type(None), str))
-    is_type(r_xticklab_pad, (type(None), str))
     is_type(xticklabel, (type(None), list))
     is_type(xtickloc, (type(None), list))
+    is_type(yticklabel, (str, list, type(None)))
+    is_type(size_xticklabel, Real)
+    is_type(pad_first, Real)
+    is_type(pad_last, Real)
     # check if columns are in dataframe
     if isinstance(string_col, str):
         string_col = [string_col]
@@ -474,13 +543,8 @@ def plot_table(
         raise ValueError('`xticklabel` should be supplied if `xtickloc` is used.')
     if (not xticklabel is None) and (not xtickloc is None):
         if len(xticklabel) != len(xtickloc):
-            raise IndexError('`xticklabel` and `xtickloc` containts distinct '
+            raise ValueError('`xticklabel` and `xtickloc` containts distinct '
                              'values.')
-        # add optional label padding
-        if not l_xticklab_pad is None:
-            xticklabel = [l_xticklab_pad + str(s) for s in xticklabel]
-        if not r_xticklab_pad is None:
-            xticklabel = [str(s) + r_xticklab_pad for s in xticklabel]
         # plot x-tick labels
         ax.set_xticks(xtickloc)
         # update kwargs for labels
@@ -538,7 +602,8 @@ def plot_table(
             )
         # adding tick labels
         ylocs = ylocs + [yloc_]
-        ylabs = ylabs + [yticklabel[j]]
+        if yticklabel is not None:
+            ylabs = ylabs + [yticklabel[j]]
     ax.set_yticks(ylocs)
     ax.set_yticklabels(ylabs)
     # ################### return

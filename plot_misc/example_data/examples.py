@@ -692,3 +692,35 @@ def create_survival_data(nrows:int = 50,
     
     df.set_index('time', inplace=True)
     return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_survival_table(**kwargs):
+    """
+    Returns a survival table with information on the `time` (in days) an event
+    occured the cummulative events per discordancy group. The time per year
+    is provided as the time_format column.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # data
+    table = pd.DataFrame(
+        {
+            'time': [0, 365, 730, 1095, 1461, 1826, 2191, 2556, 2922, 3287,
+                     3652, 4017, 4383, 4748, 5113, 5478],
+            'Not Discordant': ['268,196', '263,426', '258,484', '254,009',
+                               '249,315', '244,907', '240,562', '236,574',
+                               '233,347', '230,368', '227,648', '224,916',
+                               '222,169', '172,545', '95,987', '15,280'],
+            'Discordant': ['5,749', '5,629', '5,494', '5,374',
+                                 '5,245', '5,129', '5,029', '4,935',
+                                 '4,863', '4,777', '4,714', '4,634',
+                                 '4,558', '3,586', '2,030', '346'],
+            'time_format': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        }, **kwargs,
+    )
+    # return
+    return table
+
