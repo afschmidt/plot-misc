@@ -13,8 +13,6 @@
 Plot-misc
 =========
 
-This is |release| (short: |version|).
-
 Plot-misc is a Python package that extends matplotlib with a
 curated collection of functions and classes designed for streamlined
 data visualisation.
