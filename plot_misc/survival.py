@@ -1,6 +1,30 @@
 """
-TODO
+Survival analysis plotting tools using matplotlib.
+
+This module provides specialised plotting functions for survival analysis
+results. The functions are designed to handle common survival analysis tasks
+including step-wise survival curves (e.g., Kaplan-Meier or other non-parametric
+estimators), follow-up data extraction, and risk table annotations beneath
+survival plots.
+
+Functions
+---------
+plot_step_wise(data, estimate_col, time_col, ...)
+    Create step-wise plots for survival estimates, cumulative hazard functions,
+    or other piecewise constant estimators with optional confidence intervals
+    and customisable styling.
+
+extract_follow_up(data, at_risk_col, time_col, ...)
+    Extract at-risk counts at specified time points for creating follow-up
+    tables or "Numbers at Risk" annotations commonly displayed beneath
+    survival plots.
+
+plot_table(data, ax, string_col, ...)
+    Create table-like annotations beneath plots using matplotlib's coordinate
+    transforms, allowing precise alignment between plot data and tabular
+    information such as risk tables or summary statistics.
 """
+
 import warnings
 import numpy as np
 import pandas as pd
@@ -541,7 +565,7 @@ def plot_table(
         raise ValueError('`xtickloc` should be supplied if `xticklabel` is used.')
     if (xticklabel is None) and (not xtickloc is None):
         raise ValueError('`xticklabel` should be supplied if `xtickloc` is used.')
-    if (not xticklabel is None) and (not xtickloc is None):
+    if (xticklabel is not None) and (xtickloc is not None):
         if len(xticklabel) != len(xtickloc):
             raise ValueError('`xticklabel` and `xtickloc` containts distinct '
                              'values.')
@@ -604,8 +628,9 @@ def plot_table(
         ylocs = ylocs + [yloc_]
         if yticklabel is not None:
             ylabs = ylabs + [yticklabel[j]]
-    ax.set_yticks(ylocs)
-    ax.set_yticklabels(ylabs)
+    if yticklabel is not None:
+        ax.set_yticks(ylocs)
+        ax.set_yticklabels(ylabs)
     # ################### return
     return ax
 

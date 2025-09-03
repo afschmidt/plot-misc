@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import plot_misc.survival as pltm_surv
 import plot_misc.example_data.examples as examples
 
-sample_data = examples.create_survival_data(nrows=20, random_seed=42)
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 class TestPlotStepWise:
     """Test suite for the plot_step_wise function."""
@@ -240,3 +239,195 @@ class TestExtractFollowUp:
         )
         assert len(single_point_result) == 1
         assert single_point_result['group_1_at_risk'].iloc[0] >= 0
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class TestPlotTable:
+    """Test cases for the plot_table function."""
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @pytest.fixture
+    def sample_data(self):
+        return examples.load_survival_table()
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @pytest.fixture
+    def fig_ax(self):
+        fig, ax = plt.subplots(figsize=(10, 6))
+        return fig, ax
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self, sample_data, fig_ax):
+        """
+        Test basic table plotting with a single string column.
+        
+        This test verifies that the function can handle:
+        - Single string column input
+        - Default parameter values
+        - Proper text placement calls
+        """
+        _, ax = fig_ax
+        # call function
+        result_ax = pltm_surv.plot_table(
+            data=sample_data,
+            ax=ax,
+            string_col='Not Discordant',
+            x_col='time'
+        )
+        result_ax.set_xlim(-200, 6000)
+        assert result_ax is ax
+        # verify spines are hidden
+        assert not ax.spines['top'].get_visible()
+        assert not ax.spines['right'].get_visible()
+        # verify y-axis has no tick labels (empty list)
+        assert ax.get_yticklabels() == []
+        # verify y-axis has no ticks
+        assert len(ax.get_yticks()) == 0
+        # verify x-axis has no tick labels when not specified
+        assert ax.get_xticklabels() == []
+        assert len(ax.get_xticks()) == 0
+        # check that text objects were added to the axes
+        text_objects = ax.texts
+        assert len(text_objects) == len(sample_data)
+        # Verify some text properties
+        first_text = text_objects[0]
+        assert first_text.get_text() == sample_data.iloc[0,1]
+        assert first_text.get_horizontalalignment() == 'center'
+        assert first_text.get_verticalalignment() == 'center'
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_twogroups(self, sample_data, fig_ax):
+        """
+        Test table plotting with multiple string columns and custom parameters.
+        
+        This test verifies:
+        - Multiple string columns handling
+        - Custom y-tick labels
+        - Custom positioning and formatting parameters
+        - X-axis tick customisation
+        """
+        _, ax = fig_ax
+        result_ax = pltm_surv.plot_table(
+            data=sample_data,
+            ax=ax,
+            string_col=['Not Discordant', 'Discordant'],
+            x_col='time',
+            yloc=[0.7, 0.3],
+            yticklabel=['Control Group', 'Treatment Group'],
+            xticklabel=['Year 0', 'Year 5', 'Year 10', 'Year 15'],
+            xtickloc=[0, 1826, 3652, 5478],
+            size_text=12,
+            halignment_text='left',
+            pad_first=50.0,
+            pad_last=25.0
+        )
+        assert result_ax is ax
+        # check text objects were added for both columns
+        text_objects = ax.texts
+        expected_text_count = len(sample_data) * 2
+        assert len(text_objects) == expected_text_count
+        # x-axis ticks and labels
+        x_ticks = ax.get_xticks()
+        x_tick_labels = [lab.get_text() for lab in ax.get_xticklabels()]
+        np.testing.assert_array_equal(x_ticks, [0, 1826, 3652, 5478])
+        assert x_tick_labels == ['Year 0', 'Year 5', 'Year 10', 'Year 15']
+        # y-axis labels
+        y_tick_labels = [lab.get_text() for lab in ax.get_yticklabels()]
+        assert y_tick_labels == ['Control Group', 'Treatment Group']
+        # text alignment was applied
+        sample_text = text_objects[0]
+        assert sample_text.get_horizontalalignment() == 'left'
+        assert sample_text.get_fontsize() == 12
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_errors(self, sample_data, fig_ax):
+        """
+        Test error handling for invalid parameter combinations.
+        
+        This test verifies:
+        - ValueError for mismatched list lengths
+        - Proper error messages
+        - Input validation edge cases
+        """
+        fig, ax = fig_ax
+        # Test mismatched yticklabel and string_col lengths
+        with pytest.raises(ValueError,
+                         match="`yticklabel` and `string_col` should have "
+                               "the same number of elements."):
+            pltm_surv.plot_table(
+                data=sample_data,
+                ax=ax,
+                string_col=['Not Discordant', 'Discordant'],
+                yticklabel=['Only One Label']  # Should be two labels
+            )
+        # Test mismatched yloc and string_col lengths
+        with pytest.raises(ValueError,
+                         match="`yloc` and `string_col` should have "
+                               "the same number of elements."):
+            pltm_surv.plot_table(
+                data=sample_data,
+                ax=ax,
+                string_col=['Not Discordant', 'Discordant'],
+                yloc=[0.5]  # Should be two positions
+            )
+        # Test xticklabel without xtickloc
+        with pytest.raises(ValueError,
+                         match="`xtickloc` should be supplied if "
+                               "`xticklabel` is used."):
+            pltm_surv.plot_table(
+                data=sample_data,
+                ax=ax,
+                string_col='Not Discordant',
+                xticklabel=['Year 0', 'Year 5']
+                # Missing xtickloc
+            )
+        # Test mismatched xticklabel and xtickloc lengths
+        with pytest.raises(ValueError,
+                         match="`xticklabel` and `xtickloc` containts "
+                               "distinct values."):
+            pltm_surv.plot_table(
+                data=sample_data,
+                ax=ax,
+                string_col='Not Discordant',
+                xticklabel=['Year 0', 'Year 5'],
+                xtickloc=[0, 1826, 3652]  # Three locations, two labels
+            )
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @pytest.mark.parametrize("string_col_input,expected_text_count", [
+        ('Not Discordant', 16),  # Single column, 16 data points
+        (['Not Discordant'], 16),  # Single column as list, 16 data points
+        (['Not Discordant', 'Discordant'], 32),  # Two columns, 32 total
+    ])
+    def test_string_col(self, sample_data, fig_ax,
+                        string_col_input, expected_text_count):
+        """
+        Test that string_col parameter accepts both string and list inputs.
+        """
+        _, ax = fig_ax
+        ax = pltm_surv.plot_table(
+            data=sample_data,
+            ax=ax,
+            string_col=string_col_input,
+            x_col='time'
+        )
+        # Verify the correct number of text objects were created
+        text_objects = ax.texts
+        assert len(text_objects) == expected_text_count
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_missings(self, fig_ax):
+        """
+        Test that the function handles NaN values in string columns gracefully.
+        """
+        _, ax = fig_ax
+        # Create data with NaN values
+        data_with_nan = pd.DataFrame({
+            'time': [0, 365, 730],
+            'values': ['100', np.nan, '200']
+        })
+        
+        result_ax = pltm_surv.plot_table(
+            data=data_with_nan,
+            ax=ax,
+            string_col='values',
+            x_col='time'
+        )
+        # Verify function completes without error
+        assert result_ax is ax
+        # Check that NaN was converted to empty string
+        text_objects = ax.texts
+        text_values = [obj.get_text() for obj in text_objects]
+        assert text_values == ['100', '', '200']
