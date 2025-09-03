@@ -1,11 +1,8 @@
-Examples
--------------------------------------------
-
-Here is some sample templates illustrating 
-the basic features of plot-misc. 
+To get you started please consider the following examples illustration
+the basic functionality of plot-misc.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 0
 
    plots/barcharts.nblink
    plots/forestplot.nblink

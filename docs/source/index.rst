@@ -5,51 +5,63 @@
 
 .. figure:: _static/icon.png
    :align: center
-   :width: 150px
+   :width: 250px
    :class: project-logo
+   
+----------------------------
 
 Plot-misc
 =========
 
-Plot-misc is a Python package that extends matplotlib with a 
-curated collection of functions and classes designed for streamlined 
+Plot-misc is a Python package that extends matplotlib with a
+curated collection of functions and classes designed for streamlined
 data visualisation.
-The package provides lightweight, user-oriented plotting capabilities 
+The package provides lightweight, user-oriented plotting capabilities
 whilst maintaining full compatibility with matplotlib's native functionality.
 
-Built with flexibility in mind, Plot-misc returns standard matplotlib figure 
-and axes objects, enabling users to apply additional customisations using 
-familiar matplotlib methods. 
-This approach ensures that the package serves as an enhancement rather than a 
+Built with flexibility in mind, Plot-misc returns standard matplotlib figure
+and axes objects, enabling users to apply additional customisations using
+familiar matplotlib methods.
+This approach ensures that the package serves as an enhancement rather than a
 replacement for existing matplotlib workflows.
 
-The package adopts a focused philosophy: it attempts to concentrates exclusively 
-on plotting functionality and expects users to provide appropriately formatted data. 
-This design creates a direct, predictable relationship between your prepared 
-datasets and the resulting visualisations, promoting clear and efficient plotting 
+The package adopts a focused philosophy: it attempts to concentrates exclusively
+on plotting functionality and expects users to provide appropriately formatted data.
+This design creates a direct, predictable relationship between your prepared
+datasets and the resulting visualisations, promoting clear and efficient plotting
 workflows.
 
-Content 
-=======
+Installation
+----------------------------
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Setup
+To install the package from PyPI, run:
 
-   getting_started
+.. code-block:: console
 
+    pip install plot-misc
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Programmer reference
-   
-   api
+or instead using conda:
+
+.. code-block:: console
+
+    conda install afschmidt::plot_misc
+
+Documentation
+=============
 
 .. toctree::
    :maxdepth: 3
-   :caption: Examples
+   :caption: Quickstart & Examples
    
    examples
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+   
+   api
+
 
 .. toctree::
    :maxdepth: 2

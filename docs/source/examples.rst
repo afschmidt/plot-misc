@@ -1,9 +1,5 @@
-========================
-Examples
-========================
-
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    examples/plot_misc
 

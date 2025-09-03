@@ -1,6 +1,6 @@
+
 plot-misc.barchart module
 -------------------------------------------
-
 .. automodule:: plot_misc.barchart
    :members:
 
