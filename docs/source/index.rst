@@ -3,14 +3,31 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to plot-misc's documentation!
-=====================================
+.. figure:: _static/icon.png
+   :align: center
+   :width: 150px
+   :class: project-logo
 
-Plot-misc combines a set of python-based functions and classes build on
-top of matplotlib and (less frequently) seaborn. The module is designed 
-to provide a fairly basic default illustration, returning figure 
-and axes object to allow the user to customise the base illustration 
-using regular matplotlib functionality. 
+Plot-misc
+=========
+
+Plot-misc is a Python package that extends matplotlib with a 
+curated collection of functions and classes designed for streamlined 
+data visualisation.
+The package provides lightweight, user-oriented plotting capabilities 
+whilst maintaining full compatibility with matplotlib's native functionality.
+
+Built with flexibility in mind, Plot-misc returns standard matplotlib figure 
+and axes objects, enabling users to apply additional customisations using 
+familiar matplotlib methods. 
+This approach ensures that the package serves as an enhancement rather than a 
+replacement for existing matplotlib workflows.
+
+The package adopts a focused philosophy: it attempts to concentrates exclusively 
+on plotting functionality and expects users to provide appropriately formatted data. 
+This design creates a direct, predictable relationship between your prepared 
+datasets and the resulting visualisations, promoting clear and efficient plotting 
+workflows.
 
 Content 
 =======
