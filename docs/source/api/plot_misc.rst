@@ -1,45 +1,45 @@
 
-plot-misc.barchart module
+barchart module
 -------------------------------------------
 .. automodule:: plot_misc.barchart
    :members:
 
-plot-misc.forest module
+forest module
 -------------------------------------------
 .. automodule:: plot_misc.forest
    :members:
 
-plot-misc.heatmap module
+heatmap module
 -------------------------------------------
 .. automodule:: plot_misc.heatmap
    :members:
 
-plot-misc.incidencematrix module
+incidencematrix module
 -------------------------------------------
 .. automodule:: plot_misc.incidencematrix
    :members:
 
-plot-misc.machine_learning module
+machine_learning module
 -------------------------------------------
 .. automodule:: plot_misc.machine_learning
    :members:
 
-plot-misc.volcano module
+volcano module
 -------------------------------------------
 .. automodule:: plot_misc.volcano
    :members:
 
-plot-misc.utils.utils module
+utils.utils module
 -------------------------------------------
 .. automodule:: plot_misc.utils.utils
    :members:
 
-plot-misc.utils.formatting module
+utils.formatting module
 -------------------------------------------
 .. automodule:: plot_misc.utils.formatting
    :members:
 
-plot-misc.utils.colour module
+utils.colour module
 -------------------------------------------
 .. automodule:: plot_misc.utils.colour
    :members:

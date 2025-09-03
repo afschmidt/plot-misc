@@ -21,6 +21,8 @@ project = 'plot-misc'
 copyright = '2024, A. Floriaan Schmidt'
 author = 'A. Floriaan Schmidt'
 release = '2.0.4'
+# version = '.'.join(release.split('.')[:2])
+version = release
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -51,6 +53,9 @@ pygments_style = "sphinx"
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+html_theme_options = {
+    "display_version": True,
+}
 
 # Intersphinx, links into the STD python library
 intersphinx_mapping = {

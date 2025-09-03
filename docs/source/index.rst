@@ -13,6 +13,8 @@
 Plot-misc
 =========
 
+This is |release| (short: |version|).
+
 Plot-misc is a Python package that extends matplotlib with a
 curated collection of functions and classes designed for streamlined
 data visualisation.
@@ -50,21 +52,27 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Quickstart & Examples
    
-   examples
+   examples/plots/barcharts.nblink
+   examples/plots/forestplot.nblink
+   examples/plots/heatmap.nblink
+   examples/plots/incidencematrix.nblink
+   examples/plots/machine_learning.nblink
+   examples/plots/pychart.nblink
+   examples/plots/volcanoplot.nblink
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: API Reference
+   :maxdepth: 1
+   :caption: Additional documenation
    
    api
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Project admin
 
    contributing

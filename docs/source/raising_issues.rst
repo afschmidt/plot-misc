@@ -4,7 +4,8 @@ Raising issues
 
 If you find a possible bug or improvement (in code and/or documentation) please
 feel free to either fix this yourself following the *Contributing to the 
-project* guidance, or by raising an issue on GitLab. 
+project* guidance, or by raising an issue on GitLab  
+`SchmidtAF\plot-misc <https://gitlab.com/SchmidtAF/plot-misc>`_.
 
 When raising an issue please make sure to include a **minimal reproducible 
 example** (MRE).
