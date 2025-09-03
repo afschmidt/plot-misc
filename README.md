@@ -1,8 +1,7 @@
-<div align="center">
-  <img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png"
-       alt="plot-misc icon"
-       width="350"/>
-</div>
+<img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png"
+     alt="plot-misc icon"
+     width="350"
+     style="display: block; margin-left: auto; margin-right: auto;"/>
 
 # A collection of plotting functions
 __version__: `2.0.4`
