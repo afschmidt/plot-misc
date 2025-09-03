@@ -1,4 +1,6 @@
-<img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png" alt="plot-misc icon" width="200"/>
+<p align="center">
+<img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png" alt="plot-misc icon" width="450"/>
+<\p>
 
 # A collection of plotting functions
 __version__: `2.0.4`
