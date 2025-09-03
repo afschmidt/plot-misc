@@ -1,7 +1,8 @@
-<p align="center">
-
-<img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png" alt="plot-misc icon" width="350"/>
-
+<p>
+  <img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png"
+       alt="plot-misc icon"
+       width="350"
+       style="display:block; margin-left:auto; margin-right:auto;"/>
 </p>
 
 # A collection of plotting functions
