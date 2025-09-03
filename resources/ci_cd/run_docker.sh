@@ -28,6 +28,7 @@ repo_root="$(readlink -f "$2")"
 repo_base="$(basename "$repo_root")"
 
 # Set up the documentation build dir
+# NOTE the default is defunct - should just remove
 build_dir=$HOME/pCloudDrive/Public\ Folder/skeleton-package/
 build_dir=${3:-"$build_dir"}
 mkdir -p "$build_dir"
