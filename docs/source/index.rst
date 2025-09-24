@@ -44,7 +44,7 @@ or instead using conda:
 
 .. code-block:: console
 
-    conda install afschmidt::plot_misc
+    conda install afschmidt::plot-misc
 
 Documentation
 =============
