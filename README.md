@@ -32,7 +32,7 @@ To install from this channel, run:
 
 
 ```sh
-conda install afschmidt::plot_misc
+conda install afschmidt::plot-misc
 ```
 
 ### Installation using gitlab

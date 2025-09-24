@@ -400,22 +400,7 @@ def extract_follow_up(data: pd.DataFrame,
     # return
     return res
 
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# surv_table = pd.DataFrame(
-#     {
-#     'time': [0, 365, 730, 1095, 1461, 1826, 2191, 2556, 2922, 3287,
-#              3652, 4017, 4383, 4748, 5113, 5478],
-#     'Not Discordant': ['268,196', '263,426', '258,484', '254,009',
-#                        '249,315', '244,907', '240,562', '236,574',
-#                        '233,347', '230,368', '227,648', '224,916',
-#                        '222,169', '172,545', '95,987', '15,280'],
-#     'Apo-B discordant': ['5,749', '5,629', '5,494', '5,374',
-#                          '5,245', '5,129', '5,029', '4,935',
-#                          '4,863', '4,777', '4,714', '4,634',
-#                          '4,558', '3,586', '2,030', '346'],
-#     'time_format': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-# }
-# )
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def plot_table(
     data:pd.core.frame.DataFrame,
@@ -430,6 +415,7 @@ def plot_table(
     xtickloc: list[Real] | None = None,
     pad_first:Real = 0.0,
     pad_last:Real = 0.0,
+    pad_all:Real = 0.0,
     kwargs_text_dict:dict[Any,Any] | None = None,
     kwargs_xticklabel_dict:dict[Any,Any] | None = None,
 ) -> plt.Axes:
@@ -474,9 +460,12 @@ def plot_table(
     xtickloc : `list` [`real`] or `None`, default `None`
         A list of real values defining the x-axis locations for the ticks.
     pad_first : `Real`, default 0.0
-        Horizontal padding applied to the first column entries.
+        Horizontal padding applied to first string.
     pad_last : `Real`, default 0.0
-        Horizontal padding applied to the last column entries.
+        Horizontal padding applied to the last string.
+    pad_all : `Real`, default 0.0
+        Horizontal padding applied to all the strings. Note this will be added
+        on top of any `pad_last` or `pad_first` padding as a sum.
     kwargs_text_dict : `dict` [`any`,`any`] or `None`, default `None`
         Additional keyword arguments passed to ax.text() for table entries.
         Allows fine-tuning of text appearance (colour, weight, etc.).
@@ -612,10 +601,12 @@ def plot_table(
                 horizontalalignment=halignment_text,
                 verticalalignment=valignment_text,
             )
+            # adding text padding
             if k == 0:
                 xticklabel1 = xticklabel1 + pad_first
             elif k == data.shape[0]-1:
                 xticklabel1 = xticklabel1 + pad_last
+            xticklabel1 = xticklabel1 + pad_all
             # plotting table text
             ax.text(
                 y=yloc_,
