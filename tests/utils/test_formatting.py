@@ -4,6 +4,7 @@ from plot_misc.utils.formatting import(
     format_estimates,
     sci_notation,
     string_interval,
+    wrap_text,
     _nlog10_func,
     _superscriptinate,
 )
@@ -74,6 +75,24 @@ class Test_sci_notation(object):
         assert sci_notation(0.0012545, min=0.01) == '1.00×10⁻²'
         assert sci_notation(101, max=10) == '1.00×10¹'
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class Test_wrap_text(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_default(self):
+        text = "The quick brown fox jumps over the lazy dog."
+        # one break
+        assert wrap_text(text, 25) ==\
+            'The quick brown fox\njumps over the lazy dog.'
+        # more than one
+        assert wrap_text(text, 10) ==\
+            'The quick\nbrown fox\njumps\nover the\nlazy dog.'
+        assert wrap_text('no_break', 10) == 'no_break'
+        # heart breaks
+        text = "Pneumonoultramicroscopicsilicovolcanoconiosis"
+        assert wrap_text(text, 10, break_char="-") ==(
+            "Pneumonoul-\ntramicrosc-\nopicsilico-\nvolcanocon-\n"
+            "iosis"
+        )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Test_string_interval(object):

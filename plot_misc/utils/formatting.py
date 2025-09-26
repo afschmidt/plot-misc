@@ -268,6 +268,56 @@ def sci_notation(number: Real, sig_fig:int=2,
         return str(np.nan)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def wrap_text(text: str, max_n: int, break_char:str='') -> str:
+    """
+    If the `text` string is longer than `max_n`, insert a linebreak at a white
+    space before `max_n`.
+     
+    Parameters
+    ----------
+    text : `str`
+        A string which should be truncated if too long.
+    max_n : `int`
+        The truncation length.
+    break_char : `str`,
+        The character to insert before a newline when a word must be
+        split (a hard break). Defaults to an empty string.
+        
+    Return
+    ------
+    str
+        The truncated string, with additional linebreak if needed.
+    """
+    #  ####check input
+    is_type(text, str)
+    is_type(max_n, int)
+    # #### remove any leading white space
+    text = text.lstrip()
+    # #### check string
+    # The string it already short enough!
+    if len(text) <= max_n:
+        return text
+    # find the last whitespace before `max_n`
+    text_cut = text.rfind(" ", 0, max_n)
+    if text_cut == -1:
+        # hard break at max_n if no whitespace is found.
+        text_cut = max_n
+        # apply break character and linebreak
+        line_ending = break_char + "\n"
+    else:
+        line_ending = "\n"
+    # Find the first part before the break
+    first_part = text[:text_cut] + line_ending
+    if text_cut == max_n:
+        # Hard break
+        remainder = text[text_cut:]
+    else:
+        # Soft break
+        remainder = text[text_cut + 1 :]
+    # Recursive step: wrap the remainder and concatenate.
+    return first_part + wrap_text(remainder, max_n, break_char)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def string_interval(limits:list[Real], int_notation:bool=False,
                     middle:bool=False, lower_lim:Real | None = None,
                     inq_space:str = ' ', sep:str = ', ',
