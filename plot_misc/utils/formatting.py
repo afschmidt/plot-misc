@@ -297,24 +297,22 @@ def wrap_text(text: str, max_n: int, break_char:str='') -> str:
     # The string it already short enough!
     if len(text) <= max_n:
         return text
-    # find the last whitespace before `max_n`
     text_cut = text.rfind(" ", 0, max_n)
+    # If there is no white space apply a hard break
     if text_cut == -1:
-        # hard break at max_n if no whitespace is found.
         text_cut = max_n
-        # apply break character and linebreak
         line_ending = break_char + "\n"
     else:
         line_ending = "\n"
-    # Find the first part before the break
     first_part = text[:text_cut] + line_ending
+    #  get the remainder
     if text_cut == max_n:
-        # Hard break
+        # hard break
         remainder = text[text_cut:]
     else:
-        # Soft break
+        # soft break
         remainder = text[text_cut + 1 :]
-    # Recursive step: wrap the remainder and concatenate.
+    # Recursive step, will stop when len(text)<=max_n
     return first_part + wrap_text(remainder, max_n, break_char)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
