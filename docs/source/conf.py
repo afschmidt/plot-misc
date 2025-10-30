@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath(os.path.join('..', '..' )))
 project = 'plot-misc'
 copyright = '2024, A. Floriaan Schmidt'
 author = 'A. Floriaan Schmidt'
-release = '2.0.4'
+release = '2.1.0'
 version = '.'.join(release.split('.')[:2])
 
 # -- General configuration ---------------------------------------------------

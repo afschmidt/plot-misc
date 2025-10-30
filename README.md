@@ -1,7 +1,7 @@
 <img src="https://schmidtaf.gitlab.io/plot-misc/_images/icon.png" alt="plot-misc icon" width="250"/>
 
 # A collection of plotting functions
-__version__: `2.0.4`
+__version__: `2.1.0`
 
 This repository collects plotting modules written on top of `matplotlib`.
 The functions are intended to set up light-touch, basic illustrations that
