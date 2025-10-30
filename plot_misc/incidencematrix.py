@@ -61,6 +61,8 @@ def draw_incidencematrix(
     margins:tuple[float,float] | None = None,
     grid_position:Literal['outline', 'centre'] | None = 'centre',
     ax:plt.Axes | None = None,
+    x_coords:list[Real] | None = None,
+    y_coords:list[Real] | None = None,
     break_limits:tuple[float, float] = (-np.inf, np.inf),
     size_data: pd.DataFrame | None = None,
     transparency_data: pd.DataFrame | None = None,
@@ -119,6 +121,14 @@ def draw_incidencematrix(
     ax : `plt.axes` or `None`, default `None`
         If provided, the plot is drawn on this axis. Otherwise, a new figure
         and axis are created.
+    x_coords : `list` [`real`] or `None`, default `None`
+        An optional list of x-coordinates to use for plotting the dots.
+        If `None`, dots are spaced evenly. Length must match number of
+        rows in `data`.
+    y_coords : `list` [`real`] or `None`, default `None`
+        An optional list of y-coordinates to use for plotting the dots.
+        If `None`, dots are spaced evenly. Length must match number of
+        columns in `data`.
     break_limits : `tuple` [`float`, `float`], default (-np.inf, np.inf)
         Lower and upper bounds for the first and final break. Used to define
         open-ended ranges in dot colouring. Currently only uses the lower
@@ -148,8 +158,9 @@ def draw_incidencematrix(
     
     Missing or non-matching entries in the input matrix will be ignored.
     """
-    SHAPE_ERR = ('`data` and `{0}` should have the same shapes '
+    SHAPE_ERR1 = ('`data` and `{0}` should have the same shapes '
                  'not: {1} and {2}, respectively.')
+    SHAPE_ERR2 = ('Length of {0}: {1} must match number of {2}: {3}.')
     # check inputs
     is_type(dot_size, list)
     is_type(dot_colour, list)
@@ -159,6 +170,8 @@ def draw_incidencematrix(
     is_type(grid_position, (str, type(None)))
     is_type(size_data, (type(None), pd.DataFrame))
     is_type(transparency_data, (type(None), pd.DataFrame))
+    is_type(x_coords, (type(None), list))
+    is_type(y_coords, (type(None), list))
     # check literals
     EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
     if grid_position is not None and not grid_position in EXP_GRID:
@@ -168,11 +181,11 @@ def draw_incidencematrix(
     # make sure all the data have the same shape
     if size_data is not None and data.shape != size_data.shape:
         raise IndexError(
-            SHAPE_ERR.format('size_data', data.shape, size_data.shape
+            SHAPE_ERR1.format('size_data', data.shape, size_data.shape
                              ))
     if transparency_data is not None and data.shape != transparency_data.shape:
         raise IndexError(
-            SHAPE_ERR.format('transparency_data', data.shape,
+            SHAPE_ERR1.format('transparency_data', data.shape,
                              transparency_data.shape
                              ))
     # transpose - hack to make the output match the input row,col and order.
@@ -221,9 +234,24 @@ def draw_incidencematrix(
     dot_transparency_arr = _map_attributes(
         transparency_input, new_dot_transparency,
         break_limits=break_limits)
-    # the x and y coordinates
+    # All for user supplied coordinates and check these match the data shape
     M, N = data.shape
-    x, y = np.meshgrid(np.arange(M), np.arange(N))
+    if x_coords is not None:
+        x_coords_ = np.asarray(x_coords)
+        if len(x_coords_) != M:
+            raise ValueError(SHAPE_ERR2.format('x_coords', len(x_coords_),
+                                               'rows', M))
+    else:
+        x_coords_ = np.arange(M)
+    if y_coords is not None:
+        y_coords_ = np.asarray(y_coords)
+        if len(y_coords_) != N:
+            raise ValueError(SHAPE_ERR2.format('y_coords', len(y_coords_),
+                                               'columns', N))
+    else:
+        y_coords_ = np.arange(N)
+    # get the actual coordinates
+    x, y = np.meshgrid(x_coords_, y_coords_)
     xv = x.T.ravel()
     yv = y.T.ravel()
     col_flat = dot_colours_arr.ravel()

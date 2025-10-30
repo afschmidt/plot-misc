@@ -1,6 +1,7 @@
 """
 testing the `incidencematrix` module
 """
+import pytest
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -129,6 +130,75 @@ class TestIncidenceMatrix(object):
         observed_rgba = {tuple(c) for c in face_rgba}
         assert observed_rgba.issubset(expected_rgba), \
             f"Unexpected colours: {observed_rgba} not in {expected_rgba}"
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_custom_coordinates(self):
+        """Testing custom x and y coordinates"""
+        data = pd.DataFrame({
+            "Col 1": [0, 1],
+            "Col 2": [1, 0],
+        }, index=["Row A", "Row B"])
+        
+        # Custom coordinates with non-uniform spacing
+        x_coords = [0, 5]
+        y_coords = [0, 3]
+        
+        _, ax = imat_plt.draw_incidencematrix(
+            data,
+            x_coords=x_coords,
+            y_coords=y_coords,
+            dot_colour=DOT_COLOUR,
+            dot_size=DOT_SIZE,
+            tick_lab_size=TICK_LAB_SIZE,
+            margins=MARGINS,
+        )
+        
+        # Get all scatter points
+        scatters = [c for c in ax.collections if
+                    isinstance(c, PathCollection)]
+        all_offsets = np.concatenate([s.get_offsets() for s in scatters])
+        
+        # Extract unique x and y coordinates from plotted points
+        unique_x = np.unique(all_offsets[:, 0])
+        unique_y = np.unique(all_offsets[:, 1])
+        
+        # Verify coordinates match our custom values
+        assert np.allclose(unique_x, x_coords), \
+            f"Expected x coords {x_coords}, got {unique_x}"
+        assert np.allclose(unique_y, y_coords), \
+            f"Expected y coords {y_coords}, got {unique_y}"
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_custom_coordinates_error(self):
+        """Testing error when coordinate dimensions do not match data"""
+        data = pd.DataFrame({
+            "Col 1": [0, 1],
+            "Col 2": [1, 0],
+        }, index=["Row A", "Row B"])
+        
+        # Test x_coords mismatch (data has 2 rows, but 3 x_coords)
+        x_coords_wrong = [0, 5, 10]
+        y_coords_correct = [0, 3]
+        
+        with pytest.raises(ValueError, match=r"Length of x_coords.*must "
+                                             r"match number of rows"):
+            imat_plt.draw_incidencematrix(
+                data,
+                x_coords=x_coords_wrong,
+                y_coords=y_coords_correct,
+                dot_colour=DOT_COLOUR,
+            )
+        
+        # Test y_coords mismatch (data has 2 columns, but 3 y_coords)
+        x_coords_correct = [0, 5]
+        y_coords_wrong = [0, 3, 10]
+        
+        with pytest.raises(ValueError, match=r"Length of y_coords.*must "
+                                             r"match number of columns"):
+            imat_plt.draw_incidencematrix(
+                data,
+                x_coords=x_coords_correct,
+                y_coords=y_coords_wrong,
+                dot_colour=DOT_COLOUR,
+            )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class TestMapAttributes(object):
