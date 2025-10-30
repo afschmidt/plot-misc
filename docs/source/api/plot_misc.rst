@@ -24,6 +24,11 @@ machine_learning module
 .. automodule:: plot_misc.machine_learning
    :members:
 
+survival module
+-------------------------------------------
+.. automodule:: plot_misc.survival
+   :members:
+
 volcano module
 -------------------------------------------
 .. automodule:: plot_misc.volcano

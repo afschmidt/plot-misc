@@ -59,6 +59,7 @@ Documentation
    examples/plots/incidencematrix.nblink
    examples/plots/machine_learning.nblink
    examples/plots/pychart.nblink
+   examples/plots/survival.nblink
    examples/plots/volcanoplot.nblink
 
 

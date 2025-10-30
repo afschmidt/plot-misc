@@ -394,9 +394,9 @@ class ForestPlot(object):
         - 'max' : float
             The upper bound of the span in data coordinates.
         - 'kwargs' : dict
-        A dictionary of keyword arguments to be passed to the span plotting
-        function (e.g., `ax.axhspan()`), such as `facecolor`, `alpha`,
-        `zorder`, etc.
+            A dictionary of keyword arguments to be passed to the span plotting
+            function (e.g., `ax.axhspan()`), such as `facecolor`, `alpha`,
+            `zorder`, etc.
     
     Notes
     -----
@@ -1000,15 +1000,15 @@ class EmpericalSupport(object):
     -----
     This implementation is based on the concept of compatibility (or
     confidence) curves, which visualise the range of parameter values supported
-    by the data across a continuum of alpha levels [1]_, [2]_.
+    by the data across a continuum of alpha levels [ES1]_, [ES2]_.
     
     References
     ----------
-    .. [1] Amrhein, V., Greenland, S., & McShane, B. B. (2019).
+    .. [ES1] Amrhein, V., Greenland, S., & McShane, B. B. (2019).
        Scientists rise up against statistical significance.
        *Nature*, 567(7748), 305–307. https://doi.org/10.1038/d41586-019-00857-9
     
-    .. [2] Van der Burg, S. H., & Gelman, A. (2020).
+    .. [ES2] Van der Burg, S. H., & Gelman, A. (2020).
        Empirical support plots and compatibility intervals.
        *BMC Medical Research Methodology*, 20, Article 109.
        https://doi.org/10.1186/s12874-020-01105-9

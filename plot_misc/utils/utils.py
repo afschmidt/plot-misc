@@ -1048,8 +1048,9 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         The position of the label **orthogonal to the axis**, given in **axes
         coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
         place the label outside the axis bounds. Defaults to:
-            - -0.01 for `axis='y'` (left of y-axis)
-            - -0.02 for `axis='x'` (below x-axis)
+        
+        - -0.01 for `axis='y'` (left of y-axis)
+        - -0.02 for `axis='x'` (below x-axis)
     padding : float, default 0.0
         The padding on the requested axis in original units. Only applied to
         `labels` supplied strings.

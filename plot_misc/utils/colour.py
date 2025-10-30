@@ -65,7 +65,7 @@ class Colours(object):
         Sweetie color palette with contrasting tones.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -81,7 +81,7 @@ class Colours(object):
         Pico-8 color palette for retro-inspired visuals.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -97,7 +97,7 @@ class Colours(object):
         Vanilla milkshake color palette with soft pastels.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -113,7 +113,7 @@ class Colours(object):
         ChEMBL-inspired red color palette.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -125,7 +125,7 @@ class Colours(object):
         ChEMBL-inspired green color palette.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -137,7 +137,7 @@ class Colours(object):
         GWAS catalog color palette with earthy tones.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -151,7 +151,7 @@ class Colours(object):
         British National Formulary (BNF) color palette with strong hues.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """
@@ -166,7 +166,7 @@ class Colours(object):
         Eight distinct colours.
         
         Returns
-		-------
+        -------
         list of str
             Hex color codes.
         """

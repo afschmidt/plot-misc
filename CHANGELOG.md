@@ -1,5 +1,36 @@
 # Changelog
 
+## v2.1.0 - 30-10-2025
+
+### Fixed
+
+- forestplot notebook. 
+
+### Added
+
+- Added `midpoints` parameter to `annotate_axis_midpoints` function which 
+  overwrites the `gap` argument. 
+- Added `survival` module and notebook supporting survival plots with bottom 
+  survival table. 
+- Additional colour schemes to the utils.colour module.
+- `text_wrap` function in utils.formatting to automatically break a string 
+ into multiple lines with optional line break character. 
+- introduced x and y coordinate parameters in incidencematrix allowing the 
+  user to match coordinates when creating multiple plots in for example a
+  gridspec.
+
+
+### Changed
+
+- Documentation improvements.
+
+### Deprecated
+
+_Nothing_ 
+
+### Removed
+
+_Nothing_
 
 ## v2.0.4 - 14-08-2025
 

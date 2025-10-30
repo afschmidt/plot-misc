@@ -28,7 +28,9 @@ from the example published in the official matplotlib gallery [1]_.
 
 References
 ----------
-.. [1] https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
+.. [1] Matplotlib contributors. "Creating annotated heatmaps."
+Matplotlib Gallery.
+https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
 """
 
 # modules
@@ -105,7 +107,13 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
     The returned objects can be used to annotate the cells using for example
     `annotate_heatmap`.
     
-    This function is adapted from the matplotlib gallery example [1]_.
+    This function is adapted from the matplotlib gallery example [HM1]_.
+    
+    References
+    ----------
+    .. [HM1] Matplotlib contributors. "Creating annotated heatmaps."
+            Matplotlib Gallery.
+            https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
     """
     
     # create a axes if needed

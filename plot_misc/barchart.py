@@ -56,7 +56,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
         The column name for the bar height values.
     error_max : `str`, default `NoneType`
         column name for the upper value of the error line segment.
-    error_min : ``str` default `NoneType`
+    error_min : `str`, default `NoneType`
         column name for the lower value of the error line segment.
     colours : `list` [`str`], default ['tab:blue', 'tab:pink']
         Colours for the bars; recycled if shorter than the number of bars.

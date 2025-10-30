@@ -283,7 +283,7 @@ def extract_follow_up(data: pd.DataFrame,
           the data's time range (returns 0 at-risk for future times).
     output_col : `str`, default `group_1`
         Prefix for output column names. Creates columns named
-        '{output_col}_at_risk', '{output_col}_at_risk_format', etc.
+        ``{output_col}_at_risk``, ``{output_col}_at_risk_format``, etc.
     thousands_sep : `str`, default `,`
         Thousands separator character for formatting at-risk numbers in the
         formatted output column.
