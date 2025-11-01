@@ -88,9 +88,27 @@ suite to confirm everything is working as expected:
 pytest tests
 ```
 
+## Development
+
+When setting up a development environment, the `setup-hooks` command configures 
+Git commit hooks to enforce conventional commit message formatting.
+This ensures consistent commit messages across the project.
+
+If you have already installed the package in editable mode without running
+`_setup_git_hooks.py`, you can configure the hooks manually at any time by 
+running:
+
+```sh
+_setup_git_hooks.py
+```
+
+For more information on commit message conventions used in this project,
+refer to the `.githooks/commit-msg` file.
+
 ## Usage
 
 Please have a look at the examples in 
 [resources](https://gitlab.com/SchmidtAF/plot-misc/-/tree/master/resources/examples)
 for some possible recipes. 
+
 

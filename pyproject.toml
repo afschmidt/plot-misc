@@ -25,6 +25,9 @@ classifiers = [
 Homepage = "https://gitlab.com/SchmidtAF/plot-misc"
 Documentation = "https://schmidtaf.gitlab.io/plot-misc/"
 
+[project.scripts]
+setup-hooks = "setup_hooks:_setup_git_hooks"
+
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
