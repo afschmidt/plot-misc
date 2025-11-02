@@ -698,7 +698,7 @@ def create_survival_data(nrows:int = 50,
 def load_survival_table(**kwargs):
     """
     Returns a survival table with information on the `time` (in days) an event
-    occured the cummulative events per discordancy group. The time per year
+    occurred the cumulative events per discordancy group. The time per year
     is provided as the time_format column.
     
     Returns

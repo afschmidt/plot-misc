@@ -293,7 +293,7 @@ def clustermap(data:pd.DataFrame,
     linewidths : `float`, default 1.0
         Width of the gridlines between cells.
     annot : `pd.DataFrame` or `None`, default `NoneType`
-        An opional dataframe used for annotation.
+        An optional dataframe used for annotation.
     annotsize : `float`, default 6.0
         Font size for annotations, will be parsed to
         `matplotlib.axes.Axes.text`.

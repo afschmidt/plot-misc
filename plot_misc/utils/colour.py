@@ -12,22 +12,6 @@ Classes
 Colours
     A container for commonly used colour palettes, exposed as read-only
     properties.
-    
-Palettes include:
-    - `diverse20`: 20 high-contrast colours
-    - `sweetie`: rich, stylised palette with dark background tones
-    - `pico8`: retro palette based on the Pico-8 fantasy console
-    - `vanilamilkshake`: soft pastel shades
-    - `chembl_red`, `chembl_green`: ChEMBL-inspired scientific tones
-    - `gwas_catalog`: muted and earthy tones
-    - `bnf`: strong hues matching British National Formulary colours
-    - `distinct8`: eight distinguishable primary colours
-    - `green9` : sequential colorbrewer scheme
-    - `purple9` : sequential colorbrewer scheme
-    - `red9` : sequential colorbrewer scheme
-    - `orange9` : sequential colorbrewer scheme
-    - `blue9` : sequential colorbrewer scheme
-    - `black9` : sequential colorbrewer scheme
 """
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,7 +23,7 @@ class Colours(object):
     list of hexadecimal colour codes. These palettes can be used in matplotlib
     or other plotting libraries to ensure consistent, visually distinct styles.
     
-    All palettes are exposed as read-only propertie
+    All palettes are exposed as read-only properties
     """
     # /////////////////////////////////////////////////////////////////////////
     @property

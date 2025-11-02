@@ -533,12 +533,12 @@ class Calibration(object):
             `None`, the raw y-values will be plotted against the predicted
             scores. This can be used to plot pre-computed data.
         line_colour : `str`, `list` [`str`], or `None`, default `None`
-            The colour of the curve(s), set to None to re-use this parameter.
+            The colour of the curve(s), set to None to reuse this parameter.
         line_linestyle : `str`, `list` [`str`], or `None`, default `None`
-            The linestyle of the curve(s), set to None to re-use this
+            The linestyle of the curve(s), set to None to reuse this
             parameter.
         line_linewidth : `float`, `list` [`float`], or `None`, default `None`
-            The linewidth of the curve(s), set to None to re-use this parameter.
+            The linewidth of the curve(s), set to None to reuse this parameter.
         kwargs_smoother: `dict` [`str`, `any`] or `None`, default `None`
             keyword arguments passed to the `smoother`.
         kwargs_curve: `dict` [`str`, `any`] or `None`, default `None`
@@ -763,7 +763,7 @@ class DecisionCurve(object):
         These rates are scaled by the assumed prevalence to allow valid
         comparisons across populations with different case/control ratios.
         
-        Code addapted from
+        Code adapted from
         `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_.
         
         Hash: 007c64b
@@ -786,7 +786,7 @@ class DecisionCurve(object):
                 (true_tf_above_thresh_count/len(true_outcome[model])) * prevalence
             )
             # NOTE the above is equivalent to: true_tf_above_thresh_count/n
-        # #### False postives
+        # #### False positives
         false_outcome = data[data[outcome].isin([False])][[model]]
         fp_rate = []
         for threshold in thresholds:
@@ -861,7 +861,7 @@ class DecisionCurve(object):
         
         The resulting table can be visualised using the `plot()` method.
         
-        Code addapted from:
+        Code adapted from:
         `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_
         
         Hash: 007c64b
@@ -1125,7 +1125,7 @@ class DecisionCurve(object):
         YSPAN=np.abs(YSPAN[1] - YSPAN[0])
         ax.set_xlim(0, ax.get_xlim()[1])
         ax.set_ylim(0 - np.max((0.01,0.01*YSPAN)), ax.get_ylim()[1])
-        # add lables
+        # add labels
         ax.set_ylabel('Net benefit',
                       fontsize=self.LABEL_FONT_SIZE,
                       labelpad=self.LABEL_PAD,

@@ -353,11 +353,11 @@ def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
     # testing input
     is_type(partial_match, str)
     is_type(dict_string, dict)
-    # evaluting object
+    # evaluating object
     for key, value in dict_string.items():
         if isinstance(value, str) and re.match(partial_match, value):
             dict_string[key] = eval(value, context)
-    # return stuf
+    # return stuff
     return dict_string
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -414,7 +414,7 @@ def change_ticks(ax:plt.Axes, ticks:list[str], labels:list[str] | None = None,
     ticks : `list` [`float` | `int`]
         A list of ticks marks which will be used for the position and labels
     labels : `list` [`str`]
-        If supplied use these labels instead of re-using `ticks`.
+        If supplied use these labels instead of reusing `ticks`.
     log: `bool`, default `False`
         If True, apply `np.log` to the tick locations before placing.
     

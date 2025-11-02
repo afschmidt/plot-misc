@@ -40,7 +40,7 @@ Ensure the following modules are install:
 - **setuptools**: Build backend
 - **wheel**: Ensures `.whl` format is available
 
-Next, update your `pyproject.toml` to inculde
+Next, update your `pyproject.toml` to include
 
 ```sh
 [build-system]

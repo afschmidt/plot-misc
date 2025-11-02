@@ -233,7 +233,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
         f, ax = plt.subplots(figsize=figsize)
     else:
         f = ax.figure
-    # ### should not be any missings
+    # ### should not be any missing
     # NOTE consider making this into a function
     if any(data.isna().any()):
         raise ValueError(Error_MSG.MISSING_DF.format('data'))

@@ -587,7 +587,7 @@ class ForestPlot(object):
         is_type(span_colour, list)
         is_type(reverse_y, bool)
         is_type(ylim, (type(None), tuple))
-        # ### set defauls
+        # ### set defaults
         # replace None by empty dict
         kwargs_scatter_dict = kwargs_scatter_dict or {}
         kwargs_plot_ci_dict = kwargs_plot_ci_dict or {}
@@ -701,7 +701,7 @@ class ForestPlot(object):
         y_mid.insert(0, y_locations.iloc[0][FNames.min])
         y_mid[-1] = self.ax.get_ylim()[1] # replace with y-axis limit
         # ################### Add horizontal segments
-        # to store the span y-axis coordiniates, colours
+        # to store the span y-axis coordinates, colours
         if span ==True:
             span_dict = {}
             # add segments
@@ -767,7 +767,7 @@ def plot_table(
     Parameters
     ----------
     data : `pd.DataFrame`
-        Pandas DataFrame containg `string_col` that should be plotted.
+        Pandas DataFrame containing `string_col` that should be plotted.
         margin of error, etc.
     ax : plt.axes
             Axes to operate on.
@@ -858,7 +858,7 @@ def plot_table(
     kwargs_yticklabel_dict = kwargs_yticklabel_dict or {}
     # ################### remove spines
     ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
-    # remove lables
+    # remove labels
     ax.xaxis.set_ticklabels([])
     # remove ticks
     ax.set_xticks([])
@@ -869,7 +869,7 @@ def plot_table(
         raise ValueError('`yticklabel` should be supplied if `ytickloc` is defined.')
     if (not yticklabel is None) and (not ytickloc is None):
         if len(yticklabel) != len(ytickloc):
-            raise IndexError('`yticklabel` and `ytickloc` containts distinct values.')
+            raise IndexError('`yticklabel` and `ytickloc` contains distinct values.')
         # add optional label padding
         if not l_yticklab_pad is None:
             yticklabel = [l_yticklab_pad + str(s) for s in yticklabel]
@@ -1026,7 +1026,7 @@ class EmpericalSupport(object):
         is_type(estimate, (int, float))
         is_type(standard_error, (int, float))
         is_type(alpha, (list, np.ndarray))
-        # asign
+        # assign
         self.estimate=estimate
         self.standard_error=standard_error
         self.alpha=alpha
@@ -1304,10 +1304,10 @@ class EmpericalSupport(object):
                   kwargs_text:dict[Any,Any] | None = None,
                   )-> tuple[plt.Figure, plt.Axes]:
         """
-        Plots an Emperical Support graph based on either `coverage` (iterating
+        Plots an Empirical Support graph based on either `coverage` (iterating
         the confidence interval coverage percentage), or `compatibility`
         (iterating the p-value). Due to its Christmas tree like shape this
-        type of illustration is refered to as a `tree plot`.
+        type of illustration is referred to as a `tree plot`.
         
         Parameters
         ----------

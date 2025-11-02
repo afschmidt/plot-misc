@@ -111,7 +111,7 @@ def is_type(param: Any, types: tuple[Type] | Type,
         if param_name is None:
             param_name = _get_param_name(param)
         else:
-            warnings.warn('`param_name` will be depricated.',
+            warnings.warn('`param_name` will be deprecated.',
                           DeprecationWarning,
                           stacklevel=2,
                           )
@@ -207,7 +207,7 @@ def is_series_type(column: pd.Series | pd.DataFrame, types: tuple[Type] | Type,
     ----------
     column : `pd.Series` or `pd.DataFrame`
         Data structure to validate.
-    types : `type` or `tuple` [`tupe`]
+    types : `type` or `tuple` [`type`]
         Allowed types for individual elements.
     
     Returns
@@ -232,7 +232,7 @@ def is_series_type(column: pd.Series | pd.DataFrame, types: tuple[Type] | Type,
         [is_type(col, types) for col in column]
     elif isinstance(column, pd.DataFrame):
         if version.parse('2.0.3') <= version.parse(pd.__version__):
-            # iteritems got depricated.
+            # iteritems got deprecated.
             column.iteritems = column.items
         for _, col in column.items():
             [is_type(co, types) for co in col]

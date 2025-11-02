@@ -429,7 +429,7 @@ def plot_table(
     Parameters
     ----------
     data : `pd.DataFrame`
-        DataFrame containg `string_col` that should be plotted.
+        DataFrame containing `string_col` that should be plotted.
     ax : `plt.Axes`
         Matplotlib Axes object where the table will be plotted.
     string_col : `str` or `list` [`str`],
@@ -523,13 +523,13 @@ def plot_table(
     kwargs_xticklabel_dict = kwargs_xticklabel_dict or {}
     # ################### remove spines
     ax.spines[['top', 'right']].set_visible(False)
-    # remove lables
+    # remove labels
     ax.yaxis.set_ticklabels([])
     # remove ticks
     ax.set_yticks([])
     # set the y-axis to start exactly at zero
     # ax.set_ylim(bottom=0)
-    # ################### y-tick lables
+    # ################### y-tick labels
     if yticklabel is not None:
         if isinstance(yticklabel, str):
             yticklabel = [yticklabel]
@@ -556,7 +556,7 @@ def plot_table(
         raise ValueError('`xticklabel` should be supplied if `xtickloc` is used.')
     if (xticklabel is not None) and (xtickloc is not None):
         if len(xticklabel) != len(xtickloc):
-            raise ValueError('`xticklabel` and `xtickloc` containts distinct '
+            raise ValueError('`xticklabel` and `xtickloc` contain distinct '
                              'values.')
         # plot x-tick labels
         ax.set_xticks(xtickloc)

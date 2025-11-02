@@ -191,7 +191,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
             xs = above[x_column]
             ys = above[y_column]
         try:
-            # NOTE warpping this in try/finally to reset the default font.
+            # NOTE wrapping this in try/finally to reset the default font.
             default_font = plt.rcParams[FT_FAM]
             if not font_label is None:
                 plt.rcParams[FT_FAM] = font_label
