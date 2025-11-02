@@ -26,7 +26,7 @@ Homepage = "https://gitlab.com/SchmidtAF/plot-misc"
 Documentation = "https://schmidtaf.gitlab.io/plot-misc/"
 
 [project.scripts]
-setup-hooks = "setup_hooks:_setup_git_hooks"
+setup-hooks = "plot_misc._setup_git_hooks:main"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }

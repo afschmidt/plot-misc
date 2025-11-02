@@ -14,7 +14,7 @@ broader workflows without imposing unnecessary constraints.
 The package is intended solely as a plotting toolkit. Users are 
 expected to curate and prepare their data in a format suitable for 
 plotting.
-However, in practice, data analysis and plotting maybe  
+However, in practice, data analysis and plotting may be  
 closely linked.
 In such cases, it may be appropriate to integrate 
 limited analytical functionality into the plotting function.

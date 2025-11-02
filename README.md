@@ -65,30 +65,27 @@ conda env update --file ./resources/conda/envs/conda_update.yaml
 Next the package can be installed: 
 
 ```sh
-python -m pip install .
+make install
 ```
 
-Or for an editable (developer) install run the command below from the 
-root of the repository.
-The difference with this is that you can just run `git pull` to 
-update repository, or switch branches without re-installing:
+#### Development
+For development work, install the package in editable mode with Git commit 
+hooks configured:
 
+```sh
+make install-dev
+```
+This command installs the package in editable mode and configures Git commit 
+hooks, allowing you to run `git pull` to update the repository or switch 
+branches without reinstalling.
+
+Alternatively, you can install manually:
 ```sh
 python -m pip install -e .
-
+python .setup_git_hooks.py
 ```
 
-#### Validating the package
-
-After installing the package from GitLab, you may wish to run the test
-suite to confirm everything is working as expected:
-
-```sh
-# From the root of the repository
-pytest tests
-```
-
-## Development
+#### Git Hooks Configuration
 
 When setting up a development environment, the `setup-hooks` command configures 
 Git commit hooks to enforce conventional commit message formatting.
@@ -104,6 +101,17 @@ _setup_git_hooks.py
 
 For more information on commit message conventions used in this project,
 refer to the `.githooks/commit-msg` file.
+
+
+#### Validating the package
+
+After installing the package from GitLab, you may wish to run the test
+suite to confirm everything is working as expected:
+
+```sh
+# From the root of the repository
+pytest tests
+```
 
 ## Usage
 

@@ -15,7 +15,7 @@ It includes only what's essential to reproduce the issue and nothing more.
 
 Including an MRE increases the chance that we are addressing the actual bug 
 you have encountered. 
-Furthermore, by spending to time to create an MRE, you may find a way to fix
+Furthermore, by spending time to create an MRE, you may find a way to fix
 it yourself - or, if not, meaningfully decrease the time we have to spend 
 creating an MRE ourselves. 
 This ensures that time can be spent on fixing the actual bug. 
@@ -64,7 +64,7 @@ input.
    problematic part into a smaller example.
 
 You could additionally consider including the original error message.
-This might not be relevant if you have ensured the MRE faitfully replicates 
+This might not be relevant if you have ensured the MRE faithfully replicates 
 the same message. 
 
 .. code-block:: python

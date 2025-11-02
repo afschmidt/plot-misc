@@ -25,7 +25,7 @@ familiar matplotlib methods.
 This approach ensures that the package serves as an enhancement rather than a
 replacement for existing matplotlib workflows.
 
-The package adopts a focused philosophy: it attempts to concentrates exclusively
+The package adopts a focused philosophy: it attempts to concentrate exclusively
 on plotting functionality and expects users to provide appropriately formatted data.
 This design creates a direct, predictable relationship between your prepared
 datasets and the resulting visualisations, promoting clear and efficient plotting
@@ -65,7 +65,7 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
-   :caption: Additional documenation
+   :caption: Additional documentation
    
    api
 

@@ -1,4 +1,7 @@
-.PHONY: install
+.PHONY: install install-dev
 install:
-	pip install -e .
+	python -m pip install .
+
+install-dev:
+	python -m pip install -e .
 	python .setup_git_hooks.py

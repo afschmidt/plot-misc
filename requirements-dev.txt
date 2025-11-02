@@ -6,4 +6,5 @@ pytest>=6
 pytest-mock>=3
 pytest-dependency>=0.5
 bump2version>=1
+codespell
 jupyter
