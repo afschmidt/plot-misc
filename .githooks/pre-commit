@@ -12,8 +12,11 @@ NC='\033[0m' # No Colour
 echo -e "${YELLOW}Running spell checker...${NC}"
 
 # Get list of staged files (only text files we care about)
+# NOTE this ^[^.] start with a non-dot character, and this mean
+# [^.]+ one or more non-dot chracter. Hence this matches ^[^.]+$ 
+# files starting without a dot and ending without a file extention.
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | \
-    grep -E '\.(py|rst|md|txt)$')
+    grep -E '\.(py|rst|md|txt|ipynb|sh|bash|yml|yaml|json|toml|ini|cfg|cnf)$|^[^.]+$')
 
 if [ -z "$STAGED_FILES" ]; then
     echo -e "${GREEN}No text files to check.${NC}"
