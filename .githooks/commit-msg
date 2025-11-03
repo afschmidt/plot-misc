@@ -1,8 +1,74 @@
 #!/bin/bash
 # .githooks/commit-msg
-commit_msg_file=$1
-commit_msg=$(cat "$commit_msg_file")
-# Skip merge commits
+show_help() {
+    cat << 'EOF'
+Conventional Commits Format Guide
+==================================
+
+Format: type(scope): description [#issue]
+
+Example:
+  feat(plotting): add violin plot with quartile markers #45
+
+COMMIT TYPES
+============
+
+  feat      New plotting function or feature
+  fix       Bug fix
+  docs      Documentation (docstrings, README, guides)
+  refactor  Code restructuring
+  test      Adding or updating tests
+  perf      Performance improvements
+  data      Example datasets or demo updates
+  chore     Maintenance (dependencies, configs)
+
+REQUIREMENTS
+============
+
+  • Type must be from the list above
+  • Scope is optional but must contain NO SPACES (use hyphens)
+  • Description must be at least 10 characters
+  • First line should be less than 72 characters
+  • Issue reference is optional (format: #number)
+
+EXAMPLES
+========
+
+  feat(plotting): add violin plot with quartile markers
+  fix(stats): correct percentile calculation #12
+  docs(api): update docstring examples for scatter
+  refactor(core): simplify colour palette handling
+  perf(rendering): optimise large dataset display
+  test(config): add unit tests for colour validation
+  chore(deps): update numpy to latest version
+
+SCOPE NAMING
+============
+
+Use hyphens to separate words in scope:
+  • feat(colour-palette): not feat(colourPalette)
+  • fix(data-import): not fix(dataImport)
+
+ISSUE REFERENCES
+================
+
+Optionally reference issues or merge requests:
+  • feat(plotting): add feature #42
+  • fix(stats): resolve bug #15
+
+For more information, see the repository guidelines.
+EOF
+}
+
+# Handle help flag
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# extract the commit message
+commit_msg=$(cat "$1")
+# Skip merge commits, these have different conventions
 if echo "$commit_msg" | grep -q "^Merge branch"; then
     exit 0
 fi

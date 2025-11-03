@@ -21,7 +21,7 @@ available on gitlab.
 
 To install the package from PyPI, run:
 
-```sh
+```bash
 pip install plot-misc
 ```
 
@@ -33,38 +33,39 @@ A Conda package is maintained in my personal Conda channel.
 To install from this channel, run:
 
 
-```sh
+```bash
 conda install afschmidt::plot-misc
 ```
 
 ### Installation using gitlab
 
-If you require the latest updates, potentially not yet formally released, you can install the package directly from GitLab.
+If you require the latest updates, potentially not yet formally released,
+you can install the package directly from GitLab.
 
 First, clone the repository and move into its root directory:
 
-```sh
+```bash
 git clone git@gitlab.com:SchmidtAF/plot-misc.git
 cd plot-misc
 ```
 
 Install the dependencies:
 
-```sh
+```bash
 # From the root of the repository
 conda env create --file ./resources/conda/envs/conda_create.yaml
 ```
 
 To add to an existing environment use:
 
-```sh
+```bash
 # From the root of the repository
 conda env update --file ./resources/conda/envs/conda_update.yaml
 ```
 
 Next the package can be installed: 
 
-```sh
+```bash
 make install
 ```
 
@@ -72,7 +73,7 @@ make install
 For development work, install the package in editable mode with Git commit 
 hooks configured:
 
-```sh
+```bash
 make install-dev
 ```
 This command installs the package in editable mode and configures Git commit 
@@ -80,35 +81,62 @@ hooks, allowing you to run `git pull` to update the repository or switch
 branches without reinstalling.
 
 Alternatively, you can install manually:
-```sh
+```bash
 python -m pip install -e .
 python .setup_git_hooks.py
 ```
 
 #### Git Hooks Configuration
 
-When setting up a development environment, the `setup-hooks` command configures 
-Git commit hooks to enforce conventional commit message formatting.
-This ensures consistent commit messages across the project.
+
+When setting up a development environment, the `setup-hooks` command 
+configures Git hooks to enforce conventional commit message formatting and 
+spell check using `codespell`.
+
+To view the commit message format requirements, run:
+
+```bash
+./.githooks/commit-msg -help
+```
+
+For frequent use, add this function to your shell configuration (`~/.bashrc` 
+or `~/.zshrc`):
+
+```bash
+commit-format-help() {
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    
+    if [ -z "$git_root" ]; then
+        echo "Error: Not inside a git repository"
+        return 1
+    fi
+    
+    local hook_path="$git_root/.githooks/commit-msg"
+    
+    if [ ! -f "$hook_path" ]; then
+        echo "Error: commit-msg hook not found"
+        return 1
+    fi
+    
+    "$hook_path" --help
+}
+```
 
 If you have already installed the package in editable mode without running
 `_setup_git_hooks.py`, you can configure the hooks manually at any time by 
 running:
 
-```sh
+```bash
 _setup_git_hooks.py
 ```
-
-For more information on commit message conventions used in this project,
-refer to the `.githooks/commit-msg` file.
-
 
 #### Validating the package
 
 After installing the package from GitLab, you may wish to run the test
 suite to confirm everything is working as expected:
 
-```sh
+```bash
 # From the root of the repository
 pytest tests
 ```
