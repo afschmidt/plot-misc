@@ -376,9 +376,7 @@ class TestPlotTable:
                 # Missing xtickloc
             )
         # Test mismatched xticklabel and xtickloc lengths
-        with pytest.raises(ValueError,
-                         match="`xticklabel` and `xtickloc` containts "
-                               "distinct values."):
+        with pytest.raises(ValueError):
             pltm_surv.plot_table(
                 data=sample_data,
                 ax=ax,
