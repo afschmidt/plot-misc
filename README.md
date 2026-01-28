@@ -11,7 +11,8 @@ covering forest plots, volcano plots, incidence matrices/bubble charts,
 illustrations to evaluate prediction models (e.g. feature importance, net benefit, calibration plots),
 and more.
 
-The documentation for plot-misc can be found [here](https://SchmidtAF.gitlab.io/plot-misc/). 
+The documentation for plot-misc can be found 
+[here](https://SchmidtAF.gitlab.io/plot-misc/). 
 
 ## Installation 
 The package is available on PyPI, and conda, with the latest source code 
