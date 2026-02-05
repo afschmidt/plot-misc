@@ -4,4 +4,4 @@ install:
 
 install-dev:
 	python -m pip install -e .
-	python .setup_git_hooks.py
+	python .githooks/.setup_git_hooks.py
