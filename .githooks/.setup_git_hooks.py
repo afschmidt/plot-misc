@@ -7,7 +7,8 @@ def setup_git_hooks():
         repo_root = os.path.dirname(
             os.path.abspath(__file__)
         )
-        hooks_path = os.path.join(repo_root, ".githooks")
+        hooks_path = repo_root
+        repo_root = Path(repo_root).parent
         
         if os.path.exists(hooks_path):
             subprocess.run(

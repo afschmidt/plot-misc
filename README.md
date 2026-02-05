@@ -124,14 +124,6 @@ commit-format-help() {
 }
 ```
 
-If you have already installed the package in editable mode without running
-`_setup_git_hooks.py`, you can configure the hooks manually at any time by 
-running:
-
-```bash
-_setup_git_hooks.py
-```
-
 #### Validating the package
 
 After installing the package from GitLab, you may wish to run the test

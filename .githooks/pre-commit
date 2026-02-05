@@ -31,10 +31,7 @@ if ! command -v codespell &> /dev/null; then
 fi
 
 # Run codespell on staged files
-# The -I flag specifies a file with words to ignore
-# The -L flag specifies a comma-separated list of words to ignore
 ERRORS=$(codespell $STAGED_FILES \
-    -L "te,nd,ser,crate,recuse" \
     --skip="*.un~,*.swp" 2>&1)
 
 if [ -n "$ERRORS" ]; then
