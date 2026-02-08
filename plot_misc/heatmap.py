@@ -3,9 +3,7 @@ Heatmap drawing and annotation tools built on top of matplotlib and seaborn.
 
 This module provides flexible functions to create and annotate heatmaps using
 either `matplotlib` or `seaborn`, with extensive support for customisation and
-publication-quality output. It includes functionality for standard heatmaps,
-clustered heatmaps, and embedded annotations with control over grid styling,
-tick labelling, and colourbar presentation.
+publication-quality output.
 
 Functions
 ---------
@@ -16,10 +14,6 @@ heatmap(data, row_labels, col_labels, ...)
 annotate_heatmap(im, data=None, valfmt=None, ...)
     Adds text annotations to an existing heatmap image (AxesImage object),
     with configurable formatting and colour thresholding.
-
-clustermap(data, cmap='Spectral', annot=None, ...)
-    Wraps seaborn's `clustermap` with additional layout and styling options
-    suitable for compact or publication figures.
 
 Notes
 -----
@@ -261,117 +255,4 @@ def annotate_heatmap(
             texts.append(text)
     # returning stuff
     return texts
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def clustermap(data:pd.DataFrame,
-               cmap:matplotlib.cm.get_cmap=matplotlib.colormaps.get_cmap('Spectral'),
-               annot:pd.DataFrame | None = None,
-               fsize:tuple[Real,Real]=(15, 15),
-               linewidths:float=1.0,
-               cpos: tuple[float] | None =(0.09, 0.02, 0.03, 0.10),
-               annotsize:float=6, clab:str='', clabfs:float=7, fmt:str=".3",
-               clabpos:str='left', clabtsize:float=5, xticklabsize:float=8,
-               yticklabsize:float=6, yticks:bool=True, xticks:bool=True,
-               cbar_dict_kw:dict[Any,Any] | None = None,
-               tree_dict_kw:dict[Any,Any] | None = None,
-               annot_dict_kw:dict[Any,Any] | None = None,
-               clustermap_dict_kw:dict[Any,Any] | None = None,
-               ) -> sns.matrix.ClusterGrid:
-    """
-    Plot a clustered heatmap using seaborn's clustermap API.
-    
-    Wraps `seaborn.clustermap` with additional controls for layout,
-    annotation, and appearance. Allows clustering of both rows and columns
-    and supports annotated values, tick styling, and custom colourbars.
-    
-    Parameters
-    ----------
-    data : `pd.DataFrame`
-        A datafarme of shape (M, N).
-    fsize : `tuple` [`real`, `real`], default `(15, 15)`
-        figure size in inches
-    linewidths : `float`, default 1.0
-        Width of the gridlines between cells.
-    annot : `pd.DataFrame` or `None`, default `NoneType`
-        An optional dataframe used for annotation.
-    annotsize : `float`, default 6.0
-        Font size for annotations, will be parsed to
-        `matplotlib.axes.Axes.text`.
-    fmt : `str`, default '.3'
-        String formatting code to use when adding annotations.
-    cmap : `matplotlib.colormaps`, default 'viridis'
-        matplotlib colormaps
-    cpos : `tuple` [`float`, `float`, `float`, `float`]
-        Default (0.09,0.02.0.03,0.10). Position of the colourbar in figure
-        coordinates: `(left, bottom, width, height)`. Set to `None` to disable
-        the colourbar.
-    clab : `str`, default ' '
-        colour guide y-axis title.
-    clabsf : `float`, default 7.0.
-        Font size for the colourbar label.
-    clabpos : `str`, `left`
-        Position of the colourbar label (e.g., `'left'`, `'right'`).
-    clabtsize : `float`, default 5.0
-        Font size for the colourbar tick labels.
-    xticklabsize : `float`, default 8.0
-        Font size for x-axis tick labels.
-    yticklabsize : `float`, default 6.0
-        Font size for y-axis tick labels.
-    yticks : `bool`, default `True`
-        Whether to display y-axis tick marks.
-    xticks : `bool`, default `True`
-        Whether to display x-axis tick marks.
-    cbar_dict_kw : `dict` [`any`, `any`], optional
-        Keyword arguments passed to `Figure.colorbar()`.
-    tree_dict_kw : `dict` [`any`, `any`], optional
-        Keyword arguments passed to dendrogram tree plotting.
-    annot_dict_kw : `dict` [`any`, `any`], optional
-        Keyword arguments passed to annotation text formatting.
-    clustermap_dict_kw : `dict` [`any`, `any`], optional
-        Keyword arguments passed to `seaborn.clustermap()`.
-    
-    Returns
-    -------
-    cm : `seaborn.matrix.ClusterGrid`
-        A seaborn cluster grid object with the full figure layout.
-    """
-    # #### constants
-    # map None to dict
-    cbar_dict_kw = cbar_dict_kw or {}
-    tree_dict_kw = tree_dict_kw or {}
-    annot_dict_kw = annot_dict_kw or {}
-    clustermap_dict_kw = clustermap_dict_kw or {}
-    # update keyword dictionaries
-    annot_kw = _update_kwargs(update_dict=annot_dict_kw,
-                              size=annotsize,
-                              )
-    clustermap_kw = _update_kwargs(update_dict=clustermap_dict_kw,
-                                   fmt=fmt, linewidths=linewidths,
-                                   figsize=(fsize[0], fsize[1]),
-                                   cbar_pos=cpos, cmap=cmap,
-                                   annot=annot,
-                                   )
-    # make figure
-    cm = sns.clustermap(data,
-                        cbar_kws=cbar_dict_kw,
-                        tree_kws=tree_dict_kw,
-                        annot_kws=annot_kw,
-                        **clustermap_kw,
-                        )
-    # cbar labels
-    cm.ax_cbar.axes.yaxis.set_label_text(clab, fontsize=clabfs)
-    cm.ax_cbar.axes.yaxis.set_label_position(clabpos)
-    cm.ax_cbar.tick_params(labelsize=clabtsize)
-    # heatmap tick labels
-    cm.ax_heatmap.set_xticklabels(cm.ax_heatmap.get_xmajorticklabels(),
-                                   fontsize = xticklabsize)
-    cm.ax_heatmap.set_yticklabels(cm.ax_heatmap.get_ymajorticklabels(),
-                                   fontsize = yticklabsize)
-    # removing axis labels
-    cm.ax_heatmap.set_ylabel("")
-    cm.ax_heatmap.set_xlabel("")
-    # add both xy ticks
-    cm.ax_heatmap.tick_params('both', reset=False, bottom=xticks, right=yticks)
-    # return
-    return cm
 
