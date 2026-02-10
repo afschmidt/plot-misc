@@ -30,7 +30,6 @@ https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated
 # modules
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 from plot_misc.utils.utils import _update_kwargs

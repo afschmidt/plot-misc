@@ -10,7 +10,6 @@ pytest>=6
 pytest-mock>=3
 pytest-dependency>=0.5
 scikit-learn>=1.4
-seaborn>=0.11
 matplotlib>=3.5
 bump2version>=1
 adjustText>=1.3
