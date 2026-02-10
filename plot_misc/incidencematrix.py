@@ -50,9 +50,9 @@ from plot_misc.errors import (
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def draw_incidencematrix(
     data:pd.DataFrame, fsize:tuple[Real, Real]=(3,4),
-    dot_colour:list[tuple[str, Real]]=[('grey',0), ('black',1)],
-    dot_size:list[Real] | list[tuple[Real, Real]]=[4, 8],
-    dot_transparency:list[Real] | list[tuple[Real, Real]]=[0.9, 1.0],
+    dot_colour:str | list[tuple[str, Real]]=[('grey',0), ('black',1)],
+    dot_size:Real | list[Real] | list[tuple[Real, Real]]=[4, 8],
+    dot_transparency:Real | list[Real] | list[tuple[Real, Real]]=[0.9, 1.0],
     line_colour:tuple[str, str]=('lightgrey', 'lightgrey'),
     lw:tuple[float, float]=(0.3, 0.3),
     tick_lab_size:tuple[float, float]=(4.5, 4.5),
@@ -87,27 +87,28 @@ def draw_incidencematrix(
         dot attributes based on `dot_colour`.
     fsize : `tuple` [`float`, `float`], default (6.0, 6.0)
         Width and height of the figure in inches.
-    dot_colour : `list` [`tuple` [`str`, `float`]], default [('grey', 0), ('black', 1)]
-        A list of (colour, upper bound) tuples defining dot appearance by value.
-        Each dot is coloured according to the first `cut` for which the value is
-        less than or equal to `cut` and greater than the previous break.
+    dot_colour : `str` or `list` [`tuple` [`str`, `float`]], default [('grey', 0), ('black', 1)]
+        Dot colour specification. Can be a single colour string (applied to all
+        dots), or a list of (colour, upper bound) tuples defining dot
+        appearance by value. Each dot is coloured according to the first `cut`
+        for which the value is less than or equal to `cut` and greater than
+        the previous break.
         
-        The default: [('grey',0), ('black',1)], colours dots grey for value in
-        (\\infinity, 0], and colours dots black for values in (0, 1].
+        The default: [('grey',0), ('black',1)], colours dots grey for values in
+        (-infinity, 0], and colours dots black for values in (0, 1].
+    dot_size : `float` or `list` [`float`] or `list` [`tuple` [`float`, `float`]], default [4, 8]
+        Size of dots. Can be a single value (applied uniformly), a list of
+        sizes corresponding to each threshold in `dot_colour`, or a list of
+        (size, upper_bound) tuples for custom cut-offs. When using
+        `size_data`, cut-offs are applied to that DataFrame instead of `data`.
+    dot_transparency : `float` or `list` [`float`] or `list` [`tuple` [`float`, `float`]], default [0.9, 1.0]
+        Alpha transparency for dots. Can be a single value (applied uniformly),
+        a list of values corresponding to each threshold in `dot_colour`, or
+        a list of (alpha, upper_bound) tuples for custom cut-offs. When using
+        `transparency_data`, cut-offs are applied to that DataFrame instead
+        of `data`.
     line_colour : `tuple` [`str`, `str`], default ('lightgrey', 'lightgrey')
         Colours of vertical and horizontal grid lines.
-    dot_size : `list` [`float`], default [4, 8]
-        Size of dots corresponding to each threshold in `dot_colour`. Can also
-        be supplied a list of tuple similar to `dot_colour`. The cut-offs
-        can be based on the `data` values or on a separately supplied
-        `size_data` of equal dimension to `data`. Supply a single float to
-        apply the same size to each dot.
-    dot_transparency : `list` [`float`], default [0.9, 1.0]
-        Alpha transparency values for dots in each category. Can also be
-        supplied a list of tuple similar to `dot_colour`. The cut-offs
-        can be based on the `data` values or on a separately supplied
-        `transparency_data` of equal dimension to `data`. Supply a single float
-        to apply the same transparency to each dot.
     lw : tuple [`float`, `float`], default (0.3, 0.3)
         Line width for vertical and horizontal grid lines.
     tick_lab_size : `tuple` [`float`, `float`], default (4.5, 4.5)
@@ -164,9 +165,9 @@ def draw_incidencematrix(
                  'not: {1} and {2}, respectively.')
     SHAPE_ERR2 = ('Length of {0}: {1} must match number of {2}: {3}.')
     # check inputs
-    is_type(dot_size, list)
-    is_type(dot_colour, list)
-    is_type(dot_transparency, list)
+    is_type(dot_size, (int, float, list))
+    is_type(dot_colour, (str, list))
+    is_type(dot_transparency, (int, float, list))
     is_type(ax,(type(None), plt.Axes))
     is_df(data)
     is_type(grid_position, (str, type(None)))
@@ -200,6 +201,13 @@ def draw_incidencematrix(
     kwargs_scatter_dict = kwargs_scatter_dict or {}
     kwargs_vline_dict = kwargs_vline_dict or {}
     kwargs_hline_dict = kwargs_hline_dict or {}
+    # normalise scalar inputs to list format
+    if isinstance(dot_colour, str):
+        dot_colour = [(dot_colour, np.inf)]
+    if isinstance(dot_size, Real):
+        dot_size = [dot_size]
+    if isinstance(dot_transparency, Real):
+        dot_transparency = [dot_transparency]
     # if one value is supplied, multiply the number of dot_colour elements
     ndots = len(dot_colour)
     if len(dot_size) == 1:
