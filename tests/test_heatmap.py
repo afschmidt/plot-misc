@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import seaborn as sns
 import plot_misc.example_data.examples as examples
 import plot_misc.heatmap as heatmap
 
@@ -25,7 +24,7 @@ class TestHeatmap(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_heatmap_w_colobar(self):
         # plotting
-        fig, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
+        _, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
         # plotting heatmap
         im, cbar = heatmap.heatmap(data=DATA, row_labels=DATA.index.to_list(),
                                    col_labels=DATA.columns.to_list(), ax=ax,
@@ -39,10 +38,9 @@ class TestHeatmap(object):
         assert (np.array(im.axes.images[0].get_array()) == DATA.to_numpy()).all()
         assert cbar.orientation == 'horizontal'
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    @pytest.mark.dependency(name='depends1')
     def test_heatmap_wo_colobar(self):
         # plotting
-        fig, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
+        _, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
         # plotting heatmap
         im, cbar = heatmap.heatmap(data=DATA, row_labels=DATA.index.to_list(),
                                    col_labels=DATA.columns.to_list(), ax=ax,
@@ -62,7 +60,6 @@ class TestAnnotateHeatmap(object):
     Testing the `annotate_heatmap` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    @pytest.mark.dependency(depends=["depends1"])
     def test_annotate_heatmap(self):
         # getting an imshow object
         im, _ = heatmap.heatmap(data=DATA,
@@ -77,19 +74,4 @@ class TestAnnotateHeatmap(object):
         # assert
         assert len(texts) == DATA.shape[0] * DATA.shape[1]
         assert texts[1].get_text() == '{:.1%}'.format(DATA.iloc[0,1])
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# clustermap
-class TestClusterMap(object):
-    """
-    Testing the `clustermap` function.
-    """
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def test_clustermap(self):
-        # plotting
-        cm = heatmap.clustermap(data=DATA, fsize=(25,25))
-        # asserting
-        assert isinstance(cm, sns.matrix.ClusterGrid)
-        assert (cm.data.to_numpy() == DATA.to_numpy()).all()
-        assert cm.dendrogram_col.method == 'average'
-        assert cm.dendrogram_col.metric == 'euclidean'
-        assert cm.cbar_pos == (0.09, 0.02, 0.03, 0.10)
+

@@ -100,12 +100,14 @@ def draw_incidencematrix(
         Size of dots corresponding to each threshold in `dot_colour`. Can also
         be supplied a list of tuple similar to `dot_colour`. The cut-offs
         can be based on the `data` values or on a separately supplied
-        `size_data` of equal dimension to `data`.
+        `size_data` of equal dimension to `data`. Supply a single float to
+        apply the same size to each dot.
     dot_transparency : `list` [`float`], default [0.9, 1.0]
         Alpha transparency values for dots in each category. Can also be
         supplied a list of tuple similar to `dot_colour`. The cut-offs
         can be based on the `data` values or on a separately supplied
-        `transparency_data` of equal dimension to `data`.
+        `transparency_data` of equal dimension to `data`. Supply a single float
+        to apply the same transparency to each dot.
     lw : tuple [`float`, `float`], default (0.3, 0.3)
         Line width for vertical and horizontal grid lines.
     tick_lab_size : `tuple` [`float`, `float`], default (4.5, 4.5)
