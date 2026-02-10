@@ -62,6 +62,11 @@ Documentation
    examples/plots/survival.nblink
    examples/plots/volcanoplot.nblink
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Creating publication ready illustrations
+
+   examples/plots/publication_ready.nblink
 
 .. toctree::
    :maxdepth: 1
