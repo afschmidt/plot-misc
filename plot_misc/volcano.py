@@ -42,7 +42,8 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  point_label:str | None = None,
                  fsize:tuple[float,float] | None = None, adjust:bool=False,
                  lim:int=1000, vline:Real=0, alpha:float=1e-5,
-                 col:tuple[str, str, str]=('orangered','dimgrey','lightcoral'),
+                 col_sgnd: str = 'orangered', col_nsgnd: str = 'dimgrey',
+                 col_vline: str = 'lightcoral',
                  xlab:str='Point estimate', ylab:str=r'$-log_{10}(pvalue)$',
                  ylim:tuple[float, float] | None = None, msize:Real=10,
                  lsize:Real=5, transparency_ns:Real=0.6,
@@ -52,6 +53,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  label_kwargs_dict:dict[Any,Any] | None = None,
                  scatter_sig_kwargs_dict:dict[Any,Any] | None = None,
                  scatter_nonsig_kwargs_dict:dict[Any,Any] | None = None,
+                 vline_kwargs_dict:dict[Any,Any] | None = None,
                  ) -> tuple[plt.Figure, plt.Axes]:
     """
     Generate a volcano plot from a set of effect estimates and p-values.
@@ -79,9 +81,12 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         The x-position of the vertical line
     alpha : `float`, default 1e-5
         P-value threshold for significance (used on –log10 scale).
-    col : `tuple` [`str`, `str`, `str`]
-        Colours for (1) significant points, (2) non-significant points,
-        and (3) vertical line.
+    col_sgnd : `str`, default `orangered`
+        The colour for the dots above the significance threshold.
+    col_nsgnd : `str`, default `dimgrey`
+        The colour for the dots below the significance threshold.
+    col_vline ; `str`, default `lightcoral`
+        The colour of the vertical line.
     xlab : `str`, default 'Point estimate'
         x-axis label.
     ylab : `str`, default '-log10(pvalue)'
@@ -101,11 +106,16 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         Font family to use for point labels (e.g. 'monospace', 'Arial').
     ax : `plt.axes` or `None`, default `None`
         Axis object to plot on. If `None`, a new figure and axis are created.
-    *_kwargs_dict : dict, default `None`
-        Optional arguments supplied to the various plotting functions:
-            label_kwargs_dict          --> adjust_text
-            scatter_sig_kwargs_dict    --> ax.bar
-            scatter_nonsig_kwargs_dict --> ax.bar
+    label_kwargs_dict : `dict` or `None`, default `None`
+        Optional keyword arguments passed to `adjust_text`.
+    scatter_sig_kwargs_dict : `dict` or `None`, default `None`
+        Optional keyword arguments passed to `ax.scatter` for significant
+        points.
+    scatter_nonsig_kwargs_dict : `dict` or `None`, default `None`
+        Optional keyword arguments passed to `ax.scatter` for non-significant
+        points.
+    vline_kwargs_dict : `dict` or `None`, default `None`
+        Optional keyword arguments passed to `ax.axvline`.
     
     Returns
     -------
@@ -130,14 +140,14 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     is_type(x_column, str)
     is_type(point_label, (str, type(None)))
     is_type(font_label, (type(None), str))
-    is_type(col, tuple)
-    if len(col) != 3:
-        raise ValueError("Please make sure `col` is a tuple with 3 elements, "
-                         f"not:{len(col)}.")
+    is_type(col_sgnd, str)
+    is_type(col_nsgnd, str)
+    is_type(col_vline, str)
     # map None to dict
     label_kwargs_dict = label_kwargs_dict or {}
     scatter_sig_kwargs_dict = scatter_sig_kwargs_dict or {}
     scatter_nonsig_kwargs_dict = scatter_nonsig_kwargs_dict or {}
+    vline_kwargs_dict = vline_kwargs_dict or {}
     # raise warning
     if (adjust == True and point_label == None):
         warnings.warn('`adjust` is ignored if `point_label` is None',
@@ -151,7 +161,11 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ### significance level
     threshold = -1 * np.log10(alpha)
     ### setting a reference line (zorder=1; behind)
-    ax.axvline(x=vline, c=col[2], linestyle='--', zorder=1, linewidth=1)
+    new_vline_kwargs = _update_kwargs(
+        update_dict=vline_kwargs_dict,
+        c=col_vline, linestyle='--', zorder=1, linewidth=1,
+    )
+    ax.axvline(x=vline, **new_vline_kwargs)
     ### getting data above threshold
     above = data[data[y_column] >= threshold]
     xs = above[x_column]
@@ -159,7 +173,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     # kwargs
     new_sig_kwargs = _update_kwargs(
         update_dict=scatter_sig_kwargs_dict,
-        edgecolor=(1, 1, 1, 0), zorder=2, c=col[0], s=msize,
+        edgecolor=(1, 1, 1, 0), zorder=2, c=col_sgnd, s=msize,
     )
     ax.scatter(xs, ys, **new_sig_kwargs)
     ### getting data below threshold
@@ -170,7 +184,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     new_nonsig_kwargs = _update_kwargs(
         update_dict=scatter_nonsig_kwargs_dict,
         edgecolor=(1, 1, 1, 0), zorder=2, linewidths=0.0, s=msize,
-        alpha=transparency_ns, c=col[1],
+        alpha=transparency_ns, c=col_nsgnd,
     )
     ax.scatter(xns, yns,  **new_nonsig_kwargs,)
     ### adding annotations
