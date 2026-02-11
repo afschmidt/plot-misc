@@ -1,2 +1,5 @@
 numpy:
   - 1.23
+# python: # using noarch python
+#   - 3.11
+#   - 3.12
