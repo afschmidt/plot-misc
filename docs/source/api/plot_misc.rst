@@ -24,6 +24,11 @@ machine_learning module
 .. automodule:: plot_misc.machine_learning
    :members:
 
+piechart module 
+-------------------------------------------
+.. automodule:: plot_misc.piechart
+   :members:
+
 survival module
 -------------------------------------------
 .. automodule:: plot_misc.survival
@@ -32,11 +37,6 @@ survival module
 volcano module
 -------------------------------------------
 .. automodule:: plot_misc.volcano
-   :members:
-
-utils.utils module
--------------------------------------------
-.. automodule:: plot_misc.utils.utils
    :members:
 
 utils.formatting module
@@ -48,3 +48,9 @@ utils.colour module
 -------------------------------------------
 .. automodule:: plot_misc.utils.colour
    :members:
+
+utils.utils module
+-------------------------------------------
+.. automodule:: plot_misc.utils.utils
+   :members:
+

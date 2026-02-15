@@ -60,7 +60,7 @@ def piechart(
     col_values : `str`
         Name of the column containing the numeric values that determine wedge
         sizes.
-    col_labells : `str` or `None`, default `None`
+    col_labels : `str` or `None`, default `None`
         Name of the column containing wedge labels. If None, the pie chart is
         drawn without annotations.
     figsize : `tuple` [`float`, `float`], default `(8, 4)`
