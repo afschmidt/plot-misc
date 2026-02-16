@@ -223,3 +223,34 @@ class TestGroupBar(object):
         assert patch[0].get_height() == 0.6
         assert patch[1].get_linewidth() == 1
         assert len([p.get_x() for p in patch]) == GROUP.shape[0] * len(GENES)
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# bar positions
+class TestBarPositions(object):
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_bar_positions(self):
+        # custom positions for the bars
+        custom_pos = [0, 2, 5, 8, 12]
+        # running the function
+        _, ax = barchart.bar(TABLE_T, label=LABELS,
+                             column=TABLE_T.columns.to_list()[0],
+                             positions=custom_pos,
+                             wd=0.4,
+                             )
+        # asserting - check that bars are at the specified positions
+        tick_positions = ax.get_xticks()
+        assert np.allclose(tick_positions, custom_pos)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_group_bar_positions(self):
+        # custom group positions
+        custom_pos = [0, 5,]
+        # running the function
+        _, ax = barchart.group_bar(GROUP, label=GR_LAB,
+                                   columns=COLS,
+                                   group_positions=custom_pos,
+                                   wd=0.6,
+                                   )
+        # asserting - check tick positions match custom group centres
+        tick_positions = ax.get_xticks()
+        expected_ticks = [0.9, 5.9]
+        assert np.allclose(tick_positions, expected_ticks)
