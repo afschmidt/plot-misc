@@ -1,5 +1,5 @@
 # yaml-jinja
-{% set version = "2.1.0" %}
+{% set version = "2.2.0" %}
 
 package:
   name: plot-misc
