@@ -1,5 +1,44 @@
 # Changelog
 
+## v2.2.0 - 18-02-2026
+
+### Fixed
+
+- Fixed a `pytest.raises` error for `plot_table`.
+- Added missing `test_survival` test.
+- Renamed `commit-spell.sh` to `pre-commit` to comply with git hook name
+  conventions.
+
+### Added
+
+- Git hook enforcing commit message standards.
+- Added the `.githooks` directory and script.
+- `codespellrc` and ignore word list.
+- Makefile: generalised GitLab install and path to the git hooks
+    setup script; git hook install now handled via `make install`.
+- Started a publication-ready tips notebook, expanding tutorials on tick
+  labels and locations.
+
+### Changed
+
+- Incidencematrix parameter arguments updated.
+- Volcano module refactored: updated colour arguments, added
+  `vline_kwargs_dict`, and updated the example notebook.
+- Heatmap refactored: removed redundant tests and cleaned the example file.
+- Example notebooks updated, correcting spelling mistakes and removing
+  redundant help calls.
+- Numerous spelling and grammar fixes across documentation.
+
+### Deprecated
+
+_Nothing_
+
+### Removed
+
+- Clustermap removed from the heatmap module, as it no longer fits the
+  package aim.
+- Seaborn dependency removed.
+
 ## v2.1.0 - 30-10-2025
 
 ### Fixed
@@ -87,7 +126,7 @@ _Nothing_
 
 ### Fixed
 
-- Upgraded adjustText to 1.3 or higer to deal with an error where the `lim` keyward was incorrectly passed to FancyArrowPatch. 
+- Upgraded adjustText to 1.3 or higher to deal with an error where the `lim` keyword was incorrectly passed to FancyArrowPatch. 
 
 ### Added
 
@@ -153,7 +192,7 @@ _Nothing_.
 
 - Migrated to pyproject.toml instead of setup.py
 - Where relevant ensure all functions return ax.figure if an ax is supplied. 
-This replaces retruning a None value.
+This replaces returning a None value.
 - Document clarifications. 
 - `assign_distance` can now deal with groups of different sizes. 
 
@@ -199,7 +238,7 @@ _Nothing_
 
 - Piechart module `pychart`.
 - A point estimate formatting function in `utils.formatting`.
-- A emperical support class to plot trees. 
+- A empirical support class to plot trees. 
 - Pytest for the new functions.
 - Adding sphinx documentation
 - Gitlab CI/CD
