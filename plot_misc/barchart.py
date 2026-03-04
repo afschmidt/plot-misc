@@ -35,6 +35,7 @@ from plot_misc.constants import Real
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def bar(data:pd.DataFrame, label:str, column:str,
+        positions:np.ndarray | list[Real] | None = None,
         error_max:str | None = None, error_min:str | None = None,
         colours:list[str]=['tab:blue', 'tab:pink'], transparency:float=0.7,
         wd:Real=1.0, edgecolour:str='black',
@@ -54,6 +55,10 @@ def bar(data:pd.DataFrame, label:str, column:str,
         The column name for the axes labels.
     column : `str`
         The column name for the bar height values.
+    positions : `np.ndarray` or `list` or `None`, default `None`
+        Numeric positions for the bars along the category axis. If None,
+        bars are placed at integer positions 0, 1, 2, ... with tick
+        labels taken from the `label` column.
     error_max : `str`, default `NoneType`
         column name for the upper value of the error line segment.
     error_min : `str`, default `NoneType`
@@ -96,6 +101,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
     is_df(data)
     is_type(label, str)
     is_type(column, str)
+    is_type(positions, (type(None), np.ndarray, list))
     is_type(colours, list)
     is_type(transparency, float)
     is_type(wd, (float, int))
@@ -117,8 +123,17 @@ def bar(data:pd.DataFrame, label:str, column:str,
     # ### check input
     if any(data.isna().any()):
         raise ValueError(Error_MSG.MISSING_DF.format('data'))
-    # ### get labels
+    # ### get labels and positions
     labels = data[label]
+    if positions is None:
+        pos = np.arange(len(labels))
+    else:
+        pos = np.asarray(positions)
+        if len(pos) != len(labels):
+            raise ValueError(
+                f'Length of positions ({len(pos)}) does not match '
+                f'number of rows in data ({len(labels)}).'
+            )
     # ### plotting
     if horizontal == False:
         # plotting vertical bar chart
@@ -128,8 +143,10 @@ def bar(data:pd.DataFrame, label:str, column:str,
                                     alpha=transparency,
                                     zorder=2,
                                     )
-        bars = ax.bar(labels, height=data[column], **new_kwargs,
+        bars = ax.bar(pos, height=data[column], **new_kwargs,
                       )
+        ax.set_xticks(pos)
+        ax.set_xticklabels(labels)
     else:
         # plotting horizontal bar chart
         new_kwargs = _update_kwargs(update_dict=kwargs_bar,
@@ -138,8 +155,10 @@ def bar(data:pd.DataFrame, label:str, column:str,
                                     alpha=transparency,
                                     zorder=2,
                                     )
-        bars = ax.barh(labels, width=data[column], **new_kwargs,
+        bars = ax.barh(pos, width=data[column], **new_kwargs,
                        )
+        ax.set_yticks(pos)
+        ax.set_yticklabels(labels)
     # do we need to plot error bars
     if error_min is not None or error_max is not None:
         # finding the mid points of the bars and
@@ -178,6 +197,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
+              positions:np.ndarray | list[Real] | None = None,
               colours:list[str]=['tab:blue', 'tab:pink'],
               transparency:float=0.7, wd:Real=1.0, edgecolour:str='black',
               horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
@@ -194,6 +214,9 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
         Column name used for bar labels.
     columns : `list` [`str`]
         Column names representing bar segments to stack.
+    positions : `np.ndarray` or `list` or `None`, default `None`
+        Numeric positions for the bars along the category axis. If None,
+        bars are placed at integer positions 0, 1, 2, ...
     colours : `list` [`str`]
         List of colours for each stack segment.
     transparency : `float`, default 0.7
@@ -222,6 +245,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
     is_df(data)
     is_type(label, str)
     is_type(columns, list)
+    is_type(positions, (type(None), np.ndarray, list))
     is_type(colours, list)
     is_type(transparency, float)
     is_type(wd, (float, int))
@@ -261,10 +285,10 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
             new_kwargs = _update_kwargs(new_kwargs, left=left,
                                         )
         # The actual plotting
-        # NOTE adding wd here because it bar assigns it to either width or
+        # NOTE adding wd here because bar assigns it to either width or
         # height depending on horizontal.
-        _, ax = bar(data=data, label=label, column=name, horizontal=horizontal,
-                    wd=wd, ax=ax, kwargs_bar=new_kwargs,
+        _, ax = bar(data=data, label=label, column=name, positions=positions,
+                    horizontal=horizontal, wd=wd, ax=ax, kwargs_bar=new_kwargs,
                     )
         # updating the coordinate where the last bar stops
         left = left + data[name]
@@ -277,6 +301,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
                  subtotal_col: str | None = None,
+                 positions:np.ndarray | list[Real] | None = None,
                  colours:tuple[str,str]=('grey','tab:blue'),
                  transparency:tuple[float,float]=(0.7,0.9),
                  wd:tuple[float,float]=(1,0.6),
@@ -301,6 +326,9 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
         Column containing values for the base (total) bars.
     subtotal_col : `str` or `None`, default `NoneType`
         Column containing values for (smaller) overlaid subtotal bars.
+    positions : `np.ndarray` or `list` or `None`, default `None`
+        Numeric positions for the bars along the category axis. If None,
+        bars are placed at integer positions 0, 1, 2, ...
     colours : `tuple` [`str`,`str`], default ("grey", "tab:blue")
         Colours for the total and subtotal bars.
     transparency : `tuple` [`float`,`float`], default (0.7, 0.9)
@@ -339,6 +367,7 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
     is_type(ax, (type(None), plt.Axes))
     is_type(total_col, str)
     is_type(subtotal_col, (str, type(None)))
+    is_type(positions, (type(None), np.ndarray, list))
     is_type(zorder, tuple)
     is_type(colours, tuple)
     is_type(transparency, tuple)
@@ -370,6 +399,7 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
         ax=ax,
         label=label,
         column=total_col,
+        positions=positions,
         colours=[colours[0]],
         transparency=transparency[0],
         wd=wd[0],
@@ -390,6 +420,7 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
             ax=ax,
             label=label,
             column=subtotal_col,
+            positions=positions,
             colours=[colours[1]],
             transparency=transparency[1],
             wd=wd[1],
@@ -405,6 +436,7 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def group_bar(data:pd.DataFrame, label:str, columns:list[str],
+              group_positions:np.ndarray | list[Real] | None = None,
               errors_max:list[str] | None = None,
               errors_min:list[str] | None = None,
               colours:list[str]=['tab:blue', 'tab:pink'],
@@ -433,6 +465,10 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
         Column name for group labels.
     column : `list` [`str`]
         Value columns to plot as grouped bars.
+    group_positions : `np.ndarray` or `list` or `None`, default `None`
+        Numeric positions for the group centres along the category axis.
+        If None, groups are placed at positions determined by
+        `group_spacing` (0, group_spacing, 2*group_spacing, ...).
     errors_max : `list` [`str`] or `None`, default `NoneType`
         Column names in `data` containing the upper values of the error bars.
         Should be structured similarly to `columns` if used.
@@ -469,6 +505,7 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     # check input - most will be done by bar, just keeping the minimum
     is_df(data)
     is_type(columns, list)
+    is_type(group_positions, (type(None), np.ndarray, list))
     is_type(errors_max, (type(None),list))
     is_type(errors_min, (type(None),list))
     is_type(horizontal, bool)
@@ -483,8 +520,16 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     # ### prepare the loop
     # the number of bars for each group
     n_bars = len(columns)
-    # the number of groups
-    base = np.arange(data.shape[0]) * group_spacing
+    # the base position of each group
+    if group_positions is None:
+        base = np.arange(data.shape[0]) * group_spacing
+    else:
+        base = np.asarray(group_positions)
+        if len(base) != data.shape[0]:
+            raise ValueError(
+                f'Length of group_positions ({len(base)}) does not '
+                f'match number of rows in data ({data.shape[0]}).'
+            )
     # the total width of all the bars in a single group
     spacing_per_bar = bar_spacing * wd
     total_spacing = spacing_per_bar * (n_bars - 1)
