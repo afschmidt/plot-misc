@@ -33,10 +33,7 @@ import numpy as np
 import pandas as pd
 import warnings
 from scipy.stats import norm
-from typing import (
-    Any,
-    Optional,
-)
+from typing import Any
 from plot_misc.constants import (
     UtilsNames,
     Real,
@@ -135,7 +132,7 @@ def format_estimates(point:Real, se: float | None=None,
         z = norm.ppf(1-alpha/2)
         lower = point - z*se
         upper = point + z*se
-    if exp == True:
+    if exp:
         point = np.exp(point)
         upper = np.exp(upper)
         lower = np.exp(lower)
@@ -147,7 +144,7 @@ def format_estimates(point:Real, se: float | None=None,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def format_roc(observed:np.ndarray, predicted:np.ndarray,
-               **kwargs:Optional[Any],
+               **kwargs:Any,
                ) -> pd.DataFrame:
     """
     Takes a binary `observed` column vector and a continuous `predicted`
@@ -368,7 +365,7 @@ def string_interval(limits:list[Real], int_notation:bool=False,
     # what should be plotted
     vals = []
     limits = sorted(limits)
-    if middle == True:
+    if middle:
         # combine lower limit with limits to form intervals
         edges = [lower_lim if lower_lim is not None else -np.inf] + limits
         for i in range(len(limits)):

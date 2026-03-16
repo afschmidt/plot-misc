@@ -12,12 +12,12 @@ ForestPlot
     A class to draw a forest plot, with point estimates and confidence
     intervals.
 
-EmpericalSupport
+EmpiricalSupport
     A class to compute and visualise empirical support (or compatibility)
     intervals for a given estimate and standard error across a range of
     alpha (i.e. type 1 error) values.
 
-EmpericalSupportPlotResults
+EmpiricalSupportPlotResults
     Stores the full results table and estimate from an empirical support plot.
 
 Functions
@@ -66,11 +66,11 @@ from plot_misc.errors import (
 # Class
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class EmpericalSupportPlotResults(Results):
+class EmpiricalSupportPlotResults(Results):
     """
     Results container for empirical support visualisations.
     
-    This class stores results from the `EmpericalSupport` visualisation
+    This class stores results from the `EmpiricalSupport` visualisation
     workflow, including the point estimate and the full data table used for
     plotting.
     
@@ -313,7 +313,7 @@ def set_y_coordinates(data:pd.DataFrame,
     else:
         # GROUP AND STRATA
         # temporarily order if needed.
-        if isinstance(sort_dict, dict) == False:
+        if not isinstance(sort_dict, dict):
             ORG_ORDER = '_original_order'
             df[ORG_ORDER] = range(len(df))
             df.sort_values(by=cols, inplace=True)
@@ -336,7 +336,7 @@ def set_y_coordinates(data:pd.DataFrame,
             # NOTE simply taking the max value of the recorded y_coords
             current_y = y_coords.max() + between_pad
         # revert original order
-        if isinstance(sort_dict, dict) == False:
+        if not isinstance(sort_dict, dict):
             df.sort_values(by=ORG_ORDER, inplace=True)
             df.drop(columns=[ORG_ORDER], inplace=True)
     # ### add to df
@@ -493,7 +493,7 @@ class ForestPlot(object):
                 getattr(self, FNames.forest_data)[n_cn] = cn
                 # update name
                 new_names.append(n_cn)
-                if verbose == True:
+                if verbose:
                     warnings.warn(f"`{cn}` not found in `data`, creating `{n_cn}` "
                                   f"column with value `{cn}`.", RuntimeWarning)
             else:
@@ -653,7 +653,7 @@ class ForestPlot(object):
             self.g_col).agg({self.y_col: [FNames.mean,FNames.min,FNames.max]}
                                         )
         # ################## segments between points
-        if connect_shape ==True:
+        if connect_shape:
             xg_value = [ [min, max] for min, max in zip(
                 group_y[self.x_col,FNames.min],
                 group_y[self.x_col,FNames.max])
@@ -702,7 +702,7 @@ class ForestPlot(object):
         y_mid[-1] = self.ax.get_ylim()[1] # replace with y-axis limit
         # ################### Add horizontal segments
         # to store the span y-axis coordinates, colours
-        if span ==True:
+        if span:
             span_dict = {}
             # add segments
             for t in range(len(y_mid)-1):
@@ -734,7 +734,7 @@ class ForestPlot(object):
         self.ax.set_yticks(y_locations[FNames.mean])
         self.ax.set_yticklabels(y_locations.index)
         # ################### invert y-axis
-        if reverse_y == True:
+        if reverse_y:
             self.ax.invert_yaxis()
         # ################### return the figure, axis, and other
         return self.figure, self.ax
@@ -948,7 +948,7 @@ def plot_table(
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Supported parameter space
-class EmpericalSupport(object):
+class EmpiricalSupport(object):
     """
     A class to calculate and plot a somewhat historic empirical support plot,
     also referred to as a `compatibility` plot.
@@ -979,8 +979,8 @@ class EmpericalSupport(object):
     table : `pd.DataFrame`
         The calculated support table, containing lower and upper bounds,
         p-values, and CI coverage.
-    results_ : `EmpericalSupportResults`
-        An EmpericalSupportResults instance.
+    results_ : `EmpiricalSupportResults`
+        An EmpiricalSupportResults instance.
     
     Methods
     -------
@@ -1031,7 +1031,7 @@ class EmpericalSupport(object):
         self.standard_error=standard_error
         self.alpha=alpha
         self.table = None
-        setattr(self, FNames.EmpericalSupportResults, None)
+        setattr(self, FNames.EmpiricalSupportResults, None)
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def __str__(self) -> str:
         """
@@ -1277,7 +1277,7 @@ class EmpericalSupport(object):
             ax.fill_betweenx(ylimits, xleft, xright,
                              **new_fill_kwargs)
         # ################### invert y-axis
-        if reverse_y == True:
+        if reverse_y:
             ax.invert_yaxis()
         # ################### return the figure, and axis
         return f, ax
@@ -1373,7 +1373,7 @@ class EmpericalSupport(object):
         - `self.table` : a DataFrame of estimated intervals across alpha values
         - `self.support_col` : name of the y-axis support column
         - `self.ylabel` : label for the y-axis
-        - `self.EmpericalSupportPlotResults` : a container with estimate and results
+        - `self.EmpiricalSupportPlotResults` : a container with estimate and results
         
         These attributes may be accessed after the plot call if a reference to the
         object is retained.
@@ -1382,12 +1382,12 @@ class EmpericalSupport(object):
         is_type(support, str)
         is_type(annotate_estimate, bool)
         is_type(annotate_ci, (type(None), list))
-        if (support != FNames.EmpericalSupport_Coverage) &\
-                (support != FNames.EmpericalSupport_Compatability):
+        if (support != FNames.EmpiricalSupport_Coverage) &\
+                (support != FNames.EmpiricalSupport_Compatibility):
             raise InputValidationError(
                 Error_MSG.INVALID_STRING.format(
-                    'support', FNames.EmpericalSupport_Coverage + ' or ' +
-                    FNames.EmpericalSupport_Compatability
+                    'support', FNames.EmpiricalSupport_Coverage + ' or ' +
+                    FNames.EmpiricalSupport_Compatibility
                 )
             )
         # set None to dict
@@ -1409,7 +1409,7 @@ class EmpericalSupport(object):
             f, ax = plt.subplots(figsize=figsize)
         else:
             f = ax.figure
-        if support == FNames.EmpericalSupport_Coverage:
+        if support == FNames.EmpiricalSupport_Coverage:
             self.support_col = FNames.CI
             self.ylabel = 'Coverage'
             self.table =self.table.sort_values(
@@ -1422,7 +1422,7 @@ class EmpericalSupport(object):
         if reverse_y is not None:
             self.reverse_y=reverse_y
         # do we annotate the point
-        if annotate_estimate == True:
+        if annotate_estimate:
             plot_estimate=self.estimate
         else:
             plot_estimate=None
@@ -1449,7 +1449,7 @@ class EmpericalSupport(object):
                 x_seg = self.table.iloc[idx][[FNames.LOWER_BOUND,
                                          FNames.UPPER_BOUND]].to_list()
                 # which y_value to use
-                if support == FNames.EmpericalSupport_Coverage:
+                if support == FNames.EmpiricalSupport_Coverage:
                     Y_COL = FNames.CI
                 else:
                     Y_COL = FNames.PVALUE
@@ -1471,8 +1471,8 @@ class EmpericalSupport(object):
                       FNames.data_table : self.table,
                       }
         setattr(self,
-                FNames.EmpericalSupportResults,
-                EmpericalSupportPlotResults(**results_dict),
+                FNames.EmpiricalSupportResults,
+                EmpiricalSupportPlotResults(**results_dict),
                 )
         return f, ax
 

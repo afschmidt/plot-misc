@@ -37,10 +37,7 @@ from plot_misc.errors import (
     is_type,
 )
 from plot_misc.constants import Real
-from typing import (
-    Any,
-    Optional,
-)
+from typing import Any
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
@@ -50,7 +47,7 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
             ax:plt.Axes | None = None,
             grid_kw:dict[Any,Any] | None = None,
             cbar_kw:dict[Any,Any] | None = None,
-            **kwargs:Optional[Any],
+            **kwargs:Any,
             ) -> tuple[matplotlib.image.AxesImage,
                        matplotlib.colorbar.Colorbar]:
     """
@@ -130,7 +127,7 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
     # ### Plot the heatmap
     im = ax.imshow(matrix, **kwargs)
     # Create colorbar
-    if cbar_bool == True:
+    if cbar_bool:
         # NOTE if the kwargs for colobar is extended use `_update_kwargs
         cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
         cbar.ax.set_ylabel(cbar_label, rotation=-90, va="bottom")
@@ -172,7 +169,7 @@ def annotate_heatmap(
     valfmt:str | matplotlib.ticker.Formatter | None = None,
     textcolors:tuple[str,str] | list[str,str]=("black","white"),
     threshold: float | None = None,
-    **kwargs:Optional[Any],
+    **kwargs:Any,
 ) -> list[plt.Text]:
     """
     Annotate each cell in a heatmap image with its value.

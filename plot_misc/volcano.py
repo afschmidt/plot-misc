@@ -149,7 +149,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     scatter_nonsig_kwargs_dict = scatter_nonsig_kwargs_dict or {}
     vline_kwargs_dict = vline_kwargs_dict or {}
     # raise warning
-    if (adjust == True and point_label == None):
+    if adjust and point_label is None:
         warnings.warn('`adjust` is ignored if `point_label` is None',
                       SyntaxWarning)
     ### getting figure

@@ -51,8 +51,8 @@ DATA_SET_Y_COORD = pd.DataFrame({
 })
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-class TestEmpericalSupportPlotResults(object):
-    def test_emperical_support_plot_results_initialisation(self):
+class TestEmpiricalSupportPlotResults(object):
+    def test_empirical_support_plot_results_initialisation(self):
         # Mock data
         estimate = 0.42
         df = pd.DataFrame({
@@ -63,7 +63,7 @@ class TestEmpericalSupportPlotResults(object):
             FNames.CI: [0.95, 0.99, 0.999],
         })
         # Initialise class
-        result = forest.EmpericalSupportPlotResults(
+        result = forest.EmpiricalSupportPlotResults(
             **{FNames.ESTIMATE: estimate, FNames.data_table: df}
         )
         # Assertions
@@ -314,7 +314,7 @@ class TestPlotForest(object):
         '''
         evaluating attributes
         '''
-        # not retruning anything
+        # not returing anything
         forest_p = forest.ForestPlot(data=data2,
                                      x_col=POINT, lb_col=LB, ub_col=UB,
                                      )
@@ -463,14 +463,14 @@ class TestPlotTable(object):
         assert all(r.get_facecolor() in expect_cols for r in rect)
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# EmpericalSupport
-class TestEmpericalSupport(object):
+# EmpiricalSupport
+class TestEmpiricalSupport(object):
     """
-    Testing the `EmpericalSupport` function.
+    Testing the `EmpiricalSupport` function.
     """
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_calc_empirical_support(self):
-        table = forest.EmpericalSupport.calc_empirical_support(
+        table = forest.EmpiricalSupport.calc_empirical_support(
             -2, 0.2, [0.01, 0.2, 0.8])
         assert table.mean().round(2).to_list() ==\
             [-2.0, -2.27, -1.73, 0.34, 0.66]
@@ -485,7 +485,7 @@ class TestEmpericalSupport(object):
              'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
              'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
         )
-        _, ax = forest.EmpericalSupport._plot_empirical_support(
+        _, ax = forest.EmpiricalSupport._plot_empirical_support(
             table, lb_col='lower_bound', ub_col='upper_bound',
             support_col='confidence_interval',
             estimate=None)
@@ -510,7 +510,7 @@ class TestEmpericalSupport(object):
              'p-value': {0: 0.01, 1: 0.2, 2: 0.8},
              'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
         )
-        _, ax = forest.EmpericalSupport._plot_empirical_support(
+        _, ax = forest.EmpiricalSupport._plot_empirical_support(
             table, lb_col='lower_bound', ub_col='upper_bound',
             support_col='confidence_interval',
             estimate=-2)
@@ -531,14 +531,14 @@ class TestEmpericalSupport(object):
              'confidence_interval': {0: 0.99, 1: 0.8, 2: 0.19999999999999996}}
         )
         with pytest.raises(IndexError):
-            _ = forest.EmpericalSupport._plot_empirical_support(
+            _ = forest.EmpiricalSupport._plot_empirical_support(
                 table, lb_col='lower_bound', ub_col='upper_bound',
                 support_col='confidence_interval',
                 estimate=-2)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_plot_tree(self):
         est = 0.2; m=100
-        space=forest.EmpericalSupport(estimate=est, standard_error=0.001,
+        space=forest.EmpiricalSupport(estimate=est, standard_error=0.001,
                                       alpha=list(np.linspace(1, 0.00001, m))
                                       )
         _, ax = space.plot_tree()
@@ -549,9 +549,9 @@ class TestEmpericalSupport(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_plot_annotate_ci(self):
         est = 0.2; m=100
-        space=forest.EmpericalSupport(estimate=est, standard_error=0.001,
+        space=forest.EmpiricalSupport(estimate=est, standard_error=0.001,
                                       alpha=list(np.linspace(1, 0.00001, m))
                                       )
         _, ax = space.plot_tree(annotate_ci=[0.6, 0.7, 0.2])
-        # assert - 5 lines isntead of 2 due to the annotations
+        # assert - 5 lines instead of 2 due to the annotations
         assert len(ax.lines) == 5

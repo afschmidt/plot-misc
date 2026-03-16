@@ -176,7 +176,7 @@ def plot_step_wise(data: pd.DataFrame,
     kwargs_ci = kwargs_ci or {}
     kwargs_fill = kwargs_fill or {}
     # ### should we create a figure and axis
-    if add == False:
+    if not add:
         if ax is None:
             f, ax = plt.subplots(figsize=figsize)
         else:
@@ -218,7 +218,7 @@ def plot_step_wise(data: pd.DataFrame,
             ci_ = data[ci_col].values
             ax.step(time_, ci_, **new_kwargs_ci,)
     # add shaded area between limits
-    if fill == True:
+    if fill:
         if fill_colour is None:
             fill_colour = line_colour
         fill_lims = [estimate, estimate]
@@ -240,7 +240,7 @@ def plot_step_wise(data: pd.DataFrame,
                           "intervals are all None type."
                           )
     # Formatting
-    if add == False:
+    if not add:
         ax.margins(*margins)
         if xlim is not None:
             ax.set_xlim(xlim)

@@ -35,6 +35,7 @@ tags
 !.[R|r]nw
 # local folders
 docs/build/
+build/
 /dist/
 /venv/
 /__pycache__/

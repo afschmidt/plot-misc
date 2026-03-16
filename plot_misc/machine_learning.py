@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 # import matplotlib as mpl
 from plot_misc.constants import (
     NamesDecisionCurves as NamesDC,
-    NamesMachineLearnig as NamesML,
+    NamesMachineLearning as NamesML,
     Real,
 )
 from plot_misc.errors import (
@@ -172,7 +172,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
                                    markersize=dot_size,
                                    markeredgewidth=dot_edge_size,
                                    )
-    if vertical == True:
+    if vertical:
         # #### vertical lines
         ax.vlines(x=index, ymin=0, ymax=values, **new_lines_dict,
                   )
@@ -188,7 +188,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         else:
             ax.set_ylim(importance_limit)
         #  invert feature axis
-        if reverse_feature_order == True:
+        if reverse_feature_order:
             ax.invert_xaxis()
     else:
         # #### horizontal lines
@@ -206,7 +206,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         else:
             ax.set_xlim(importance_limit)
         #  invert feature axis
-        if reverse_feature_order == True:
+        if reverse_feature_order:
             ax.invert_yaxis()
     # hide spines
     try:
@@ -561,7 +561,7 @@ class Calibration(object):
         RuntimeError
             If `plot()` has not been called prior to adding curves.
         """
-        if self._plot == False:
+        if not self._plot:
             raise RuntimeError('Please run the `plot` method prior to adding '
                                'curves.')
         # check input
@@ -1028,7 +1028,7 @@ class DecisionCurve(object):
         """
         
         # make sure net_benefit is available
-        if self.CALCULATED == False:
+        if not self.CALCULATED:
             raise RuntimeError('calc_net_benefit must be run before plotting.')
         # #### check input
         is_type(ax, (type(None), plt.Axes))

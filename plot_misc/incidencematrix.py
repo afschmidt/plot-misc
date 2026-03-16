@@ -227,7 +227,7 @@ def draw_incidencematrix(
                                       break_limits=break_limits)
     # get size maps
     size_input = size_data if size_data is not None else data
-    if all(isinstance(x, Real) for x in dot_size) == True:
+    if all(isinstance(x, Real) for x in dot_size):
         new_dot_size = [(n, i[1]) for n, i in zip(dot_size, dot_colour)]
     else:
         new_dot_size = dot_size
@@ -236,7 +236,7 @@ def draw_incidencematrix(
     # get transparency maps
     transparency_input = (
         transparency_data if transparency_data is not None else data)
-    if all(isinstance(x, Real) for x in dot_transparency) == True:
+    if all(isinstance(x, Real) for x in dot_transparency):
         new_dot_transparency=\
             [(n, i[1]) for n, i in zip(dot_transparency, dot_colour)]
     else:

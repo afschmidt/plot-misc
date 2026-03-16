@@ -58,7 +58,6 @@ import numbers
 from typing import (
     Any,
     Literal,
-    Optional,
 )
 
 from plot_misc.constants import (
@@ -287,7 +286,7 @@ class MidpointNormalize(mpl.colors.Normalize):
 # Functions
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _update_kwargs(update_dict:dict[Any, Any], **kwargs:Optional[Any],
+def _update_kwargs(update_dict:dict[Any, Any], **kwargs:Any,
             ) -> dict[Any, Any]:
     """
     Merge keyword arguments with override priority.
@@ -362,7 +361,7 @@ def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_span(start_span:Real, stop_span:Real, ax:plt.Axes,
-              horizontal:bool=True, **kwargs:Optional[Any],
+              horizontal:bool=True, **kwargs:Any,
               ):
     """
     Add a horizontal or vertical span to a matplotlib axis.
@@ -389,7 +388,7 @@ def plot_span(start_span:Real, stop_span:Real, ax:plt.Axes,
     is_type(ax, plt.Axes)
     is_type(horizontal, bool)
     # horizontal or vertical
-    if horizontal == True:
+    if horizontal:
         span = ax.axhspan
     else:
         span = ax.axvspan
@@ -432,7 +431,7 @@ def change_ticks(ax:plt.Axes, ticks:list[str], labels:list[str] | None = None,
     is_type(labels, (list, type(None)))
     is_type(axis, str)
     is_type(log, bool)
-    if axis in ['y', 'x'] == False:
+    if axis not in ['y', 'x']:
         raise ValueError('`axis` is limited to `x` or `y`.')
     # set labels
     if isinstance(labels, list):
@@ -444,7 +443,7 @@ def change_ticks(ax:plt.Axes, ticks:list[str], labels:list[str] | None = None,
     else:
         tick_labels = ticks
     # do we need to transform the location
-    if log == True:
+    if log:
         tick_location = np.log(ticks)
     else:
         tick_location = ticks
@@ -467,7 +466,7 @@ def change_ticks(ax:plt.Axes, ticks:list[str], labels:list[str] | None = None,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
             point_col:str, pvalue_col:str, dropna:bool=False,
-            **kwargs:Optional[Any],
+            **kwargs:Any,
             ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Extract point estimate and p-value matrices from long-format data.
@@ -581,7 +580,7 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
         raise ValueError("`digits` must be interpretable as a single integer, "
                          f"got: {digits}.")
     # taking the log10
-    if log == True:
+    if log:
         pval_full = _nlog10_func(pval, ptrun)
     else:
         pval_full = pval.copy()
@@ -598,8 +597,8 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
         effect = effect.map(dig.format).copy()
     # scaling
     pval = dir * pval
-    # if log == True use larger than
-    if log == True:
+    # if log use larger than
+    if log:
         # if not significant set to empty
         effect[pval_full < sig] = '.'
         effect = effect.astype('str')
@@ -636,7 +635,7 @@ def calc_matrices(data:pd.DataFrame,
                   annotate:str | None='star',
                   without_log:bool=False,
                   mask_na:bool=True,
-                  **kwargs:Optional[Any],
+                  **kwargs:Any,
                   ) -> MatrixHeatmapResults:
     """
     Generate value and annotation matrices for clustered heatmap visualisation.
@@ -711,7 +710,7 @@ def calc_matrices(data:pd.DataFrame,
         _format_matrices(
             point_mat, pvalue_mat, sig=alpha,
             ptrun=ptrun, digits=str(sig_numbers),
-            log=without_log == False,
+            log=not without_log,
         )
     ### selecting the annotation to use
     if annotate == UtilsNames.mat_annot_star:
@@ -733,13 +732,13 @@ def calc_matrices(data:pd.DataFrame,
                                  ]
                                 ))
     ### drop or mask NAs
-    if mask_na == False:
-        drop_c = values.isna().any(axis = 0) == False
-        drop_r = values.isna().any(axis = 1) == False
+    if not mask_na:
+        drop_c = ~values.isna().any(axis=0)
+        drop_r = ~values.isna().any(axis=1)
         values_input = values.loc[drop_r, drop_c]
         annot_input = annot.loc[drop_r, drop_c]
         # Mask with zero if logged
-    elif without_log == False:
+    elif not without_log:
         values_input = values.fillna(0, inplace=False)
         annot_input = annot.fillna('.', inplace=False)
         annot_input[annot_input == 'nan'] = '.'
@@ -897,7 +896,7 @@ def calc_angle_points(x:list[float] | tuple[float, float],
     # ensure the angle is between 0 and 360 degrees
     angle = (angle_degrees_original + 360) % 360
     # get the principal angle
-    if radians == True:
+    if radians:
         angle = np.radians(angle)
     # return
     return angle
@@ -978,7 +977,7 @@ def segment_labelled(
     mid_coordinates=calc_mid_point(x=x, y=y)
     if overrule_angle is None:
         # do we need to apply a transformation first
-        if calc_angle_after_trans == True:
+        if calc_angle_after_trans:
             p1 = list(ax.transData.transform_point((x[0], y[0])))
             p2 = list(ax.transData.transform_point((y[0], y[1])))
             x_trans=[p1[0], p2[0]]
@@ -1084,7 +1083,7 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
     is_type(offset, (type(None), int, float))
     is_type(start_label, (type(None), dict))
     is_type(end_label, (type(None), dict))
-    if axis in ['y', 'x'] == False:
+    if axis not in ['y', 'x']:
         raise ValueError('`axis` is limited to `x` or `y`.')
     if midpoints is not None and gap is None:
         warnings.warn("`gap` is ignored when `midpoints` is supplied.")

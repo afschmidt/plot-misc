@@ -42,9 +42,9 @@ class ForestNames(object):
     PVALUE                         = 'p-value'
     CI                             = 'confidence_interval'
     data_table                     = 'data_table'
-    EmpericalSupport_Coverage      = 'coverage'
-    EmpericalSupport_Compatability = 'compatibility'
-    EmpericalSupportResults        = 'results_'
+    EmpiricalSupport_Coverage      = 'coverage'
+    EmpiricalSupport_Compatibility = 'compatibility'
+    EmpiricalSupportResults        = 'results_'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Utils Names
@@ -103,7 +103,7 @@ class NamesIncidenceMatrix(object):
     GRID_POS_O   = 'outline'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class NamesMachineLearnig(object):
+class NamesMachineLearning(object):
     '''
     Names used by machinelearning.py
     '''

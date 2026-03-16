@@ -185,7 +185,7 @@ def are_columns_in_df(
     missing_columns = expected_columns_set - set(df.columns)
     # return
     if missing_columns:
-        if warning == False:
+        if not warning:
             raise InputValidationError(
                 message.format(missing_columns)
             )

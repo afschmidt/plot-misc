@@ -30,7 +30,7 @@ from plot_misc.errors import (
     is_df,
     Error_MSG,
 )
-from typing import Any, Optional
+from typing import Any
 from plot_misc.constants import Real
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,7 +135,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
                 f'number of rows in data ({len(labels)}).'
             )
     # ### plotting
-    if horizontal == False:
+    if not horizontal:
         # plotting vertical bar chart
         new_kwargs = _update_kwargs(update_dict=kwargs_bar,
                                     edgecolor=edgecolour,
@@ -163,7 +163,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
     if error_min is not None or error_max is not None:
         # finding the mid points of the bars and
         # initialising the bounds, allowing for one-sided limits.
-        if horizontal == False:
+        if not horizontal:
             min_l = [b.get_y() + b.get_height() for b in bars]
             max_l = min_l.copy()
         else:
@@ -183,7 +183,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
                                     color='black',
                                     zorder=1,
                                     )
-        if horizontal == False:
+        if not horizontal:
             mids = [b.get_x() + b.get_width() / 2 for b in bars]
             ax.vlines(mids, min_l, max_l, **new_kwargs_error,)
         else:
@@ -201,7 +201,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
               colours:list[str]=['tab:blue', 'tab:pink'],
               transparency:float=0.7, wd:Real=1.0, edgecolour:str='black',
               horizontal:bool = False, figsize:tuple[Real,Real] = (2,2),
-              ax:plt.Axes | None = None, **kwargs:Optional[Any],
+              ax:plt.Axes | None = None, **kwargs:Any,
               ) -> tuple[plt.Figure, plt.Axes]:
     """
     Plot a stacked bar chart with each bar divided into segments.
@@ -278,7 +278,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
                                     color=colours[idx],
                                     alpha=transparency,
                                     )
-        if horizontal == False:
+        if not horizontal:
             new_kwargs = _update_kwargs(new_kwargs, bottom=left,
                                         )
         else:
