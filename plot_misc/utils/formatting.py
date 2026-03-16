@@ -91,11 +91,11 @@ def format_estimates(point:Real, se: float | None=None,
     ----------
     point : `float` or `int`
         Point estimate.
-    se : `float` or `None`, default `NoneType`
+    se : `float` or `None`, default `None`
         Standard error of the point estimate.
-    lower : `float`, `int` or `None`, default `NoneType`
+    lower : `float`, `int` or `None`, default `None`
         Lower bound of the confidence interval.
-    upper : `float`, `int` or `None`, default `NoneType`
+    upper : `float`, `int` or `None`, default `None`
         Upper bound of the confidence interval.
     alpha : `float`, default 0.05
         Significance level used to compute confidence interval if `se` is given.
@@ -118,17 +118,17 @@ def format_estimates(point:Real, se: float | None=None,
     is_type(round, int)
     is_type(alpha, float)
     is_type(point, float)
-    if se == None and not (isinstance(lower, float) and isinstance(upper, float)):
+    if se is None and not (isinstance(lower, float) and isinstance(upper, float)):
             raise TypeError('Please supply either an `se`, or both  `lower` '
                             'and `upper`.')
-    if isinstance(se, float) and not (lower == None and upper == None):
+    if isinstance(se, float) and not (lower is None and upper is None):
             raise TypeError('Please supply either an `se`, or both  `lower` '
                             'and `upper`.')
     if isinstance(se, float) and isinstance(lower, float) and\
     isinstance(upper, float):
             warnings.warn('Ignoring `se`.', SyntaxWarning)
     # calculate lower and upper bounds
-    if (lower == None and upper == None):
+    if lower is None and upper is None:
         z = norm.ppf(1-alpha/2)
         lower = point - z*se
         upper = point + z*se

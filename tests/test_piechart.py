@@ -8,7 +8,6 @@ from matplotlib.text import Annotation
 from matplotlib.patches import Wedge
 from matplotlib.colors import to_rgba
 from numpy import cos, sin, deg2rad, sign
-from numpy.testing import assert_allclose
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # constants

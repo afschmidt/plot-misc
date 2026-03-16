@@ -95,7 +95,7 @@ def is_type(param: Any, types: tuple[Type] | Type,
         Expected type(s) of the object.
     param_name : `str` or `None`
         Name of the parameter. Will attempt to infer the parameter name if set
-        to `NoneType`.
+        to `None`.
     
     Returns
     -------
@@ -273,7 +273,7 @@ def same_len(object1: Any, object2: Any, object_names: list[str] | None = None,
     if object_names is None:
         object_names = ['object1', 'object2']
     elif len(object_names) !=2:
-        raise ValueError('`object_names` should be `NoneType` or contain '
+        raise ValueError('`object_names` should be `None` or contain '
                          'two strings')
     # the actual test
     if n1 != n2:

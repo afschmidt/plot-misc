@@ -59,9 +59,9 @@ def bar(data:pd.DataFrame, label:str, column:str,
         Numeric positions for the bars along the category axis. If None,
         bars are placed at integer positions 0, 1, 2, ... with tick
         labels taken from the `label` column.
-    error_max : `str`, default `NoneType`
+    error_max : `str`, default `None`
         column name for the upper value of the error line segment.
-    error_min : `str`, default `NoneType`
+    error_min : `str`, default `None`
         column name for the lower value of the error line segment.
     colours : `list` [`str`], default ['tab:blue', 'tab:pink']
         Colours for the bars; recycled if shorter than the number of bars.
@@ -73,7 +73,7 @@ def bar(data:pd.DataFrame, label:str, column:str,
         The bar edgecolour.
     horizontal : `bool`, default `False`
         Whether plot a horizontal bar chart.
-    ax : `plt.ax`, default `NoneType`
+    ax : `plt.ax`, default `None`
         The pyplot.axes object.
     figsize : `tuple` [`float`, `float`], default (2, 2),
         The figure size in inches, when ax is set to None.
@@ -227,7 +227,7 @@ def stack_bar(data:pd.DataFrame, label:str, columns:list[str],
         Colour for bar borders.
     horizontal : `bool`, default `False`
         Whether plot a horizontal barchart.
-    ax : `plt.ax`, default `NoneType`
+    ax : `plt.ax`, default `None`
         The pyplot.axes object.
     figsize : `tuple` [`float`, `float`], default (2, 2),
         The figure size in inches, when ax is set to None.
@@ -324,7 +324,7 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
         Column name for axis labels.
     total_col : `str`
         Column containing values for the base (total) bars.
-    subtotal_col : `str` or `None`, default `NoneType`
+    subtotal_col : `str` or `None`, default `None`
         Column containing values for (smaller) overlaid subtotal bars.
     positions : `np.ndarray` or `list` or `None`, default `None`
         Numeric positions for the bars along the category axis. If None,
@@ -408,7 +408,7 @@ def subtotal_bar(data:pd.DataFrame, label:str, total_col:str,
         kwargs_bar=new_total_kwargs_bar,
     )
     # plot subtotal
-    if not subtotal_col is None:
+    if subtotal_col is not None:
         subtotal = data[subtotal_col]
         # updating kwargs
         new_subtotal_kwargs_bar = _update_kwargs(
@@ -469,10 +469,10 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
         Numeric positions for the group centres along the category axis.
         If None, groups are placed at positions determined by
         `group_spacing` (0, group_spacing, 2*group_spacing, ...).
-    errors_max : `list` [`str`] or `None`, default `NoneType`
+    errors_max : `list` [`str`] or `None`, default `None`
         Column names in `data` containing the upper values of the error bars.
         Should be structured similarly to `columns` if used.
-    errors_min : `list` [`str`] or `None` default `NoneType`
+    errors_min : `list` [`str`] or `None` default `None`
         Column names in `data` containing the lower values of the error bars.
     colours : `list` [`str`], default ['tab:blue', 'tab:pink']
         Colours for the bars. Recycled if fewer colours than `columns`.
@@ -484,7 +484,7 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
         The bar edge colours.
     horizontal : `bool`, default `False`
         Whether plot a horizontal barchart.
-    ax : `plt.ax`, default `NoneType`
+    ax : `plt.ax`, default `None`
         The pyplot.axes object.
     figsize : `tuple` [`float`, `float`], default (2, 2),
         The figure size in inches, when ax is set to None.

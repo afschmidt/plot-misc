@@ -110,17 +110,17 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
     importance_margin : `float`, default 0
         Padding on the axis representing the feature importance value.
         Set to `None` to use matplotlib defaults.
-    importance_limit : `tuple` [`float`,`float`], default `NoneType`
+    importance_limit : `tuple` [`float`,`float`], default `None`
         Explicit x-axis limits. If None, inferred automatically.
     vertical : `bool`, default `True`
         If True, draws vertical lines with feature labels on the y-axis.
         If False, draws horizontal lines with feature labels on the x-axis.
         This effectively transposes the chart orientation and can be used
         to better accommodate long labels or large feature sets.
-    ax : `plt.Axes`, default `NoneType`
+    ax : `plt.Axes`, default `None`
         Matplotlib Axes to plot on. If None, a new figure and axes are created.
     figsize : `tuple` [`float`,`float`], default `(10, 10)`
-        The figure size in inches when ax is `NoneType`.
+        The figure size in inches when ax is `None`.
     kwargs_lines_dict : `dict` [`str`, `any`] or `None`, default `None`
         Additional keyword arguments passed to `ax.hlines`.
     kwargs_plot_dict : `dict` [`str`, `any`] or `None`, default `None`
@@ -181,7 +181,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         change_ticks(ax=ax, ticks=list(index), labels=list(labels), axis='x')
         #  margins
         value_lim = ax.get_ylim()
-        if not importance_margin is None:
+        if importance_margin is not None:
             ax.margins(y=importance_margin)
         if importance_limit is None:
             ax.set_ylim(0, value_lim[1]*1.05)
@@ -199,7 +199,7 @@ def lollipop(values:np.ndarray, labels:np.ndarray,
         change_ticks(ax=ax, ticks=list(index), labels=list(labels), axis='y')
         #  margins
         value_lim = ax.get_xlim()
-        if not importance_margin is None:
+        if importance_margin is not None:
             ax.margins(x=importance_margin)
         if importance_limit is None:
             ax.set_xlim(0, value_lim[1]*1.05)
@@ -246,7 +246,7 @@ class Calibration(object):
     data : `pd.DataFrame` or `dict` [`pd.DataFrame`]
         Binned data containing predicted risks and observed outcomes per bin.
         If multiple models are provided, use a dictionary of DataFrames.
-    ax : `plt.Axes`, default `NoneType`
+    ax : `plt.Axes`, default `None`
         Optional matplotlib axis to draw on. If None, a new figure and axis are
         created.
     figsize : `tuple` [`float`, `float`], default (6.0, 6.0),
@@ -338,11 +338,11 @@ class Calibration(object):
         predicted : `str`
             A column name in `data` representing the predicted risk
             (between 0 and 1).
-        lower_observed : `str` or `None`, default `NoneType`
+        lower_observed : `str` or `None`, default `None`
             An optional column name in `data` representing the lower bound of
             the observed risk. For example this can be a confidence interval
             limit.
-        upper_observed : `str` or `None`, default `NoneType`
+        upper_observed : `str` or `None`, default `None`
             An optional column name in `data` representing the upper bound of
             the observed risk. For example this can be a confidence interval
             limit.
@@ -410,19 +410,19 @@ class Calibration(object):
         # #### testing column content
         # combined the columns
         columns = [predicted, observed]
-        if not lower_observed is None:
+        if lower_observed is not None:
             columns = columns + [lower_observed]
-        if not upper_observed is None:
+        if upper_observed is not None:
             columns = columns + [upper_observed]
         [are_columns_in_df(d, columns) for d in self.data.values()]
         # #### compare plt params to dict len
         # NOTE if None simply repeat for the number of datasets
-        if not ci_colour is None:
+        if ci_colour is not None:
             same_len(self.data, ci_colour, [NamesML.DATA, NamesML.CI_COLOUR])
         else:
             ci_colour = [None] * len(self.data)
         # NOTE if None simply repeat for the number of datasets
-        if not ci_linewidth is None:
+        if ci_linewidth is not None:
             same_len(self.data, ci_linewidth, [NamesML.DATA,NamesML.CI_LINEWIDTH])
         else:
             ci_linewidth = [None] * len(self.data)
@@ -455,9 +455,9 @@ class Calibration(object):
             # set lb and ub to the same y-values, and update based on avail data
             y_bin_lb = val[observed]
             y_bin_ub = val[observed]
-            if not lower_observed is None:
+            if lower_observed is not None:
                 y_bin_lb = val[lower_observed]
-            if not upper_observed is None:
+            if upper_observed is not None:
                 y_bin_ub = val[upper_observed]
             # set confidence intervals
             y_ci = [y_bin_lb, y_bin_ub]
@@ -822,16 +822,16 @@ class DecisionCurve(object):
             Column name in `data` of outcome/target of interest.
         modelnames : `str` or `list` [`str`]
             Column names from `data` that contain model risk scores or values.
-        thresholds : `list` [`float`] or `None`, default `NoneType`
+        thresholds : `list` [`float`] or `None`, default `None`
             The probability values the net benefit will be calculated for. If
-            `NoneType` will default to a list between 0 and 1 with 100 equally
+            `None` will default to a list between 0 and 1 with 100 equally
             spaced values.
-        harm : `dict` [`str`,`float`] or `None`, default `NoneType`
+        harm : `dict` [`str`,`float`] or `None`, default `None`
             An optional dictionary, supplied with a `key` referring tot a
             `modelnames` entry and a float value between 0 and 1. Will be
-            skipped if `NoneType`. Harm represents the burden of model might
+            skipped if `None`. Harm represents the burden of model might
             entail, and its value is subtracted from the crude net benefit.
-        prevalence : `int`,`float` or `None, default `NoneType`
+        prevalence : `int`,`float` or `None, default `None`
             Optional value indicating the outcome prevalence, primarily for
             case-control correction. If None, will be estimated from `data`.
         
@@ -980,13 +980,13 @@ class DecisionCurve(object):
         
         Parameters
         ----------
-        ax : `plt.axes` or `None`, default `NoneType`
+        ax : `plt.axes` or `None`, default `None`
             An optional matplotlib axis. If supplied the function works on the
             axis. Otherwise will internally generate a figure and axes pair.
-        col_dict: `dict` [`str`,`str`] or `None`, default `NoneType`
+        col_dict: `dict` [`str`,`str`] or `None`, default `None`
             A dictionary with the model names as keys and the colours as values.
             Set to `Nonetype` to plot each line in black.
-        line_dict: `dict` [`str`,`str`], default `NoneType`
+        line_dict: `dict` [`str`,`str`], default `None`
             A dictionary with the model names as keys and the linetypes as values.
             Set to `Nonetype` to use a solid line for all models.
         linewidth : `float`, default 0.8

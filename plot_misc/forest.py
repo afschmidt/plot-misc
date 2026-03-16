@@ -140,7 +140,7 @@ def order_row(data:pd.DataFrame, order_outer:dict[str,list[str]],
     is_type(order_inner, (type(None), dict))
     if len(order_outer) > 1:
         raise AttributeError(AE_MSG)
-    if not order_inner is None:
+    if order_inner is not None:
         if len(order_inner) > 1:
             raise AttributeError(AE_MSG)
     # ### algorithm
@@ -152,7 +152,7 @@ def order_row(data:pd.DataFrame, order_outer:dict[str,list[str]],
     for sel_outer in outer_lst:
         slice_outer = data.loc[data[outer_col] == sel_outer]
         # do we have an inner order
-        if not order_inner is None:
+        if order_inner is not None:
             inner_col = list(order_inner.keys())[0]
             inner_lst = list(order_inner.values())[0]
             inner_data = pd.DataFrame()
@@ -205,7 +205,7 @@ def set_y_coordinates(data:pd.DataFrame,
             y       7
             y       9
             
-    strata_within_group : `str` or `None` , default `NoneType`
+    strata_within_group : `str` or `None` , default `None`
         A column in `data` providing additional grouping information.
         Use this to ensure that rows with distinct strata values but the same
         group value receive the same y-coordinate.
@@ -233,7 +233,7 @@ def set_y_coordinates(data:pd.DataFrame,
         The name of the column that will be added to `data`.
     sort_dict : `dict`, `str`, `None`, default `skip`
         Supply a key:value-float combination dictionary to sort the rows on
-        `group` membership. Set to `NoneType` to order rows by
+        `group` membership. Set to `None` to order rows by
         `[order, strata]`. Set to `skip` to not sort.
     
     Returns
@@ -367,12 +367,12 @@ class ForestPlot(object):
         The column name of the lower bound of an confidence interval.
     ub_col : `str` or `None`, default None
         The column name of the upper bound of an confidence interval.
-    g_col : `str` or `None`, default `NoneType`
+    g_col : `str` or `None`, default `None`
         The column name of the group indicator; often the outcome or study
         indicator.  This column will be used to provide y-axis ticklabels.
         If None, a column with a unique value for each row will be
         added - so there are no groups.
-    ax : `plt.axes` or `None`, default `NoneType`
+    ax : `plt.axes` or `None`, default `None`
         Optional existing axis to plot on. If None, a new figure and axis are
         created.
     figsize : `tuple` [`real`, `real`], default (6.0,6.0),
@@ -553,7 +553,7 @@ class ForestPlot(object):
             should be added
         span_colour : `list` [`str`, `str`], default ['white', 'lightgrey']
             The colours of the span.
-        ylim : `tuple` [`float`, `float`] or `None`, default `NoneType`
+        ylim : `tuple` [`float`, `float`] or `None`, default `None`
             Overwrite the default standard y-limits.
         reverse_y : `bool`, default `True`
             inverts the y-axis.
@@ -780,7 +780,7 @@ def plot_table(
         The position of the text **orthogonal to the axis**, given in **axes
         coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
         place the label outside the axis bounds.
-    annoteheaders : `str` or `None`, default `NoneType`
+    annoteheaders : `str` or `None`, default `None`
         string to annotate the table column.
     xloc_header: `real`, 0.5
         Same as `xloc`.
@@ -813,7 +813,7 @@ def plot_table(
         Optional suffix to be added to each y-axis label.
     annoteheader : `str` or `None`, default `None`
         Header label to display at the top of the table.
-    span : `dict` [`int`, `dict` [`str`, `any`]] or `None`, default `NoneType`
+    span : `dict` [`int`, `dict` [`str`, `any`]] or `None`, default `None`
         Whether you want to add an optional span. Supply a dictionary with
         k many unique keys and next dictionaries containing `min` and
         `max` coordinates and `kwargs`. This will all be supplied to
@@ -863,17 +863,17 @@ def plot_table(
     # remove ticks
     ax.set_xticks([])
     # ################### add y-labels
-    if (not yticklabel is None) and (ytickloc is None):
+    if (yticklabel is not None) and (ytickloc is None):
         raise ValueError('`ytickloc` should be supplied if `yticklabel` is defined.')
-    if (yticklabel is None) and (not ytickloc is None):
+    if (yticklabel is None) and (ytickloc is not None):
         raise ValueError('`yticklabel` should be supplied if `ytickloc` is defined.')
-    if (not yticklabel is None) and (not ytickloc is None):
+    if (yticklabel is not None) and (ytickloc is not None):
         if len(yticklabel) != len(ytickloc):
             raise IndexError('`yticklabel` and `ytickloc` contains distinct values.')
         # add optional label padding
-        if not l_yticklab_pad is None:
+        if l_yticklab_pad is not None:
             yticklabel = [l_yticklab_pad + str(s) for s in yticklabel]
-        if not r_yticklab_pad is None:
+        if r_yticklab_pad is not None:
             yticklabel = [str(s) + r_yticklab_pad for s in yticklabel]
         # plot y-tick labels
         ax.set_yticks(ytickloc)
@@ -1172,7 +1172,7 @@ class EmpiricalSupport(object):
             The size of the confidence interval curves.
         linestyle : `str`, default `-`
             The linestyle of the confidence interval curves.
-        estimate : `float`, or `None` default `NoneType`
+        estimate : `float`, or `None` default `None`
             If provided plots the estimate as a marker on top of the graph.
         estimate_size : `float`, default `1.0`
             The size of the estimate marker.
@@ -1180,12 +1180,12 @@ class EmpiricalSupport(object):
             The estimate marker shape.
         estimate_c : `str`, default `orangered`
             The color of the estimate marker.
-        area_c: `str` or `None`, default `NoneType`
+        area_c: `str` or `None`, default `None`
             The colour of the area between the confidence intervals. This
-            is mapped to the facecolor parameter. Set to `NoneType` to skip.
+            is mapped to the facecolor parameter. Set to `None` to skip.
         area_a: `float`, default `0.7`
             The proportion of opacity of the area between the curves.
-        ax : `plt.axes` or `None`, default `NoneType`
+        ax : `plt.axes` or `None`, default `None`
             An optional matplotlib axis. If supplied the function works on the
             axis, otherwise the function will create an axis object internally.
         figsize : `tuple` [`float`,`float`], default (10, 10),
@@ -1318,7 +1318,7 @@ class EmpiricalSupport(object):
         annotate_estimate: `bool`, default `False`
             Whether to include the estimate as a dot at the point where lower
             and upper bounds converge.
-        annotate_ci : `list` [`float`] or `None`, default `NoneType`
+        annotate_ci : `list` [`float`] or `None`, default `None`
             A list of confidence levels for which to annotate labelled
             horizontal segments, using `segment_labelled`.
         line_c : `str`, default `black`
@@ -1333,15 +1333,15 @@ class EmpiricalSupport(object):
             The estimate marker.
         estimate_c : `str`, default `orangered`
             The color of the estimate marker.
-        area_c : `str` or `None`, default `NoneType`
+        area_c : `str` or `None`, default `None`
             The colour of the area between the confidence intervals. This
             is mapped to the facecolor parameter.
         area_a : `float`, default `1.0`
             The proportion of opacity of the area between the curves.
-        ax : `plt.axes` or `None`, default `NoneType`
+        ax : `plt.axes` or `None`, default `None`
             An optional matplotlib axis. If supplied the function works on the
             axis, otherwise the function will create an axis object internally.
-        reverse_y : `bool`, default `NoneType`
+        reverse_y : `bool`, default `None`
             Inverts the y-axis.  Set to `False` or `True` to overwrite internal
             behaviour.
         kwargs_plot : `dict` [`str`,`any`] or `None`, default `None`

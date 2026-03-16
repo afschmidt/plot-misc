@@ -67,7 +67,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         Name of the column containing the y-axis values (typically –log10 p).
     x_column : `str`
         Name of the column containing the x-axis values (effect sizes).
-    point_label : `str` or `None`, default `NoneType`
+    point_label : `str` or `None`, default `None`
         Column name in `data` to use for point labels. If `None`, no labels
         are added.
     fsize : `tuple` [`float`, `float`] or `None`, default `None`
@@ -191,15 +191,15 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ax.set_xlabel(xlab)
     ax.set_ylabel(ylab)
     ### do we want to set the ylim
-    if not ylim is None:
+    if ylim is not None:
         ax.set_ylim(ylim[0], ylim[1])
     # adjust text only if labels are specified
-    if not point_label is None:
+    if point_label is not None:
         # check if column is present
-        if not point_label in data.columns:
+        if point_label not in data.columns:
             raise IndexError('`point_label` is not present in data.columns.')
         # get text, do we want to subset
-        if not index_label is None:
+        if index_label is not None:
             text_data = data.loc[index_label]
             above = text_data[text_data[y_column] >= threshold]
             xs = above[x_column]
@@ -207,7 +207,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         try:
             # NOTE wrapping this in try/finally to reset the default font.
             default_font = plt.rcParams[FT_FAM]
-            if not font_label is None:
+            if font_label is not None:
                 plt.rcParams[FT_FAM] = font_label
             # getting the actual labels
             texts = []

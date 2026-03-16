@@ -177,7 +177,7 @@ def draw_incidencematrix(
     is_type(y_coords, (type(None), list))
     # check literals
     EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
-    if grid_position is not None and not grid_position in EXP_GRID:
+    if grid_position is not None and grid_position not in EXP_GRID:
         raise ValueError(
             Error_MSG.INVALID_STRING.format(
                 'grid_position', EXP_GRID))
@@ -308,7 +308,7 @@ def draw_incidencematrix(
     ax.tick_params(axis="y", labelsize=tick_lab_size[1], length=tick_len[1],
                    width=tick_w[1])
     # trim margin
-    if not margins is None:
+    if margins is not None:
         ax.margins(x=margins[0], y=margins[1])
     # return the figure and axes
     return f, ax
@@ -407,12 +407,12 @@ def _draw_grid(arr:np.ndarray, ax:plt.Axes,
     is_type(arr, np.ndarray)
     is_type(ax,plt.Axes)
     EXP_GRID = [NamesIM.GRID_POS_B, NamesIM.GRID_POS_O]
-    if grid_position is not None and not grid_position in EXP_GRID:
+    if grid_position is not None and grid_position not in EXP_GRID:
         raise ValueError(
             Error_MSG.INVALID_STRING.format(
                 'grid_position', EXP_GRID))
     EXP_AXIS = [NamesIM.AXIS_X, NamesIM.AXIS_Y, NamesIM.AXIS_B]
-    if not axis in EXP_AXIS:
+    if axis not in EXP_AXIS:
         raise ValueError(
             Error_MSG.INVALID_STRING.format(
                 'axis', EXP_AXIS))

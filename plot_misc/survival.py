@@ -106,7 +106,7 @@ def plot_step_wise(data: pd.DataFrame,
         whether to fill the area between confidence intervals or the main line
         if only one side of the confidence interval is supplied.
     fill_alpha : `float`, default 0.8
-        the ransparency value for the filled confidence interval
+        the transparency value for the filled confidence interval
         area, where 0 is fully transparent and 1 is fully opaque.
     fill_colour : `str` or `None`, default `None`
         colour for the filled confidence interval area. If None, uses
@@ -550,9 +550,9 @@ def plot_table(
                 "same number of elements."
             )
     # ################### x-tick labels
-    if (not xticklabel is None) and (xtickloc is None):
+    if (xticklabel is not None) and (xtickloc is None):
         raise ValueError('`xtickloc` should be supplied if `xticklabel` is used.')
-    if (xticklabel is None) and (not xtickloc is None):
+    if (xticklabel is None) and (xtickloc is not None):
         raise ValueError('`xticklabel` should be supplied if `xtickloc` is used.')
     if (xticklabel is not None) and (xtickloc is not None):
         if len(xticklabel) != len(xtickloc):

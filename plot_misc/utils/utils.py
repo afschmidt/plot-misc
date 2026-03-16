@@ -244,11 +244,11 @@ class MidpointNormalize(mpl.colors.Normalize):
     
     Parameters
     ----------
-    vmin : `float` or `NoneType`
+    vmin : `float` or `None`
         Minimum data value that maps to 0.0 on the colour scale.
-    vmax : `float` or `NoneType`
+    vmax : `float` or `None`
         Maximum data value that maps to 1.0 on the colour scale.
-    vcenter : `float` or `NoneType`
+    vcenter : `float` or `None`
         Central value that maps to 0.5 on the colour scale.
     clip : `bool`, default False
         If True, data outside vmin/vmax is clipped to the endpoints.
@@ -925,7 +925,7 @@ def segment_labelled(
         The y-coordinates of the two points.
     label : `str`
         The string which be plotted on top of the line segment. Set to
-        `NoneType` to not plot anything.
+        `None` to not plot anything.
     ax : `plt.axes`
         The matplotlib axis.
     endpoints_marker : `str`, default `unit_circle`
@@ -940,7 +940,7 @@ def segment_labelled(
         The label font size.
     label_background_c : `str`, default `white`
         The label background colour.
-    overrule_angle : `float` or `int`, default `NoneType`
+    overrule_angle : `float` or `int`, default `None`
         Use this to overrule the internally calculated angle against which the
         label will be plotted.
     calc_angle_after_trans : `bool`, default `True`
@@ -1043,7 +1043,7 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
         Set this to skip the automatic midpoint calculation using `gap` and
         instead use the user supplied locations. Use this when the number of
         dots on the axis is unequal.
-    offset : float, default `NoneType`
+    offset : float, default `None`
         The position of the label **orthogonal to the axis**, given in **axes
         coordinates** (0 = bottom/left of axis, 1 = top/right). Negative values
         place the label outside the axis bounds. Defaults to:
@@ -1053,11 +1053,11 @@ def annotate_axis_midpoints(ax:plt.Axes, labels:list[str],
     padding : float, default 0.0
         The padding on the requested axis in original units. Only applied to
         `labels` supplied strings.
-    start_label : `dict` [`str`, `float`], default `NoneType`
+    start_label : `dict` [`str`, `float`], default `None`
         Optional label before the first detected gap. Format should be:
         `{"label text": position}` where position is the coordinate orthogonal
         to the axis (in axes coordinates).
-    end_label : `dict` [`str`, `float`], default `NoneType`
+    end_label : `dict` [`str`, `float`], default `None`
         Optional label after the last detected gap. Same format as `start_label`.
     text_kwargs : `dict` [`str`, `any`]
         Extra keyword arguments for `ax.text()` (e.g. fontweight).

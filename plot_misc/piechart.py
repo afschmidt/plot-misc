@@ -36,7 +36,7 @@ def piechart(
     data: pd.DataFrame, col_values: str, col_labels:str | None = None,
     ax: plt.Axes | None = None, figsize: tuple[float, float] = (8, 4),
     colours: list[str] = ['black', 'grey', 'lightgrey'],
-    fontsize: Real = 8, min_dist_lables: Real = 0.13,
+    fontsize: Real = 8, min_dist_labels: Real = 0.13,
     text_pos_scaling:list[tuple[float,float]] | tuple[float,float]=(1.15,1.15),
     line_start_scaling:list[tuple[float,float]] | tuple[float,float]=(1.00, 1.00),
     arrowprops: dict[str, Any] | None = None,
@@ -70,7 +70,7 @@ def piechart(
         of data points.
     fontsize : `float`, default 8.0
         Font size used for annotation labels.
-    min_dist_lables : `float`, default 0.13
+    min_dist_labels : `float`, default 0.13
         Minimum spacing between labels after adjustment.
     text_pos_scaling : `tuple` [`float`, `float`], default (1.15, 1.15)
         Scaling factor applied to the label position, controlling how far labels
@@ -81,17 +81,17 @@ def piechart(
         Scaling factor applied to the arrow starting point (on the wedge).
         A value > 1 pushes the arrow start outward from the centre. Like
         `text_pos_scaling`, a list allows per-wedge values.
-    ax : `plt.Axes` or `None`, default `NoneType`
+    ax : `plt.Axes` or `None`, default `None`
         Axes on which to draw the pie chart. If None, a new figure and axes
         are created.
-    arrowprops : `dict` [`str`, 'any`] or `None`, default `NoneType'
+    arrowprops : `dict` [`str`, `any`] or `None`, default `None`
         keyword arguments passed to `FancyArrowPatch` to style the arrow
         connecting label to wedge.
-    bboxprops : `dict` [`str`, `any`] or `None`, default `NoneType`
+    bboxprops : `dict` [`str`, `any`] or `None`, default `None`
         keyword arguments passed to the annotation text bounding box (`bbox`).
-    pie_kwargs : `dict`, default `NoneType`
+    pie_kwargs : `dict`, default `None`
         Additional keyword arguments passed to `ax.pie`.
-    annotate_kwargs :`` dict, default `NoneType`
+    annotate_kwargs : `dict`, default `None`
         Additional keyword arguments passed to `ax.annotate`.
     
     Returns
@@ -113,7 +113,7 @@ def piechart(
     is_type(ax, (plt.Axes, type(None)))
     is_type(col_labels, (type(None), str))
     is_type(col_values, str)
-    is_type(min_dist_lables, Real)
+    is_type(min_dist_labels, Real)
     is_type(text_pos_scaling, (list, tuple))
     is_type(line_start_scaling, (list, tuple))
     col_list = [col_labels, col_values]
@@ -191,7 +191,7 @@ def piechart(
             # add annotations
             annotations.append(ann)
         # Adjust labels
-        adjust_labels(annotations, ax, min_distance=min_dist_lables)
+        adjust_labels(annotations, ax, min_distance=min_dist_labels)
     # return figure and axes
     return fig, ax
 

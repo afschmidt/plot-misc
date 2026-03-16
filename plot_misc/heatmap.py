@@ -75,7 +75,7 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
         If `True`, add a colourbar to the figure.
     cbar_label : `str`, default " "
         The label for the colorbar.
-    ax : `plt.Axes` or `None`, default NoneType
+    ax : `plt.Axes` or `None`, default None
         A `matplotlib.axes.Axes` instance to which the heatmap is plotted. If
         not provided, use current axes or create a new one.
     grid_kw : `dict` [`str`,`any`] or `None`, default None
@@ -186,7 +186,7 @@ def annotate_heatmap(
     data : `pd.DataFrame`, `np.array`, or `None`, default `Nonetype`
         A 2D numpy array of shape (M, N). If `None`, the function uses the
         array embedded in `im`.
-    valfmt : `str`, `matplotlib.ticker.Formatter` or `None`, default `NoneType`
+    valfmt : `str`, `matplotlib.ticker.Formatter` or `None`, default `None`
         The format of the annotations inside the heatmap.  This should either
         use the string format method, e.g. "$ {x:.2f}" - (note the `x` is needs
         to be included to represent the numerical), or be a
@@ -194,7 +194,7 @@ def annotate_heatmap(
     textcolors : `list` or `tuple` [`str`, `str`], default `('black', 'white')`
         A pair of colors.  The first is used for values below a threshold,
         the second for those above.
-    threshold : `float` or `None`, default `NoneType`
+    threshold : `float` or `None`, default `None`
         The absolute value in data units according to which the colors from
         textcolors are applied.  If None (the default) uses the middle of the
         colormap as separation.
@@ -232,7 +232,7 @@ def annotate_heatmap(
                         verticalalignment="center",
                         )
     # Get the formatter in case a string is supplied
-    if not valfmt is None:
+    if valfmt is not None:
         if isinstance(valfmt, str):
             valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
     # Loop over the data and create a `Text` for each "pixel".
@@ -241,10 +241,10 @@ def annotate_heatmap(
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
             # only run if threshold exists
-            if not threshold is None:
+            if threshold is not None:
                 kw.update(color=textcolors[int(im.norm(abs(values[i, j])) > threshold)])
             # format text or not
-            if not valfmt is None:
+            if valfmt is not None:
                 text = im.axes.text(j, i, valfmt(matrix[i, j], None), **kw)
             else:
                 text = im.axes.text(j, i, matrix[i,j], **kw)
