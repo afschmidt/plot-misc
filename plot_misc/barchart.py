@@ -500,8 +500,6 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     ax : plt.Axes
         The matplotlib Axes object with the plot.
     """
-    # constants
-    OFFSET_COL = "__offset__"
     # check input - most will be done by bar, just keeping the minimum
     is_df(data)
     is_type(columns, list)
@@ -539,20 +537,19 @@ def group_bar(data:pd.DataFrame, label:str, columns:list[str],
     group_width = wd * n_bars + total_spacing
     tick_pos = base + (group_width - wd) / 2
     # looping
-    df_offset = data.copy()
     for i, column in enumerate(columns):
         # the location of the bar
         offset = base + i * (wd + spacing_per_bar)
-        df_offset[OFFSET_COL] = offset
         # cycling the colours
         col = colours[i % len(colours)]
         # the limits
         err_max = errors_max[i] if errors_max else None
         err_min = errors_min[i] if errors_min else None
         _ = bar(
-            data=df_offset,
-            label=OFFSET_COL,
+            data=data,
+            label=label,
             column=column,
+            positions=offset,
             error_max=err_max,
             error_min=err_min,
             colours=[col],

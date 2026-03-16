@@ -223,6 +223,19 @@ class TestGroupBar(object):
         assert patch[0].get_height() == 0.6
         assert patch[1].get_linewidth() == 1
         assert len([p.get_x() for p in patch]) == GROUP.shape[0] * len(GENES)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_bar_x_positions(self):
+        """Bars within a group must be at distinct x-positions."""
+        _, ax = barchart.group_bar(GROUP, label=GR_LAB, columns=COLS, wd=0.6)
+        patches = ax.patches
+        n_groups = GROUP.shape[0]
+        n_bars = len(COLS)
+        # x-centre of each bar (left edge + half width)
+        xs = [p.get_x() + p.get_width() / 2 for p in patches]
+        # bars within the same group must all be at distinct positions
+        for g in range(n_groups):
+            group_xs = xs[g::n_groups]
+            assert len(set(round(x, 6) for x in group_xs)) == n_bars
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # bar positions
