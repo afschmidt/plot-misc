@@ -22,11 +22,23 @@ readonly CURDIR="${PWD}"
 readonly REPO_ROOT="$(cd ../.. && pwd)"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Restore the original working directory on script exit.
+#
+# Returns
+# -------
+#   0 always.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cleanup() {
     cd "${CURDIR}"
 }
 trap cleanup EXIT
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Handle SIGINT by printing an abort message and exiting with code 1.
+#
+# Returns
+# -------
+#   Exits with code 1.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 abort() {
     echo "[info] aborting..." >&2
@@ -35,10 +47,18 @@ abort() {
 trap 'abort' SIGINT
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# NOTE lists the local branches, finds and deletes all lines not starting with
-# "*" so you only get the active branch name
+# Print the name of the currently checked-out git branch to stdout.
+#
+# Returns
+# -------
+#   0 on success; non-zero in detached-HEAD state or outside a git repo.
+#
+# Outputs
+# -------
+#   Current branch name to stdout.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 parse_git_branch() {
-    git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+    git branch --show-current
 }
 
 # NOTE moves to root, confirms the version is maj/min/patch, gets the
