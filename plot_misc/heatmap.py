@@ -216,13 +216,12 @@ def annotate_heatmap(
         matrix = data.copy().to_numpy()
     else:
         matrix = data
-    # Normalize the threshold to the images color range.
-    if threshold is not None:
-        threshold = im.norm(threshold)
-    else:
-        # this will value is matrix is a string
+    # Compare raw data values against the raw threshold
+    # This bypases any kind of value normalisation - which we should skip
+    # because the string are not normalised only the values
+    if threshold is None:
         try:
-            threshold = im.norm(values.max())/2.
+            threshold = values.max() / 2.
         except np.core._exceptions.UFuncTypeError:
             threshold = None
     # Set default alignment to center, but allow it to be
@@ -242,7 +241,7 @@ def annotate_heatmap(
         for j in range(matrix.shape[1]):
             # only run if threshold exists
             if threshold is not None:
-                kw.update(color=textcolors[int(im.norm(abs(values[i, j])) > threshold)])
+                kw.update(color=textcolors[int(abs(values[i, j]) >= threshold)])
             # format text or not
             if valfmt is not None:
                 text = im.axes.text(j, i, valfmt(matrix[i, j], None), **kw)
