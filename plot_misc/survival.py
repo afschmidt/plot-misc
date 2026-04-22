@@ -401,7 +401,6 @@ def extract_follow_up(data: pd.DataFrame,
     return res
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 def plot_table(
     data:pd.core.frame.DataFrame,
     ax: plt.Axes, string_col: str | list[str],

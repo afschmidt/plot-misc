@@ -244,6 +244,7 @@ def annotate_heatmap(
                 kw.update(color=textcolors[int(abs(values[i, j]) >= threshold)])
             # format text or not
             if valfmt is not None:
+                # NOTE text takes x, y - whereas values takes rows (y), col (x)
                 text = im.axes.text(j, i, valfmt(matrix[i, j], None), **kw)
             else:
                 text = im.axes.text(j, i, matrix[i,j], **kw)
