@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 
 def setup_git_hooks():
     """Configure Git hooks after package installation."""
