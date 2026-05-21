@@ -724,3 +724,33 @@ def load_survival_table(**kwargs):
     # return
     return table
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_forest_preprocessed(**kwargs):
+    """
+    Loads the forest example data with subgroup colour and model shape
+    columns attached, ready for direct use by the forest plot.
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # mapping literals (mirrors resources/examples/forestplot.ipynb cell 2)
+    col_dict = {
+        'wo T2DM/CVD': 'orangered',
+        'w T2DM': 'blueviolet',
+        'w T2DM & CVD': 'limegreen',
+    }
+    shape_dict = {
+        'PGS only': 'o',
+        'PGS plus': 's',
+        'PGS extended': 'H',
+    }
+    # base data (already carries the hardcoded ForestNames.y_col)
+    df = load_forest_data(**kwargs)
+    # attach colour and shape columns
+    df['col'] = df['subgroup_name'].map(col_dict)
+    df['shape'] = df['model'].map(shape_dict)
+    # return
+    return df
+
