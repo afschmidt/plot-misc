@@ -49,15 +49,23 @@ or instead using conda:
 Documentation
 =============
 
-.. toctree::
-   :maxdepth: 1
+.. nbgallery::
    :caption: TLDR
 
-   examples/plots/tldr.nblink
+   examples/plots/tldr/barcharts
+   examples/plots/tldr/bubblechart
+   examples/plots/tldr/forestplot
+   examples/plots/tldr/heatmap
+   examples/plots/tldr/incidencematrix
+   examples/plots/tldr/machine_learning
+   examples/plots/tldr/pychart
+   examples/plots/tldr/survival
+   examples/plots/tldr/treeplot
+   examples/plots/tldr/volcanoplot
 
 .. toctree::
    :maxdepth: 1
-   :caption: Quickstart & Examples
+   :caption: Worked out examples
 
    examples/plots/barcharts.nblink
    examples/plots/forestplot.nblink

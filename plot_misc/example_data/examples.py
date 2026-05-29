@@ -74,6 +74,9 @@ import os
 import re
 import pandas as pd
 import numpy as np
+import matplotlib.lines as mlines
+import plot_misc.survival as pltm_surv
+from plot_misc.forest import set_y_coordinates
 from plot_misc.constants import (
     UtilsNames,
     ForestNames,
@@ -730,7 +733,7 @@ def load_forest_preprocessed(**kwargs):
     """
     Loads the forest example data with subgroup colour and model shape
     columns attached, ready for direct use by the forest plot.
-
+    
     Returns
     -------
     pd.DataFrame
@@ -753,4 +756,198 @@ def load_forest_preprocessed(**kwargs):
     df['shape'] = df['model'].map(shape_dict)
     # return
     return df
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_barchart_preprocessed(**kwargs):
+    """
+    Loads data counting the number of associations between cardiac chambers
+    (`LV`, `RV`, `LA`) and cardiac outcomes.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    data = load_barchart_data(**kwargs).T
+    data['labels'] = data.index
+    data = data.loc[["Heart failure", "HCM", "DCM", "AF"]]
+    # return
+    return data
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_groupbar_preprocessed(**kwargs):
+    """
+    Loads data representing mean and SD percentage of sarcomere disruption
+    per knockdown gene and control in iPS-CM
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    data = load_groupbar_data(**kwargs)
+    # compute max-error columns from mean + std
+    for gene in ['Control', 'AP4S1', 'LRRC39', 'ZFAND4']:
+        data[f'{gene}_max'] = data[f'{gene}_mean'] + data[f'{gene}_std']
+    # return
+    return data
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_subtotal_preprocessed(**kwargs):
+    """
+    Reformatting the load_barchart data to create preprocssed subtotal charts.
+    
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # files
+    data_w = load_barchart_data(**kwargs)
+    data = data_w.T
+    label = "labels"
+    total_col = "total"
+    data[label] = data_w.T.index
+    data[total_col] = data.drop(columns=[label]).sum(axis=1)
+    data['sub'] = data["LV"]
+    data.drop(labels=["LA", "LV", "RV"], inplace=True, axis=1)
+    data.sort_values(by=total_col, ascending=True, inplace=True)
+    return data
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_survival_preprocessed(**kwargs) -> tuple[dict, pd.DataFrame]:
+    """
+    Returns survival rate data along with a survival table.
+    """
+    surv_table = create_survival_data(nrows=24)
+    surv_table2 = create_survival_data(nrows=15, survival_rate=0.04,
+                                       ci_width=0.45)
+    # extract at-risk counts at three time points
+    bottom_table1 = pltm_surv.extract_follow_up(
+        surv_table, at_risk_col='at_risk', points=[0, 50, 100])
+    bottom_table2 = pltm_surv.extract_follow_up(
+        surv_table2, at_risk_col='at_risk', points=[0, 50, 100])
+    sel_col = ['time', 'group_1_at_risk_format']
+    col_names = ['time', 'group 1', 'group 2']
+    bottom_table = pd.merge(
+        bottom_table1[sel_col], bottom_table2[sel_col], on=['time'],
+        **kwargs)
+    bottom_table.columns = col_names
+    # make data dict
+    data_dict = dict(
+        curve1 = [surv_table, 'steelblue'],
+        curve2 = [surv_table2,'crimson']
+    )
+    return data_dict, bottom_table
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_heatmap_preprocessed(**kwargs) -> pd.DataFrame:
+    """
+    Returns an example correlation matrix.
+    """
+    labels = [
+        "Var1",
+        "Var2",
+        "Var3",
+        "Var4",
+        "Var5",
+        "Var6",
+    ]
+    corr = np.array([
+        [1.00, 0.92, 0.81, 0.55, 0.30, 0.10],
+        [0.92, 1.00, 0.76, 0.50, 0.28, 0.08],
+        [0.81, 0.76, 1.00, 0.45, 0.22, 0.05],
+        [0.55, 0.50, 0.45, 1.00, 0.18, 0.02],
+        [0.30, 0.28, 0.22, 0.18, 1.00, -0.75],
+        [0.10, 0.08, 0.05, 0.02, -0.75, 1.00],
+    ])
+    corr = pd.DataFrame(
+        corr,
+        index=labels,
+        columns=labels,
+        **kwargs,
+    )
+    return corr
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_bubble_preprocessed(**kwargs) -> tuple[pd.DataFrame, list, list]:
+    """
+    Returns the data needed for a bubble chart
+    """
+    # create an 8x5 dataframe filled with zeros
+    table = pd.DataFrame(
+        np.zeros((8, 5), dtype=int),
+        columns=['GENE1', 'GENE2', 'GENE3', 'GENE4', 'GENE5'],
+        index=['CRP', 'SBP', 'BMI', 'HbA1c', 'eGFR', 'CHD',
+               'Stroke', 'T2DM']
+    )
+    # set two entries to 4
+    table.loc['SBP', 'GENE3'] = 4
+    table.loc['CHD', 'GENE4'] = 4
+    # set one entry to 3
+    table.loc['HbA1c', 'GENE2'] = 3
+    # set one entry to 4 (third entry with value 4)
+    table.loc['BMI', 'GENE5'] = 4
+    # set four entries to 1
+    table.loc['CRP', 'GENE1'] = 2
+    table.loc['eGFR', 'GENE2'] = 1
+    table.loc['Stroke', 'GENE4'] = 1
+    table.loc['T2DM', 'GENE5'] = 1
+    # Define cut-offs and mappings
+    DOT_COLOUR = [
+        ('#AAAAAA', 0.9),   # grey for (−inf, 0.2]
+        ('#d65db1', 1.9),
+        ('#ff6f91', 2.9),
+        ('#008f7a', 3.9),
+        ('#ffc75f', 4.9),
+    ]
+    # Size thresholds: 2 categories
+    DOT_SIZE = [
+        (0, .9),   # grey for (−inf, 0.2]
+        (20, 1.9),
+        (40, 2.9),
+        (60, 3.9),
+        (80, 4.9),
+    ]
+    # legend handle
+    _SCATTER_KW = dict(
+        marker='o', linestyle='none',
+        markeredgecolor='black', markeredgewidth=0.4,
+    )
+    _COLOURS = [c for c, _ in DOT_COLOUR[1:]]
+    _LABELS  = ['1', '2', '3', '4']
+    _DOT_SIZE_VALS = [s for s, _ in DOT_SIZE[1:]]
+    handles = [
+        mlines.Line2D(
+            [], [], markerfacecolor=col,
+            markersize=2 + 6 * s / 80 if s > 0 else 2,
+            label=lbl, **_SCATTER_KW,
+        )
+        for col, s, lbl in zip(_COLOURS, _DOT_SIZE_VALS, _LABELS)
+    ]
+    return table, [DOT_COLOUR, DOT_SIZE], handles
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
+def load_forest_preprocessed(**kwargs) -> pd.DataFrame:
+    """
+    Returns the data needed for a forest plot
+    """
+    # subsetting the data on the exposure
+    data = load_mace_associations(**kwargs)
+    exposure = 'LDL-C (mmol/L)'
+    dat = data[data['Exposure'] == exposure].reset_index()
+    table = data[data['Exposure'] == 'Apo-B (g/L)'].reset_index()
+    table['Variable'] = [f'Variable {str(s)}' for s in range(1,table.shape[0]+1)]
+    # add y-coordinates
+    dat['Independent'] = ['Exposure ' + str(i+1) for i in range(dat.shape[0])]
+    dat = set_y_coordinates(
+        dat, group='Independent', between_pad=4, within_pad=2,)
+    return dat
+
 

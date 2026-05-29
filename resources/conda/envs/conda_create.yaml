@@ -32,6 +32,7 @@ dependencies:
   - nbsphinx-link
   - numpydoc
   - codespell
+  - docutils<0.21
   # other
   - bump2version=1.*
   # for conda

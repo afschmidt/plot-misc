@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+### Added
+
+* TLDR notebooks split into per-plot files under `resources/examples/tldr/`
+  (`barcharts`, `bubblechart`, `forestplot`, `heatmap`, `incidencematrix`,
+  `machine_learning`, `pychart`, `survival`, `treeplot`, `volcanoplot`),
+  each with minimal self-contained examples. The original `tldr.ipynb` has
+  been removed.
+* Corresponding `.nblink` files added under
+  `docs/source/examples/plots/tldr/` and linked in `docs/source/index.rst`.
+* New `load_forest_preprocessed` dataset loader in
+  `plot_misc/example_data/examples.py`, returning a plot-ready DataFrame
+  with colour and shape columns attached.
+* Barchart `group_positions` parameter to control bar positions within
+  groups.
+* Examples for saving metadata with PDFs and applying compression with TIFFs
+  added to the publication-ready notebook.
+
+### Changed
+
+* `resources/build/inc_version.sh` improved: simplified git branch detection
+  and now also updates `CHANGELOG.md` automatically on version bump.
+* CI/CD: unified pip dependencies across pipeline stages and removed stale
+  code and comments.
+
+### Fixed
+
+* Heatmap: threshold now applied to raw values instead of normalised values.
+* Barchart: grouped bar charts were using the same position for every bar
+  within a group.
+* Function and class naming inconsistencies corrected; boolean handling
+  brought in line with coding standards.
+
+### Removed
+
+* Redundant `conftest.py` removed from the test suite.
+* `docs/source/examples/plots/tldr.nblink` removed (replaced by per-plot
+  nblinks under `tldr/`).
+
 ## v2.2.0 - 18-02-2026
 
 ### Fixed
