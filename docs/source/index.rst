@@ -51,8 +51,14 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
+   :caption: TLDR
+
+   examples/plots/tldr.nblink
+
+.. toctree::
+   :maxdepth: 1
    :caption: Quickstart & Examples
-   
+
    examples/plots/barcharts.nblink
    examples/plots/forestplot.nblink
    examples/plots/heatmap.nblink
