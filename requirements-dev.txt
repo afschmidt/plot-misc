@@ -8,3 +8,13 @@ pytest-dependency>=0.5
 bump2version>=1
 codespell
 jupyter
+sphinx_rtd_theme
+sphinx-bootstrap-theme
+furo
+myst-parser
+notebook
+nbsphinx
+nbsphinx-link
+sphinx-argparse
+numpydoc
+docutils<0.21

@@ -33,7 +33,6 @@ This installs the latest stable release along with its dependencies.
 A Conda package is maintained in my personal Conda channel.
 To install from this channel, run:
 
-
 ```bash
 conda install afschmidt::plot-misc
 ```

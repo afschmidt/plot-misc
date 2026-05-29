@@ -1,119 +1,56 @@
 # Package management
-Here is documentation on the maintenance of the package.
-This is not really geared towards end users but rather a log of how version
-numbering is handled and how documentation is built and maintained.
+
+Documentation on version numbering and the release workflow.
 Throughout this section `./` indicates the root of the repository.
 
 ## Versioning
-dmd uses 3 level versioning:
 
-1. Major version number
-2. Minor version number
-3. Patch version number
+This package uses 3-level semantic versioning:
 
-For all non-stable versions (which is all of them at present), these are
-augmented with a:
+1. **Major** version number
+2. **Minor** version number
+3. **Patch** version number
 
-* release - either `dev`, `a` (alpha), `b` (beta), `rc` (release candidate), 
- `prod` (production)
-* build number, this build number is associated with a release
+For example: `0.1.0`, `1.0.0`, `1.2.3`.
 
-So, a development version number will look like `0.2.0dev0`
+[`bump2version`](https://github.com/c4urself/bump2version) is used to
+increment version numbers across the package. The configuration lives in
+`./.bumpversion.cfg` and updates the following files:
 
-
-[`bump2version`](https://github.com/c4urself/bump2version) is used to increment
-the version numbers throughout the package.
-The version numbers are located in several different places:
-
-* `./.bumpversion.cfg`
-* `./README.md`
-* `./setup.py`
 * `./VERSION`
+* `./plot_misc/_version.py`
+* `./pyproject.toml`
+* `./docs/source/conf.py`
+* `./README.md`
+* `./CHANGELOG.md` — replaces `[Unreleased]` with the new version number
 
-The bumpversion config file is shown below but is also a hidden file in the root of the repository:
-```
-[bumpversion]
-current_version = 0.2.0dev0
-commit = True
-tag = True
-parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\-?(?P<release>[a-z]+)(?P<build>\d+))?
-serialize = 
-	{major}.{minor}.{patch}{release}{build}
-	{major}.{minor}.{patch}
+## Release workflow
 
-[bumpversion:part:release]
-optional_value = prod
-first_value = dev
-values = 
-	dev
-	a
-	b
-	rc
-	prod
+The `inc_version.sh` script in this directory wraps `bump2version` with:
 
-[bumpversion:part:build]
+1. A dry-run preview of the version change
+2. User confirmation before proceeding
+3. Automatic date insertion in `CHANGELOG.md` (e.g. `## 0.1.0 - 2026-04-05`)
+4. A fresh `## [Unreleased]` section added to the top of the changelog
+5. Amended commit and re-tagged to include the changelog changes
+6. Push to remote with tags
 
-[bumpversion:file:VERSION]
+### Usage
 
-[bumpversion:file:./README.md]
-search = __version__: `{current_version}`
-replace = __version__: `{new_version}`
+From this directory (`resources/build`):
 
-[bumpversion:file:./_version.py]
-search = __version__ = '{current_version}'
-replace = __version__ = '{new_version}'
-
-[bumpversion:file:./setup.py]
-search = VERSION = '{current_version}'
-replace = VERSION = '{new_version}'
-
+```bash
+bash inc_version.sh patch    # 0.0.0 -> 0.0.1
+bash inc_version.sh minor    # 0.0.0 -> 0.1.0
+bash inc_version.sh major    # 0.0.0 -> 1.0.0
 ```
 
-The procedure for incrementing the version number is as follows.
-This assumes that the `patch` number is being bumped and you are located in
-the root of the repository (where your `.bumpconfig.cfg` file is located):
+### Jump to a specific version
 
-1. run `bump2version` in "dry-run" (`-n`) mode with `--verbose` to make sure
-everything is ok:
-
-```
-$ bump2version --verbose -n patch
-current_version=0.2.0dev0
-commit=True
-tag=True
-parse=(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\-?(?P<release>[a-z]+)(?P<build>\d+))?
-serialize=
-{major}.{minor}.{patch}{release}{build}
-{major}.{minor}.{patch}
-new_version=0.2.1dev0
+First a dry-run:
+```bash
+cd ../../
+bump2version -n --verbose --new-version 0.1.0 patch
 ```
 
-2. If it all looks good (which it does above) then run for real:
-
-```
-$ bump2version --verbose patch
-current_version=0.2.0dev0
-commit=True
-tag=True
-parse=(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\-?(?P<release>[a-z]+)(?P<build>\d+))?
-serialize=
-{major}.{minor}.{patch}{release}{build}
-{major}.{minor}.{patch}
-new_version=0.2.1dev0
-```
-
-3. Push to git. `bump2version` will produce git tags (imagine these are 
-bookmarks in your repository).
-Note, to make sure these are updated in your repository you have to push with
-the `--tags` flag.
-
-```
-git push --tags origin master
-```
-
-# Jump to a specific version
-
-```sh
-bump2version -n --verbose --new-version 0.0.2a0 part
-```
-
+Remove `-n` to apply for real.

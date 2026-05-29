@@ -29,6 +29,7 @@ dependencies:
   - nbsphinx
   - nbsphinx-link
   - numpydoc
+  - docutils<0.21
   - codespell
   # other
   - bump2version=1.*
