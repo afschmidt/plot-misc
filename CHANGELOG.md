@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## Unreleased
 
 ### Added
 
@@ -37,8 +37,6 @@
 ### Removed
 
 * Redundant `conftest.py` removed from the test suite.
-* `docs/source/examples/plots/tldr.nblink` removed (replaced by per-plot
-  nblinks under `tldr/`).
 
 ## v2.2.0 - 18-02-2026
 
