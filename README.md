@@ -4,12 +4,26 @@
 __version__: `2.2.1`
 
 This repository collects plotting modules written on top of `matplotlib`.
-The functions are intended to set up light-touch, basic illustrations that
-can be customised using the standard matplotlib interface via axes and figures.
-Functionality is included to create illustrations commonly used in medical research,
-covering forest plots, volcano plots, incidence matrices/bubble charts,
-illustrations to evaluate prediction models (e.g. feature importance, net benefit, calibration plots),
-and more.
+The functions describe plotting archetypes intended to set up light-touch,
+illustrations that can be customised using the standard matplotlib interface
+via axes and figures.
+Because the implementation is matplotlib-first, the API is consistent with
+matplotlib conventions, and users already familiar with the library will find 
+the learning curve minimal.
+
+The functionality is geared towards illustrations commonly used in biomedical 
+research:
+
+* Bar charts
+* Bubble charts
+* Forest plots (with optional side-tables)
+* Heatmaps (with optional annotations)
+* Incidence matrix plots
+* Machine learning plots (calibration, feature importance, net benefit)
+* Pie charts
+* Survival plots (with optional survival table)
+* Tree/compatibility plots
+* Volcano plots
 
 Please consult the **[documentation](https://SchmidtAF.gitlab.io/plot-misc/)** 
 for plot-misc.
