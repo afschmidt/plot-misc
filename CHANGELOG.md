@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.2.1 - 2026-05-30
+
 ### Added
 
 * TLDR notebooks split into per-plot files under `resources/examples/tldr/`
