@@ -38,7 +38,8 @@ class TestPlotVolcano(object):
                             alpha=SIGNIFICANCE, ax=ax,
                             )
         # check the points are correct
-        list(DATA['pvalue_log10'])[1] in ax.collections[1].get_offsets().data[:,1]
+        assert list(DATA['pvalue_log10'])[1] in\
+            ax.collections[1].get_offsets().data[:,1]
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[0].get_xdata()) == [0, 0]
@@ -69,7 +70,8 @@ class TestPlotVolcano(object):
         text = ax.axes.texts[-1]
         assert text.get_text() == LABEL
         # check the points are correct
-        list(data2['pvalue_log10'])[0] in ax.collections[1].get_offsets().data[:,1]
+        assert list(data2['pvalue_log10'])[0] in\
+            ax.collections[1].get_offsets().data[:,1]
         # get conficence interval coordinates
         lines=ax.lines
         assert list(lines[0].get_xdata()) == [0, 0]

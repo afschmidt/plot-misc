@@ -75,8 +75,6 @@ import re
 import pandas as pd
 import numpy as np
 import matplotlib.lines as mlines
-import plot_misc.survival as pltm_surv
-from plot_misc.forest import set_y_coordinates
 from plot_misc.constants import (
     UtilsNames,
     ForestNames,
@@ -826,16 +824,24 @@ def load_survival_preprocessed(**kwargs) -> tuple[dict, pd.DataFrame]:
     surv_table2 = create_survival_data(nrows=15, survival_rate=0.04,
                                        ci_width=0.45)
     # extract at-risk counts at three time points
-    bottom_table1 = pltm_surv.extract_follow_up(
-        surv_table, at_risk_col='at_risk', points=[0, 50, 100])
-    bottom_table2 = pltm_surv.extract_follow_up(
-        surv_table2, at_risk_col='at_risk', points=[0, 50, 100])
-    sel_col = ['time', 'group_1_at_risk_format']
-    col_names = ['time', 'group 1', 'group 2']
-    bottom_table = pd.merge(
-        bottom_table1[sel_col], bottom_table2[sel_col], on=['time'],
-        **kwargs)
-    bottom_table.columns = col_names
+    # import plot_misc.survival as pltm_surv
+    # bottom_table1 = pltm_surv.extract_follow_up(
+    #     surv_table, at_risk_col='at_risk', points=[0, 50, 100])
+    # bottom_table2 = pltm_surv.extract_follow_up(
+    #     surv_table2, at_risk_col='at_risk', points=[0, 50, 100])
+    # sel_col = ['time', 'group_1_at_risk_format']
+    # col_names = ['time', 'group 1', 'group 2']
+    # bottom_table = pd.merge(
+    #     bottom_table1[sel_col], bottom_table2[sel_col], on=['time'],
+    #     **kwargs)
+    # bottom_table.columns = col_names
+    bottom_table = pd.DataFrame(
+        {
+            "time": [0, 50, 100],
+            "group 1": ["1,000", "379", "121"],
+            "group 2": ["1,000", "143", "1"],
+        }
+    )
     # make data dict
     data_dict = dict(
         curve1 = [surv_table, 'steelblue'],
@@ -946,8 +952,7 @@ def load_forest_preprocessed(**kwargs) -> pd.DataFrame:
     table['Variable'] = [f'Variable {str(s)}' for s in range(1,table.shape[0]+1)]
     # add y-coordinates
     dat['Independent'] = ['Exposure ' + str(i+1) for i in range(dat.shape[0])]
-    dat = set_y_coordinates(
-        dat, group='Independent', between_pad=4, within_pad=2,)
+    dat['y_axis'] = [1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0]
     return dat
 
 
