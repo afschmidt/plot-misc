@@ -61,6 +61,7 @@ Documentation
    examples/plots/tldr/pychart
    examples/plots/tldr/survival
    examples/plots/tldr/treeplot
+   examples/plots/tldr/utils
    examples/plots/tldr/volcanoplot
 
 .. toctree::
@@ -74,6 +75,7 @@ Documentation
    examples/plots/machine_learning.nblink
    examples/plots/pychart.nblink
    examples/plots/survival.nblink
+   examples/plots/utils.nblink
    examples/plots/volcanoplot.nblink
 
 .. toctree::
