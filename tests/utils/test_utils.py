@@ -130,6 +130,26 @@ class TestCalcMatrices(object):
         assert annot_effect.iloc[:,2].tolist() == ['nan', 'nan']
         assert annot_star.iloc[:,1].tolist() == ['.', '★']
         assert annot_pval.iloc[:,1].tolist() == ['.', '4.0']
+        # custom significance symbol is honoured
+        _, _, annot_star_sym, _, _ =\
+            _format_matrices(point_mat, pvalue_mat,
+                            sig=0.05, ptrun=16, digits='2', log=False,
+                            symbol='●')
+        assert annot_star_sym.iloc[:,1].tolist() == ['.', '●']
+        # unsigned -log10 and raw p-value annotation modes
+        _, _, _, annot_unsigned, _ =\
+            _format_matrices(point_mat, pvalue_mat,
+                            sig=0.3, ptrun=16, digits='2', log=True,
+                            pval_mode='unsigned_log')
+        _, _, _, annot_raw, _ =\
+            _format_matrices(point_mat, pvalue_mat,
+                            sig=0.3, ptrun=16, digits='3', log=True,
+                            pval_mode='raw')
+        # `annot_pval` (signed) carries the effect-direction sign ...
+        assert annot_pval.iloc[:,3].tolist() == ['-0.69', '3.27']
+        # ... while 'unsigned_log' drops it and 'raw' shows the p-value itself
+        assert annot_unsigned.iloc[:,3].tolist() == ['0.69', '3.27']
+        assert annot_raw.iloc[:,3].tolist() == ['0.205', '0.001']
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Testing _calc_matrices
     def test_correct_usage(self):
@@ -182,6 +202,44 @@ class TestCalcMatrices(object):
                              )
         assert res6.curated_matrix_value.iloc[0].to_list() == \
             [0.596, -0.02]
+        # res 7 - explicit `annotate='symbol'`
+        res7b = calc_matrices(data, annotate='symbol', symbol='◆',
+                              exposure_col=UNames.mat_exposure,
+                              outcome_col=UNames.mat_outcome,
+                              )
+        assert res7b.curated_matrix_annotation.iloc[0].to_list() == \
+            ['.', '.', '◆', '.']
+        # res 8 - 'pvalues_signed' reproduces the legacy 'pvalues' output
+        res8 = calc_matrices(data, sig_numbers=3, annotate='pvalues_signed',
+                             exposure_col=UNames.mat_exposure,
+                             outcome_col=UNames.mat_outcome,
+                             )
+        assert res8.curated_matrix_annotation.iloc[1].to_list() == \
+            ['-2.281', '4.0', '.', '.']
+        # res 9 - unsigned -log10 annotation; value matrix stays signed -log10
+        res9 = calc_matrices(data, sig_numbers=3, annotate='pvalues_unsigned',
+                             exposure_col=UNames.mat_exposure,
+                             outcome_col=UNames.mat_outcome,
+                             )
+        assert res9.curated_matrix_annotation.iloc[1].to_list() == \
+            ['2.281', '4.0', '.', '.']
+        assert res9.curated_matrix_value.iloc[1].round(3).to_list() == \
+            [-2.281, 4.0, 0.0, 0.0]
+        # res 10 - raw p-value annotation; value matrix stays signed -log10
+        res10 = calc_matrices(data, sig_numbers=3, annotate='pvalues_raw',
+                              exposure_col=UNames.mat_exposure,
+                              outcome_col=UNames.mat_outcome,
+                              )
+        assert res10.curated_matrix_annotation.iloc[1].to_list() == \
+            ['0.005', '0.0', '.', '.']
+        assert res10.curated_matrix_value.iloc[1].round(3).to_list() == \
+            [-2.281, 4.0, 0.0, 0.0]
+        # res 11 - an unknown annotation still raises
+        with pytest.raises(ValueError):
+            calc_matrices(data, annotate='not_a_mode',  # type: ignore[arg-type]
+                          exposure_col=UNames.mat_exposure,
+                          outcome_col=UNames.mat_outcome,
+                          )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~----
 class TestAjustLabels(object):

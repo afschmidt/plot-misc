@@ -10,6 +10,26 @@
 * Corresponding `.nblink` files under `docs/source/examples/plots/` and
   `docs/source/examples/plots/tldr/`, linked into the `nbgallery` and the
   "Worked out examples" toctree in `docs/source/index.rst`.
+* `calc_matrices` `symbol` argument to set the significance marker glyph to
+  any text/unicode string (e.g. `'●'`, `'◆'`); previously fixed to `'★'`.
+* `calc_matrices` `annotate='symbol'` option, replacing `'star'` as the
+  significance-marker selector.
+* `calc_matrices` p-value annotation options `'pvalues_signed'`,
+  `'pvalues_unsigned'`, and `'pvalues_raw'`, controlling whether the
+  annotation shows signed -log10, unsigned -log10, or the raw p-value. The
+  numeric value matrix remains signed -log10 regardless.
+
+### Changed
+
+* `calc_matrices` `annotate` now defaults to `'symbol'` (was `'star'`); the
+  default output is unchanged. The `annotate` argument is now a typed
+  `Literal` of the supported options.
+
+### Deprecated
+
+* `calc_matrices` `annotate='star'` is deprecated in favour of `'symbol'`.
+* `calc_matrices` `annotate='pvalues'` is deprecated in favour of
+  `'pvalues_signed'`.
 
 ### Fixed
 

@@ -67,8 +67,12 @@ class UtilsNames(object):
     mat_outcome        = 'outcome'
     mat_exposure_list  = ['IL2ra', 'IP10', 'SCF', 'TRAIL']
     mat_outcome_list   = ['HDL-C', 'LDL-C']
+    mat_annot_symbol   = 'symbol'
     mat_annot_star     = 'star'
     mat_annot_pval     = 'pvalues'
+    mat_annot_pval_signed   = 'pvalues_signed'
+    mat_annot_pval_unsigned = 'pvalues_unsigned'
+    mat_annot_pval_raw      = 'pvalues_raw'
     mat_annot_point    = 'point_estimates'
     mat_annot_none     = '`NoneType`'
     roc_false_positive = 'false_positive'
