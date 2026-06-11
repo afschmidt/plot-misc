@@ -979,7 +979,7 @@ def segment_labelled(
         # do we need to apply a transformation first
         if calc_angle_after_trans:
             p1 = list(ax.transData.transform_point((x[0], y[0])))
-            p2 = list(ax.transData.transform_point((y[0], y[1])))
+            p2 = list(ax.transData.transform_point((x[1], y[1])))
             x_trans=[p1[0], p2[0]]
             y_trans=[p1[1], p2[1]]
         else:

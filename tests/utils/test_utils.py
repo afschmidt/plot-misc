@@ -60,7 +60,7 @@ class TestDict_String_Argument(object):
         assert dict_expected == new_dict
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# Testing extraction and formating
+# Testing extraction and formatting
 class TestCalcMatrices(object):
     """
     Testing functions for the `calc_matrices` function.
@@ -264,6 +264,27 @@ class Test_Segment_Labelled(object):
         segment_labelled(x=[0, 2], y=[2, 4], ax=ax, label=lab)
         assert ax.texts[0].get_position() == (1.0, 3.0)
         assert np.round(ax.texts[0].get_rotation(), 2) == 36.69
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_label_rotation_follows_segment(self):
+        # regression: the second endpoint must use ``x[1]`` (not ``y[0]``)
+        # when transforming to display space, otherwise the label rotation
+        # does not align with the drawn segment.
+        x = [1, 8]
+        y = [2, 7]
+        _, ax = plt.subplots()
+        segment_labelled(x=x, y=y, ax=ax, label='link')
+        # expected rotation computed from the correctly transformed endpoints
+        p1 = list(ax.transData.transform_point((x[0], y[0])))
+        p2 = list(ax.transData.transform_point((x[1], y[1])))
+        expected = calc_angle_points(x=[p1[0], p2[0]], y=[p1[1], p2[1]])
+        assert np.round(ax.texts[0].get_rotation(), 5) == np.round(expected, 5)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_overrule_angle(self):
+        # the override path bypasses the internal angle calculation
+        _, ax = plt.subplots()
+        segment_labelled(x=[1, 8], y=[2, 7], ax=ax, label='link',
+                         overrule_angle=0)
+        assert ax.texts[0].get_rotation() == 0
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Test_Annotate_axis_midpoints(object):

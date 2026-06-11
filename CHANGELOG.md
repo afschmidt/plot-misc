@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Added
+
+* Example notebooks for the `plot_misc.utils.utils` helpers: a concise TLDR
+  notebook `resources/examples/tldr/utils.ipynb` and a detailed worked-out
+  notebook `resources/examples/utils.ipynb`.
+* Corresponding `.nblink` files under `docs/source/examples/plots/` and
+  `docs/source/examples/plots/tldr/`, linked into the `nbgallery` and the
+  "Worked out examples" toctree in `docs/source/index.rst`.
+
+### Fixed
+
+* `segment_labelled` now rotates the midpoint label to align with the drawn
+  segment. The second endpoint was transformed with the wrong x-coordinate
+  (`y[0]` instead of `x[1]`), producing an incorrect text angle whenever
+  `x[1] != y[0]`.
+
 ## 2.2.1 - 2026-05-30
 
 ### Added
