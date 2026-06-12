@@ -113,40 +113,43 @@ class TestCalcMatrices(object):
     def test_format_matrices(self):
         point_mat = examples.get_data('heatmap_point_matrix')
         pvalue_mat = examples.get_data('heatmap_pvalue_matrix')
-        # formatting
-        values, annot_effect, _, _, _ =\
-            _format_matrices(point_mat, pvalue_mat,
-                            sig=1.3, ptrun=16, digits='6', log=True)
-        values2, _, annot_star, _, _ =\
-            _format_matrices(point_mat, pvalue_mat,
-                            sig=0.05, ptrun=16, digits='2', log=False)
-        values3, _, _, annot_pval, _ =\
-            _format_matrices(point_mat, pvalue_mat,
-                            sig=0.3, ptrun=16, digits='2', log=True)
-        assert values.iloc[:,3].tolist() == [-0.689009, 3.272459]
-        assert values2.iloc[:,1].tolist() == [-0.95, 0.0]
-        assert values3.iloc[:,1].tolist() == [-0.02, 4.0]
+        # `_format_matrices` returns three numeric p-value tables (signed
+        # -log10, unsigned -log10, raw) plus the effect / star / p-value
+        # annotation matrices and the raw effect matrix. `sig` is supplied in
+        # -log10 units (the private interface).
+        (signed, unsigned, raw, annot_effect, annot_star, annot_pval,
+         effect_float) = _format_matrices(point_mat, pvalue_mat,
+                                          sig=1.3, ptrun=16, digits='6')
+        # the three numeric p-value tables
+        assert signed.iloc[:,3].tolist() == [-0.689009, 3.272459]
+        assert unsigned.iloc[:,3].tolist() == [0.689009, 3.272459]
+        assert raw.iloc[:,3].tolist() == [0.20464, 0.000534]
+        # effect annotation: '.' where non-significant, 'nan' where missing
         assert annot_effect.iloc[:,3].tolist() == ['.', '0.027800']
         assert annot_effect.iloc[:,2].tolist() == ['nan', 'nan']
+        # star annotation honours the significance mask
         assert annot_star.iloc[:,1].tolist() == ['.', '★']
-        assert annot_pval.iloc[:,1].tolist() == ['.', '4.0']
         # custom significance symbol is honoured
-        _, _, annot_star_sym, _, _ =\
+        (_, _, _, _, annot_star_sym, _, _) =\
             _format_matrices(point_mat, pvalue_mat,
-                            sig=0.05, ptrun=16, digits='2', log=False,
-                            symbol='●')
+                            sig=1.3, ptrun=16, digits='2', symbol='●')
         assert annot_star_sym.iloc[:,1].tolist() == ['.', '●']
-        # unsigned -log10 and raw p-value annotation modes
-        _, _, _, annot_unsigned, _ =\
+        # p-value annotation modes: signed / unsigned -log10 and raw
+        (_, _, _, _, _, annot_signed, _) =\
             _format_matrices(point_mat, pvalue_mat,
-                            sig=0.3, ptrun=16, digits='2', log=True,
+                            sig=0.3, ptrun=16, digits='2',
+                            pval_mode='signed_log')
+        (_, _, _, _, _, annot_unsigned, _) =\
+            _format_matrices(point_mat, pvalue_mat,
+                            sig=0.3, ptrun=16, digits='2',
                             pval_mode='unsigned_log')
-        _, _, _, annot_raw, _ =\
+        (_, _, _, _, _, annot_raw, _) =\
             _format_matrices(point_mat, pvalue_mat,
-                            sig=0.3, ptrun=16, digits='3', log=True,
+                            sig=0.3, ptrun=16, digits='3',
                             pval_mode='raw')
-        # `annot_pval` (signed) carries the effect-direction sign ...
-        assert annot_pval.iloc[:,3].tolist() == ['-0.69', '3.27']
+        # 'signed_log' carries the effect-direction sign ...
+        assert annot_signed.iloc[:,1].tolist() == ['.', '4.0']
+        assert annot_signed.iloc[:,3].tolist() == ['-0.69', '3.27']
         # ... while 'unsigned_log' drops it and 'raw' shows the p-value itself
         assert annot_unsigned.iloc[:,3].tolist() == ['0.69', '3.27']
         assert annot_raw.iloc[:,3].tolist() == ['0.205', '0.001']
@@ -163,11 +166,16 @@ class TestCalcMatrices(object):
             [ -1.68, 3.98, 3.27, -0.69]
         assert res1.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.','★','.']
-        # res 2
+        # the two additional numeric p-value tables (unsigned -log10, raw)
+        assert res1.curated_matrix_value_unsigned_log.iloc[1].round(r)\
+            .to_list() == [2.28, 4.0, 0.0, 0.0]
+        assert res1.curated_matrix_value_raw.iloc[1].round(r)\
+            .to_list() == [0.01, 0.0, 1.0, 1.0]
+        # res 2 - `ptrun` is now a raw p-value (0.01 == old exponent 2)
         res2 = calc_matrices(data,
                              exposure_col=UNames.mat_exposure,
                              outcome_col=UNames.mat_outcome,
-                             ptrun=2)
+                             ptrun=0.01)
         assert res2.curated_matrix_value.sum(axis=0).round(r).to_list() == \
             [-1.4, 1.98, 2.0, -0.69]
         assert res2.curated_matrix_annotation.iloc[1].to_list() == \
@@ -179,13 +187,15 @@ class TestCalcMatrices(object):
                              )
         assert res3.curated_matrix_annotation.iloc[1].to_list() == \
             [ '★','★','.', '.']
-        # res 4
-        res4 = calc_matrices(data, alpha=0.001, without_log=True,
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
-                             )
+        # res 4 - `without_log` is deprecated: it now warns and no longer
+        # changes the (always signed -log10) value matrix.
+        with pytest.warns(DeprecationWarning):
+            res4 = calc_matrices(data, alpha=0.001, without_log=True,
+                                 exposure_col=UNames.mat_exposure,
+                                 outcome_col=UNames.mat_outcome,
+                                 )
         assert res4.curated_matrix_value.sum(axis=0).round(r).to_list() == \
-            [0.24, -0.95, 1.0, 0.8]
+            [-1.68, 3.98, 3.27, -0.69]
         assert res4.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.','★','.']
         # res 5
@@ -237,6 +247,24 @@ class TestCalcMatrices(object):
         # res 11 - an unknown annotation still raises
         with pytest.raises(ValueError):
             calc_matrices(data, annotate='not_a_mode',  # type: ignore[arg-type]
+                          exposure_col=UNames.mat_exposure,
+                          outcome_col=UNames.mat_outcome,
+                          )
+        # res 12 - `alpha` is now a raw p-value in (0, 1]; values > 1 raise
+        with pytest.raises(InputValidationError):
+            calc_matrices(data, alpha=1.3,
+                          exposure_col=UNames.mat_exposure,
+                          outcome_col=UNames.mat_outcome,
+                          )
+        # res 13 - `ptrun` is now a raw p-value in (0, 1]; the old exponent
+        # convention (e.g. 2) and 0 are out of range and raise.
+        with pytest.raises(InputValidationError):
+            calc_matrices(data, ptrun=2,
+                          exposure_col=UNames.mat_exposure,
+                          outcome_col=UNames.mat_outcome,
+                          )
+        with pytest.raises(InputValidationError):
+            calc_matrices(data, ptrun=0,
                           exposure_col=UNames.mat_exposure,
                           outcome_col=UNames.mat_outcome,
                           )

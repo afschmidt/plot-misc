@@ -58,6 +58,8 @@ class UtilsNames(object):
     annot_pval         = 'matrix_pvalue'
     annot_effect       = 'matrix_point_estimate'
     value_point        = 'curated_matrix_point_estimate_value'
+    value_unsigned_log = 'curated_matrix_value_unsigned_log'
+    value_raw          = 'curated_matrix_value_raw'
     value_original     = 'crude_point_estimate'
     source_data        = 'source_data'
     mat_point          = 'point'

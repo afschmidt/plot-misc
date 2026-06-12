@@ -201,7 +201,11 @@ class MatrixHeatmapResults(Results):
         (unlogged) point estimates, masked where needed.
     curated_matrix_value : `pd.DataFrame`
         The final heatmap matrix with signed -log10(p-values), possibly NA-masked
-        and suitable for plotting (numeric).
+        and suitable for plotting (numeric). This is the default colour matrix.
+    curated_matrix_value_unsigned_log : `pd.DataFrame`
+        The unsigned -log10(p-value) matrix, NA-masked with 0 (numeric).
+    curated_matrix_value_raw : `pd.DataFrame`
+        The raw (untransformed) p-value matrix, NA-masked with 1 (numeric).
     matrix_point_estimate : `pd.DataFrame`
         A matrix of formatted point estimates as strings, with non-significant
         values masked.
@@ -222,6 +226,8 @@ class MatrixHeatmapResults(Results):
         UtilsNames.annot_star,
         UtilsNames.annot_pval,
         UtilsNames.annot_effect,
+        UtilsNames.value_unsigned_log,
+        UtilsNames.value_raw,
         UtilsNames.value_original,
         UtilsNames.value_point,
         UtilsNames.source_data,
@@ -533,131 +539,123 @@ def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
-                     log:bool=True, ptrun:Real=16, digits:str='3',
+                     ptrun:Real=16, digits:str='3',
                      symbol:str='★',
                      pval_mode:Literal['signed_log',
                                        'unsigned_log',
                                        'raw']='signed_log',
                      ) -> tuple[pd.DataFrame,
-                                                pd.DataFrame,
-                                                pd.DataFrame,
-                                                pd.DataFrame,
-                                                pd.DataFrame,
-                                                ]:
+                                pd.DataFrame,
+                                pd.DataFrame,
+                                pd.DataFrame,
+                                pd.DataFrame,
+                                pd.DataFrame,
+                                pd.DataFrame,
+                                ]:
     """
     Format effect and p-value matrices for heatmap visualisation.
-
-    Applies masking, rounding, annotation, and -log10 transformation to p-values,
-    returning both numeric and string matrices for plotting.
+    
+    P-values are always -log10 transformed. Three numeric p-value tables are
+    returned (signed -log10, unsigned -log10, and the raw p-value), together
+    with the string annotation matrices used to overlay the heatmap.
     
     Parameters
     ----------
     effect : `pd.DataFrame`
         Matrix of effect estimates as floats.
     pval : `pd.DataFrame`
-        Matrix of p-values as floats.
+        Matrix of p-values as floats (in [0, 1]).
     sig : `float`
-        The significance p-value cut-off either bounded between 0 and 1,
-        or -log10 transformed.
-    log : `bool`, default is `True`
-        should the `pval` matrix be -log10 transformed.
+        Significance cut-off expressed as a `-log10` threshold (a cell is
+        significant when `-log10(p) >= sig`).
     ptrun : `float` or `int`, default 16
-        Truncation threshold for p-values.
+        P-values smaller than `10^(-ptrun)` are truncated.
     digits : `str`, default `3`
-        the number of significant digits the effect matrix should be rounded.
+        Number of decimals the numeric tables and effect strings are rounded
+        to (a single integer character).
     symbol : `str`, default `★`
-        the unicode symbol used to flag significant findings.
+        The glyph used to flag significant findings in the `star` matrix.
     pval_mode : {'signed_log', 'unsigned_log', 'raw'}, default 'signed_log'
-        Representation used for the `pvalstring` annotation matrix:
-        - 'signed_log': signed -log10(p-value) (matches the numeric matrix).
+        Representation used for the `pvalstring` annotation matrix only:
+        - 'signed_log': signed -log10(p-value).
         - 'unsigned_log': unsigned -log10(p-value).
         - 'raw': the untransformed p-value (in [0, 1]).
-        This only affects the annotation string; the returned numeric `pval`
-        matrix is always signed -log10(p-value) (or signed raw when `log` is
-        `False`).
-
+        This affects *only* the annotation string; it never changes the numeric
+        tables or the significance mask.
+    
     Returns
     -------
-    pval : pd.DataFrame
-        Signed p-value matrix (numeric).
-    effect : pd.DataFrame
-        Masked effect matrix with rounded string entries.
-    star : pd.DataFrame
-        Star annotation matrix for significant results.
-    pvalstring : pd.DataFrame
-        Masked p-value string matrix for annotation, rendered according to
-        `pval_mode`.
-    effect_float : pd.DataFrame
-        Raw effect matrix without masking.
-
+    pval_signed : `pd.DataFrame`
+        Signed -log10(p-value) matrix (`sign(effect) * -log10 p`). This is the
+        default heatmap colour matrix.
+    pval_unsigned : `pd.DataFrame`
+        Unsigned -log10(p-value) matrix.
+    pval_raw : `pd.DataFrame`
+        Raw (untransformed) p-value matrix, rounded to `digits`.
+    effect : `pd.DataFrame`
+        Effect matrix as strings, masked to `'.'` where non-significant.
+    star : `pd.DataFrame`
+        Star annotation matrix (`symbol` for significant cells).
+    pvalstring : `pd.DataFrame`
+        P-value annotation matrix (strings), rendered per `pval_mode`.
+    effect_float : `pd.DataFrame`
+        Unmasked effect matrix (numeric).
+    
     Raises
     ------
     ValueError
         If `digits` is not a single character, or `pval_mode` is not one of
         the supported values.
-    """
     
-    # checking input
+    Notes
+    -----
+    The numeric matrices are signed by the effect direction (`sign(effect)`) so
+    a diverging colour map encodes both significance magnitude and effect
+    direction on one scale. The significance mask is unaffected by the choice of
+    numeric representation: because `-log10` is monotonic, `p <= alpha` and
+    `-log10(p) >= -log10(alpha)` select the same cells.
+    """
+    # Validate inputs.
     if len(digits) > 1:
         raise ValueError("`digits` must be interpretable as a single integer, "
                          f"got: {digits}.")
     if pval_mode not in ('signed_log', 'unsigned_log', 'raw'):
         raise ValueError("`pval_mode` must be one of 'signed_log', "
                          f"'unsigned_log', 'raw', got: {pval_mode}.")
-    # keep the raw (untransformed) p-values for the 'raw' annotation mode
-    pval_raw = pval.copy()
-    # taking the log10
-    if log:
-        pval_full = _nlog10_func(pval, ptrun)
-    else:
-        pval_full = pval.copy()
-    # rounding (unsigned)
-    dig = '{:.'+digits+'f}'
+    # ### Compute the three numeric p-value tables (signed/unsigned -log10, raw).
     ndig = int(float(digits))
-    pval_unsigned = pval_full.round(ndig)
+    dig = '{:.'+digits+'f}'
+    pval_raw = pval.round(ndig)
+    nlog10 = _nlog10_func(pval, ptrun)
+    pval_unsigned = nlog10.round(ndig)
     dir = np.sign(effect)
-    # simply stoaring the float matrix
+    pval_signed = dir * pval_unsigned
+    # ### Keep the unmasked effect matrix and format the effect estimates.
     effect_float = effect.copy()
-    # formatting
     if pd.__version__ < '2.1.0':
         effect = effect.applymap(dig.format).copy()
     else:
         effect = effect.map(dig.format).copy()
-    # scaling: the returned numeric matrix is always the signed -log10 p-value
-    pval = dir * pval_unsigned
-    # selecting the representation used for the p-value annotation string
+    # Derive the significance mask (-log10 space; NaN cells fall through both).
+    significant = nlog10 >= sig
+    not_significant = nlog10 < sig
+    # #### Select the annotation representation (`pval_mode` axis).
     if pval_mode == 'raw':
-        pval_annot = pval_raw.round(ndig)
+        pval_annot = pval_raw
     elif pval_mode == 'unsigned_log':
         pval_annot = pval_unsigned
     else:
-        pval_annot = pval
-    # if log use larger than
-    if log:
-        # if not significant set to empty
-        effect[pval_full < sig] = '.'
-        effect = effect.astype('str')
-        # adding stars
-        star = effect.copy()
-        star[pval_full >= sig] = symbol
-        # pvalues
-        pvalstring = effect.copy()
-        pvalstring[pval_full >= sig] =\
-            pval_annot[pval_full >= sig].astype('str')
-        # if log != True use smaller than
-    else:
-        # if not significant set to empty
-        effect[pval_full > sig] = '.'
-        effect = effect.astype('str')
-        # adding stars
-        star = effect.copy()
-        star[pval_full <= sig] = symbol
-        # pvalues
-        pvalstring = effect.copy()
-        pvalstring[pval_full <= sig] =\
-            pval_annot[pval_full <= sig].astype('str')
-    # returning
-    return pval, effect, star, pvalstring, effect_float
+        pval_annot = pval_signed
+    # #### Mask non-significant cells and build the star / p-value annotations.
+    effect[not_significant] = '.'
+    effect = effect.astype('str')
+    star = effect.copy()
+    star[significant] = symbol
+    pvalstring = effect.copy()
+    pvalstring[significant] = pval_annot[significant].astype('str')
+    # Return the tables
+    return (pval_signed, pval_unsigned, pval_raw, effect, star, pvalstring,
+            effect_float)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def calc_matrices(data:pd.DataFrame,
@@ -665,9 +663,9 @@ def calc_matrices(data:pd.DataFrame,
                   outcome_col:str,
                   point_col:str='point',
                   pvalue_col:str='pvalue',
-                  alpha:Real=-1*np.log10(0.05),
+                  alpha:Real=0.05,
                   sig_numbers:int=2,
-                  ptrun:Real=16,
+                  ptrun:Real=1e-16,
                   annotate:Literal['symbol',
                                    'star',
                                    'pvalues',
@@ -702,12 +700,15 @@ def calc_matrices(data:pd.DataFrame,
     pvalue_col : `str`, default 'pvalue'
         Column name with p-values. Note p-values are expected to range between
         0 and 1.
-    alpha : `float` or `int`, default `-1*np.log(0.05)`
-        The significance cut-off.
+    alpha : `float`, default `0.05`
+        The significance cut-off as a raw p-value in (0, 1] (consistent with
+        `volcano`). Converted internally to a -log10 threshold. Values outside
+        (0, 1] raise `InputValidationError`.
     sig_numbers : `int`, default 2
         The number of significant numbers the cell annotations should have.
-    ptrun : `float` or `int`, default 16
-        P-values smaller than 10^(-ptrun) are truncated.
+    ptrun : `float` or `int`, default 1e-16
+        The truncation threshold as a raw p-value in (0, 1]: p-values smaller
+        than `ptrun` are floored to `ptrun` before the -log10 transform.
     annotate : `str`, default 'symbol'
         Annotation style to return. Options:
         - 'symbol': significance markers using `symbol`.
@@ -725,7 +726,9 @@ def calc_matrices(data:pd.DataFrame,
         The text/unicode glyph used to flag significant findings when
         `annotate='symbol'` (e.g. `'●'`, `'◆'`, `'*'`).
     without_log : `bool`, default `False`
-        If the p-value should `NOT` be -log10 converted.
+        **Deprecated** and no longer changes behaviour: p-values are always
+        -log10 transformed. Setting it to `True` emits a `DeprecationWarning`.
+        Use the `curated_matrix_value_raw` table for raw p-values.
     mask_na : `bool`, default `True`
         If you want to mask missing results (e.g., replacing NAs by 0 or 1)
     **kwargs
@@ -739,6 +742,8 @@ def calc_matrices(data:pd.DataFrame,
     ------
     ValueError
         If `annotate` is not one of the supported values.
+    InputValidationError
+        If `alpha` is not a raw p-value in (0, 1].
     """
     #### check input
     is_type(data, pd.DataFrame)
@@ -747,10 +752,32 @@ def calc_matrices(data:pd.DataFrame,
     is_type(point_col, str)
     is_type(pvalue_col, str)
     is_type(alpha, (int, float))
+    is_type(ptrun, (int, float))
     is_type(sig_numbers, int)
     is_type(symbol, str)
     is_type(without_log, bool)
     is_type(mask_na, bool)
+    ### `alpha` is a raw p-value threshold in (0, 1]
+    if not (0 < alpha <= 1):
+        raise InputValidationError(
+            "`alpha` must be a raw p-value in (0, 1] (e.g. 0.05); got: "
+            f"{alpha}. The -log10 convention was removed in v2.3."
+        )
+    ### `ptrun` is a raw p-value truncation threshold in (0, 1]
+    if not (0 < ptrun <= 1):
+        raise InputValidationError(
+            "`ptrun` must be a raw p-value in (0, 1] (e.g. 1e-16); got: "
+            f"{ptrun}. The exponent convention was removed in v2.3."
+        )
+    ### `without_log` is deprecated and no longer changes behaviour
+    if without_log:
+        warnings.warn(
+            "`without_log` is deprecated and will be removed in a future "
+            "release; p-values are now always -log10 transformed. Use the "
+            "`curated_matrix_value_raw` table for raw p-values.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     ### warn on deprecated annotation aliases
     deprecated_annot = {
         UtilsNames.mat_annot_star: UtilsNames.mat_annot_symbol,
@@ -778,12 +805,14 @@ def calc_matrices(data:pd.DataFrame,
                                      pvalue_col=pvalue_col,
                                      **kwargs,
                                      )
-    ### formatting data
-    values, annot_effect, annot_star, annot_pval, values_point =\
+    ### formatting data (convert the raw-p `alpha` to a -log10 threshold)
+    sig = -1 * np.log10(alpha)
+    (values, values_unsigned, values_raw, annot_effect, annot_star,
+     annot_pval, values_point) =\
         _format_matrices(
-            point_mat, pvalue_mat, sig=alpha,
-            ptrun=ptrun, digits=str(sig_numbers),
-            log=not without_log, symbol=symbol, pval_mode=pval_mode,
+            point_mat, pvalue_mat, sig=sig,
+            ptrun=-np.log10(ptrun), digits=str(sig_numbers),
+            symbol=symbol, pval_mode=pval_mode,
         )
     ### selecting the annotation to use
     if annotate in (UtilsNames.mat_annot_symbol, UtilsNames.mat_annot_star):
@@ -813,18 +842,18 @@ def calc_matrices(data:pd.DataFrame,
                                 ))
     ### drop or mask NAs
     if not mask_na:
+        # drop rows/columns containing any missing value
         drop_c = ~values.isna().any(axis=0)
         drop_r = ~values.isna().any(axis=1)
         values_input = values.loc[drop_r, drop_c]
+        values_unsigned_input = values_unsigned.loc[drop_r, drop_c]
+        values_raw_input = values_raw.loc[drop_r, drop_c]
         annot_input = annot.loc[drop_r, drop_c]
-        # Mask with zero if logged
-    elif not without_log:
-        values_input = values.fillna(0, inplace=False)
-        annot_input = annot.fillna('.', inplace=False)
-        annot_input[annot_input == 'nan'] = '.'
-        # Mask with one if not
     else:
-        values_input = values.fillna(1, inplace=False)
+        # fill missing -log10 values with 0 and raw p-values with 1
+        values_input = values.fillna(0, inplace=False)
+        values_unsigned_input = values_unsigned.fillna(0, inplace=False)
+        values_raw_input = values_raw.fillna(1, inplace=False)
         annot_input = annot.fillna('.', inplace=False)
         annot_input[annot_input == 'nan'] = '.'
     ### Return
@@ -833,6 +862,8 @@ def calc_matrices(data:pd.DataFrame,
            UtilsNames.annot_star: annot_star,
            UtilsNames.annot_pval: annot_pval,
            UtilsNames.annot_effect: annot_effect,
+           UtilsNames.value_unsigned_log: values_unsigned_input,
+           UtilsNames.value_raw: values_raw_input,
            UtilsNames.value_original: values,
            UtilsNames.value_point: values_point,
            UtilsNames.source_data: data,

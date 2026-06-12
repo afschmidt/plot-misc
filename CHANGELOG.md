@@ -18,18 +18,34 @@
   `'pvalues_unsigned'`, and `'pvalues_raw'`, controlling whether the
   annotation shows signed -log10, unsigned -log10, or the raw p-value. The
   numeric value matrix remains signed -log10 regardless.
+* `MatrixHeatmapResults` now exposes two further numeric p-value tables,
+  `curated_matrix_value_unsigned_log` (unsigned -log10) and
+  `curated_matrix_value_raw` (raw p-values), alongside the signed -log10
+  `curated_matrix_value`.
 
 ### Changed
 
 * `calc_matrices` `annotate` now defaults to `'symbol'` (was `'star'`); the
   default output is unchanged. The `annotate` argument is now a typed
   `Literal` of the supported options.
+* `_format_matrices` no longer takes a `log` argument; p-values are always
+  -log10 transformed and the numeric `curated_matrix_value` is consistently
+  signed -log10.
+* `calc_matrices` `alpha` is now a raw p-value in (0, 1] (default `0.05`),
+  consistent with `volcano`; it is converted internally to a -log10 threshold.
+  Values outside (0, 1] raise `InputValidationError`.
+* `calc_matrices` `ptrun` is now a raw p-value in (0, 1] (default `1e-16`),
+  consistent with `alpha`; the old exponent convention was removed. Values
+  outside (0, 1] raise `InputValidationError`.
 
 ### Deprecated
 
 * `calc_matrices` `annotate='star'` is deprecated in favour of `'symbol'`.
 * `calc_matrices` `annotate='pvalues'` is deprecated in favour of
   `'pvalues_signed'`.
+* `calc_matrices` `without_log` is deprecated and no longer changes behaviour
+  (p-values are always -log10 transformed); use `curated_matrix_value_raw`
+  for raw p-values.
 
 ### Fixed
 
