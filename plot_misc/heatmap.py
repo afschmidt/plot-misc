@@ -179,6 +179,7 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
                    background_zorder:Real = 1,
                    outline_col:str='black', outline_linestyle:str='-',
                    outline_linewidth:float=1.5, outline_zorder:Real = 2,
+                   frame: bool=False,
                    cbar_bool:bool=False, cbar_label:str="",
                    ax:plt.Axes | None = None,
                    grid_kw:dict[Any,Any] | None = None,
@@ -225,6 +226,8 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
         The width of the per-cell outlines. Set to 0 to suppress them.
     outline_zorder : `int`, `float`, default `2`
         The draw order of the per-cell outlines.
+    frame : `bool`, default `False`
+        Whether to plot the spines.
     cbar_bool : `bool`, default `False`
         If `True`, add a colourbar (built from the masked heatmap layer).
     cbar_label : `str`, default ""
@@ -237,7 +240,9 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
         background lattice.
     outline_kw : `dict` [`str`, `any`] or `None`, default `None`
         Additional arguments forwarded to each `matplotlib.patches.Rectangle`
-        outline.
+        outline. Outlines default to `clip_on=False` so the borders of cells on
+        the matrix boundary are not clipped by the axes edge; pass
+        `{'clip_on': True}` to restore clipping.
     cbar_kw : `dict` [`str`, `any`] or `None`, default `None`
         A dictionary with arguments to `matplotlib.Figure.colorbar`.
     background_kw : `dict` [`str`, `any`] or `None`, default `None`,
@@ -335,11 +340,16 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
                              edgecolor=outline_col,
                              linestyle=outline_linestyle,
                              linewidth=outline_linewidth,
+                             clip_on=False,
                              )
     rows, cols = np.where(flag == 1)
     # NOTE the 0.5 and 1.0 are imshow fixed convention and should be hardcoded
     for i, j in zip(rows, cols):
         ax.add_patch(Rectangle((j-.5, i-.5), 1, 1, **rect_kw))
+    # Show the spines
+    if frame:
+        for spine in ax.spines.values():
+            spine.set_visible(True)
     # return stuff
     return im, cbar
 

@@ -67,6 +67,8 @@
   segment. The second endpoint was transformed with the wrong x-coordinate
   (`y[0]` instead of `x[1]`), producing an incorrect text angle whenever
   `x[1] != y[0]`.
+* `masked_heatmap` per-cell outlines are no longer clipped by the axes boundary
+  on edge cells (outline patches now default to `clip_on=False`).
 
 ## 2.2.1 - 2026-05-30
 

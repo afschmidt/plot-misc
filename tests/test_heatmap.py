@@ -144,6 +144,32 @@ class TestMaskedHeatmap(object):
         assert grid
         assert all(g.get_zorder() == 0 for g in grid)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_outline_not_clipped_by_default(self):
+        # plotting
+        _, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
+        heatmap.masked_heatmap(data=DATA, indicator=IND,
+                               row_labels=DATA.index.to_list(),
+                               col_labels=DATA.columns.to_list(),
+                               ax=ax,
+                               )
+        # boundary-cell outlines must not be clipped by the axes edge
+        rects = [p for p in ax.patches if isinstance(p, mpl.patches.Rectangle)]
+        assert rects
+        assert all(r.get_clip_on() is False for r in rects)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_outline_clip_override(self):
+        # plotting
+        _, ax = plt.subplots(1, figsize=(15*CMTOINCH, 15*CMTOINCH))
+        heatmap.masked_heatmap(data=DATA, indicator=IND,
+                               row_labels=DATA.index.to_list(),
+                               col_labels=DATA.columns.to_list(),
+                               ax=ax, outline_kw={'clip_on': True},
+                               )
+        # the user-supplied clip_on takes precedence over the default
+        rects = [p for p in ax.patches if isinstance(p, mpl.patches.Rectangle)]
+        assert rects
+        assert all(r.get_clip_on() is True for r in rects)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def test_invalid_indicator_raises(self):
         # a shape mismatch is rejected
         with pytest.raises(InputValidationError):
