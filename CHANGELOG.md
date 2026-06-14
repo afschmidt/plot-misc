@@ -4,6 +4,13 @@
 
 ### Added
 
+* `plot_misc.heatmap.masked_heatmap`, a two-layer heatmap that draws a
+  single-colour background and overlays the heatmap only on the cells flagged
+  by a binary `indicator` table the same shape as `data`. 
+* `examples.qc_matrix`, a dummy quality-control data set (signed standardised
+  deviations plus a binary pass/fail indicator) showcasing `masked_heatmap`.
+* Masked-heatmap cells added to the `resources/examples/heatmap.ipynb` and
+  `resources/examples/tldr/heatmap.ipynb` notebooks.
 * Example notebooks for the `plot_misc.utils.utils` helpers: a concise TLDR
   notebook `resources/examples/tldr/utils.ipynb` and a detailed worked-out
   notebook `resources/examples/utils.ipynb`.
@@ -49,6 +56,13 @@
 
 ### Fixed
 
+* `annotate_heatmap` no longer raises `MaskError` on masked arrays; masked
+  cells (e.g. from `masked_heatmap`) are skipped so only visible cells are
+  annotated.
+* `masked_heatmap` now rejects a shape mismatch between `data` and `indicator`
+  on the full 2D shape (previously only the row count was checked, so a column
+  mismatch raised an opaque `IndexError`), and applies `background_zorder` to
+  the background grid lattice.
 * `segment_labelled` now rotates the midpoint label to align with the drawn
   segment. The second endpoint was transformed with the wrong x-coordinate
   (`y[0]` instead of `x[1]`), producing an incorrect text angle whenever

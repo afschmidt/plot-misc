@@ -510,6 +510,54 @@ def heatmap_pvalue_matrix(**kwargs):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @dataset
+def qc_matrix(seed=2026):
+    """
+    Creates a dummy quality-control (QC) data set to showcase
+    `plot_misc.heatmap.masked_heatmap`.
+    
+    The values are signed, standardised QC deviations for a set of samples
+    (rows) across several QC metrics (columns). The accompanying indicator
+    flags the cells that failed QC (an absolute deviation above 2), i.e. the
+    cells `masked_heatmap` should highlight; the passing cells are left to the
+    background layer.
+    
+    Parameters
+    ----------
+    seed : `int`, default 2026
+        Seed for the random number generator, ensuring a reproducible matrix.
+    
+    Returns
+    -------
+    values : `pd.DataFrame`
+        Signed standardised QC deviations of shape (12, 6).
+    indicator : `pd.DataFrame`
+        A binary (0/1) table of the same shape as `values`, equal to 1 where
+        the metric failed QC and 0 otherwise.
+    """
+    rng = np.random.default_rng(seed)
+    samples = ['Sample_{:02d}'.format(i) for i in range(1, 13)]
+    metrics = [
+        'CallRate', 'Heterozygosity', 'Contamination', 'MeanDepth',
+        'DuplicationRate', 'InsertSize',
+    ]
+    values = pd.DataFrame(
+        rng.normal(loc=0.0, scale=1.3, size=(len(samples), len(metrics))),
+        index=samples, columns=metrics,
+    )
+    # inject a handful of unambiguous QC failures so the showcase always has
+    # highlighted cells regardless of the random draw
+    values.iloc[0, 2] = 3.4
+    values.iloc[3, 0] = -3.1
+    values.iloc[5, 4] = 2.8
+    values.iloc[7, 1] = -2.6
+    values.iloc[9, 5] = 3.0
+    values.iloc[11, 3] = -2.9
+    values = values.round(3)
+    indicator = (values.abs() > 2).astype(int)
+    return values, indicator
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@dataset
 def load_calibration_data(**kwargs):
     """
     Loads a table with binary outcomes and predicted risk. Can be used to test

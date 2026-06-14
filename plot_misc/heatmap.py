@@ -11,6 +11,10 @@ heatmap(data, row_labels, col_labels, ...)
     Draws a standard heatmap using matplotlib's `imshow`, with options for
     gridlines, tick formatting, and embedded colourbars.
 
+masked_heatmap(data, indicator, row_labels, col_labels, ...)
+    Draws a two-layer heatmap: a single-colour background and, on top of it,
+    the heatmap restricted to the cells flagged by a binary indicator table.
+
 annotate_heatmap(im, data=None, valfmt=None, ...)
     Adds text annotations to an existing heatmap image (AxesImage object),
     with configurable formatting and colour thresholding.
@@ -32,9 +36,12 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Rectangle
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
+    InputValidationError,
 )
 from plot_misc.constants import Real
 from typing import Any
@@ -163,6 +170,180 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
     return im, cbar
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def masked_heatmap(data:pd.DataFrame | np.ndarray,
+                   indicator:pd.DataFrame | np.ndarray,
+                   row_labels:list[str] | np.ndarray,
+                   col_labels:list[str] | np.ndarray,
+                   background_col:str='white', background_gridcol:str='white',
+                   background_linestyle:str='-', background_linewidth:float=0.5,
+                   background_zorder:Real = 1,
+                   outline_col:str='black', outline_linestyle:str='-',
+                   outline_linewidth:float=1.5, outline_zorder:Real = 2,
+                   cbar_bool:bool=False, cbar_label:str="",
+                   ax:plt.Axes | None = None,
+                   grid_kw:dict[Any,Any] | None = None,
+                   cbar_kw:dict[Any,Any] | None = None,
+                   background_kw:dict[Any,Any] | None = None,
+                   outline_kw:dict[Any,Any] | None = None,
+                   **kwargs: Any,
+                   ) -> tuple[matplotlib.image.AxesImage,
+                              matplotlib.colorbar.Colorbar]:
+    """
+    Plot a two-layer heatmap masked by a binary indicator table.
+    
+    The function draws two layers. First a single-colour background covering
+    every cell (carrying an optional grid lattice). Second, the heatmap of
+    `data`, restricted to the cells where `indicator` equals 1.
+    
+    Parameters
+    ----------
+    data : `pd.DataFrame` or `np.ndarray`
+        A 2D array of shape (M, N) containing the values to plot.
+    indicator : `pd.DataFrame` or `np.ndarray`
+        A binary (0/1, booleans accepted) array of the same shape as `data`.
+        Only cells equal to 1 are drawn and outlined.
+    row_labels : `list` [`str`] or `np.ndarray`
+        A list or array of length M with the labels for the rows.
+    col_labels : `list` [`str`] or `np.ndarray`
+        A list or array of length N with the labels for the columns.
+    background_col : `str`, default 'white'
+        The fill colour of the background layer.
+    background_gridcol : `str`, default 'white'
+        The colour of the background grid lattice lines.
+    background_linestyle : `str`, default '-'
+        The linestyle of the background grid lattice.
+    background_linewidth : `float`, default 0.5
+        The width of the background grid lattice. Set to 0 to suppress it.
+    background_zorder : `int`, `float` default `1`
+        The draw order of the background grid lattice.
+    outline_col : `str`, default 'black'
+        The edge colour of the per-cell outlines drawn on `indicator == 1`
+        cells.
+    outline_linestyle : `str`, default '-'
+        The linestyle of the per-cell outlines.
+    outline_linewidth : `float`, default 1.5
+        The width of the per-cell outlines. Set to 0 to suppress them.
+    outline_zorder : `int`, `float`, default `2`
+        The draw order of the per-cell outlines.
+    cbar_bool : `bool`, default `False`
+        If `True`, add a colourbar (built from the masked heatmap layer).
+    cbar_label : `str`, default ""
+        The label for the colourbar.
+    ax : `plt.Axes` or `None`, default `None`
+        A `matplotlib.axes.Axes` instance to draw on. If `None`, a new figure
+        and axes are created.
+    grid_kw : `dict` [`str`, `any`] or `None`, default `None`
+        Additional arguments forwarded to `matplotlib.Axes.grid` for the
+        background lattice.
+    outline_kw : `dict` [`str`, `any`] or `None`, default `None`
+        Additional arguments forwarded to each `matplotlib.patches.Rectangle`
+        outline.
+    cbar_kw : `dict` [`str`, `any`] or `None`, default `None`
+        A dictionary with arguments to `matplotlib.Figure.colorbar`.
+    background_kw : `dict` [`str`, `any`] or `None`, default `None`,
+        A dictionary with arguments to `heatmap.heatmap`.
+    **kwargs : `any`,
+        All other arguments passed to `masking ax.imshow`.
+    
+    Returns
+    -------
+    im : `matplotlib.image.AxesImage`
+        The masked (foreground) heatmap image object.
+    cbar : `matplotlib.colorbar.Colorbar` or `None`
+        The colourbar object if `cbar_bool` is `True`, otherwise `None`.
+    
+    Notes
+    -----
+    The masking is achieved by a separate imshow call setting the cells to
+    transparent, revealing the background.
+    
+    The returned `im` mirrors the contract of `heatmap` and can therefore be
+    annotated using `annotate_heatmap`.
+    """
+    # create an axes if needed
+    if ax is None:
+        _, ax = plt.subplots()
+    # check input types
+    is_type(data, (pd.DataFrame, np.ndarray))
+    is_type(indicator, (pd.DataFrame, np.ndarray))
+    _ = [is_type(k, (dict, type(None))) for k in\
+         (grid_kw, cbar_kw, outline_kw, background_kw)]
+    # the indicator must match the data shape exactly (full 2D shape, not just
+    # the row count)
+    if np.shape(data) != np.shape(indicator):
+        raise InputValidationError(
+            f"`indicator` shape {np.shape(indicator)} does not match `data` "
+            f"shape {np.shape(data)}."
+        )
+    # coerce the data and indicator to numpy arrays
+    if isinstance(data, pd.DataFrame):
+        matrix = data.copy().to_numpy()
+    else:
+        matrix = data
+    if isinstance(indicator, pd.DataFrame):
+        flag = indicator.copy().to_numpy()
+    else:
+        flag = indicator
+    # flag should only contain 0 and 1
+    unique_flags = set(np.unique(flag).tolist())
+    if not unique_flags.issubset({0, 1}):
+        raise InputValidationError(
+            f"`indicator` must only contain binary (0/1) values, got "
+            f"{sorted(unique_flags)}."
+        )
+    # setup the kwargs None to dict
+    background_kw = background_kw or {}
+    # masking_kw = masking_kw or {}
+    grid_kw = grid_kw or {}
+    cbar_kw = cbar_kw or {}
+    outline_kw = outline_kw or {}
+    outline_kw = _update_kwargs(update_dict=outline_kw,
+                                zorder=outline_zorder)
+    # the background grid lattice carries the background draw order
+    grid_kw = _update_kwargs(update_dict=grid_kw, zorder=background_zorder)
+    # ### Layer 1: a single-colour background covering every cell. Reusing
+    # `heatmap` keeps a single source of truth for the tick, label, spine and
+    # grid (lattice) cosmetics.
+    background = np.zeros_like(matrix, dtype=float)
+    layer1_kwargs = _update_kwargs(
+         update_dict=background_kw,
+         data=background, row_labels=row_labels, col_labels=col_labels,
+         grid_col=background_gridcol, grid_linestyle=background_linestyle,
+         grid_linewidth=background_linewidth, cbar_bool=False, ax=ax,
+         grid_kw=grid_kw, cmap=ListedColormap([background_col]),
+    )
+    heatmap(**layer1_kwargs, )
+    # ### Layer 2: the heatmap, masked so only `indicator == 1` cells are drawn.
+    masked = np.ma.masked_where(flag == 0, matrix)
+    # creating an alpha matrix.
+    # user_alpha = masking_kw.pop('alpha', 1.0)
+    user_alpha = kwargs.pop('alpha', 1.0)
+    alpha = (flag == 1).astype(float) * np.asarray(user_alpha, dtype=float)
+    layer2_kwargs = _update_kwargs(
+        update_dict=kwargs, alpha=alpha,
+    )
+    im = ax.imshow(masked, **layer2_kwargs)
+    # Create colorbar from the foreground (masked) layer
+    if cbar_bool:
+        cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+        cbar.ax.set_ylabel(cbar_label, rotation=-90, va="bottom")
+    else:
+        cbar = None
+    # ### Outline each `indicator == 1` cell. Zero cells get no patch, so they
+    # carry no outline; a zero `outline_linewidth` hides the borders.
+    rect_kw = _update_kwargs(update_dict=outline_kw, facecolor='none',
+                             edgecolor=outline_col,
+                             linestyle=outline_linestyle,
+                             linewidth=outline_linewidth,
+                             )
+    rows, cols = np.where(flag == 1)
+    # NOTE the 0.5 and 1.0 are imshow fixed convention and should be hardcoded
+    for i, j in zip(rows, cols):
+        ax.add_patch(Rectangle((j-.5, i-.5), 1, 1, **rect_kw))
+    # return stuff
+    return im, cbar
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def annotate_heatmap(
     im:plt.Axes.imshow,
     data:pd.DataFrame | np.ndarray | None = None,
@@ -210,6 +391,10 @@ def annotate_heatmap(
     
     # mapping data to matrix
     values = im.get_array()
+    # masked cells (e.g. from `masked_heatmap`) are not drawn and must not be
+    # annotated; `getmaskarray` yields a full boolean mask for masked arrays and
+    # an all-False mask for plain arrays, leaving the unmasked path unchanged
+    mask = np.ma.getmaskarray(values)
     if data is None:
         matrix = im.get_array()
     elif isinstance(data, pd.DataFrame):
@@ -239,6 +424,9 @@ def annotate_heatmap(
     texts = []
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
+            # skip masked cells, which carry no drawn value to annotate
+            if mask[i, j]:
+                continue
             # only run if threshold exists
             if threshold is not None:
                 kw.update(color=textcolors[int(abs(values[i, j]) >= threshold)])
