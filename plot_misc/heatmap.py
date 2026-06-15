@@ -41,6 +41,7 @@ from matplotlib.patches import Rectangle
 from plot_misc.utils.utils import _update_kwargs
 from plot_misc.errors import (
     is_type,
+    is_df,
     InputValidationError,
 )
 from plot_misc.constants import Real
@@ -52,6 +53,7 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
             grid_linestyle:str='-', grid_linewidth:float=3,
             cbar_bool:bool=False, cbar_label:str="",
             ax:plt.Axes | None = None,
+            figsize:tuple[float,float] | None = None,
             grid_kw:dict[Any,Any] | None = None,
             cbar_kw:dict[Any,Any] | None = None,
             **kwargs:Any,
@@ -85,6 +87,8 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
     ax : `plt.Axes` or `None`, default None
         A `matplotlib.axes.Axes` instance to which the heatmap is plotted. If
         not provided, use current axes or create a new one.
+    figsize : `tuple` [`float`, `float`] or `None`, default `None`
+        Figure size in inches (width, height). Ignored if `ax` is provided.
     grid_kw : `dict` [`str`,`any`] or `None`, default None
         A dictionary with arguments to `matplotlib.Axes.grid`.
     cbar_kw : `dict` [`str`, `any`] or `None`, default `None`
@@ -112,10 +116,20 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
             Matplotlib Gallery.
             https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
     """
-    
+    # check in put
+    is_type(data, (pd.DataFrame, np.ndarray))
+    is_type(row_labels, (list, np.ndarray))
+    is_type(col_labels, (list, np.ndarray))
+    is_type(grid_col, str)
+    is_type(grid_linestyle, str)
+    is_type(grid_linewidth, Real)
+    is_type(cbar_bool, bool)
+    is_type(cbar_label, str)
     # create a axes if needed
-    if not ax:
-        ax = plt.gca()
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+    else:
+        f = ax.figure
     # check input
     if isinstance(data, pd.DataFrame):
         matrix = data.copy().to_numpy()
@@ -124,10 +138,6 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
     # copy
     row_lab = row_labels
     col_lab = col_labels
-    # check additional input
-    is_type(row_lab, (list, np.array))
-    is_type(col_lab, (list, np.array))
-    is_type(cbar_label, str)
     # map None to dict
     grid_kw = grid_kw or {}
     cbar_kw = cbar_kw or {}
@@ -163,7 +173,7 @@ def heatmap(data:pd.DataFrame | np.ndarray, row_labels:list[str] | np.ndarray,
     new_grid_kwargs = _update_kwargs(
         update_dict=grid_kw, which="minor", color=grid_col,
                      linestyle=grid_linestyle, linewidth=grid_linewidth,
-                     )
+                     clip_on=False,)
     ax.grid(**new_grid_kwargs)
     ax.tick_params(which="minor", bottom=False, left=False)
     # return stuff
@@ -182,6 +192,7 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
                    frame: bool=False,
                    cbar_bool:bool=False, cbar_label:str="",
                    ax:plt.Axes | None = None,
+                   figsize:tuple[float,float] | None = None,
                    grid_kw:dict[Any,Any] | None = None,
                    cbar_kw:dict[Any,Any] | None = None,
                    background_kw:dict[Any,Any] | None = None,
@@ -235,6 +246,8 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
     ax : `plt.Axes` or `None`, default `None`
         A `matplotlib.axes.Axes` instance to draw on. If `None`, a new figure
         and axes are created.
+    figsize : `tuple` [`float`, `float`] or `None`, default `None`
+        Figure size in inches (width, height). Ignored if `ax` is provided.
     grid_kw : `dict` [`str`, `any`] or `None`, default `None`
         Additional arguments forwarded to `matplotlib.Axes.grid` for the
         background lattice.
@@ -267,7 +280,9 @@ def masked_heatmap(data:pd.DataFrame | np.ndarray,
     """
     # create an axes if needed
     if ax is None:
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
+    else:
+        f = ax.figure
     # check input types
     is_type(data, (pd.DataFrame, np.ndarray))
     is_type(indicator, (pd.DataFrame, np.ndarray))

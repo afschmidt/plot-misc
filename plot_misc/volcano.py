@@ -39,8 +39,7 @@ from typing import Any
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def plot_volcano(data:DataFrame, y_column:str, x_column:str,
-                 point_label:str | None = None,
-                 fsize:tuple[float,float] | None = None, adjust:bool=False,
+                 point_label:str | None = None, adjust:bool=False,
                  lim:int=1000, vline:Real=0, alpha:float=1e-5,
                  col_sgnd: str = 'orangered', col_nsgnd: str = 'dimgrey',
                  col_vline: str = 'lightcoral',
@@ -50,6 +49,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  index_label:list[str] | None = None,
                  font_label: str | None = None,
                  ax:plt.Axes | None = None,
+                 figsize:tuple[float,float] | None = None,
                  label_kwargs_dict:dict[Any,Any] | None = None,
                  scatter_sig_kwargs_dict:dict[Any,Any] | None = None,
                  scatter_nonsig_kwargs_dict:dict[Any,Any] | None = None,
@@ -70,8 +70,6 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     point_label : `str` or `None`, default `None`
         Column name in `data` to use for point labels. If `None`, no labels
         are added.
-    fsize : `tuple` [`float`, `float`] or `None`, default `None`
-        Figure size in inches (width, height). Ignored if `ax` is provided.
     adjust : `bool`, default `False`
         Whether to apply label de-overlapping using `adjustText`.
     lim : `int`, default 1000
@@ -106,6 +104,8 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         Font family to use for point labels (e.g. 'monospace', 'Arial').
     ax : `plt.axes` or `None`, default `None`
         Axis object to plot on. If `None`, a new figure and axis are created.
+    figsize : `tuple` [`float`, `float`] or `None`, default `None`
+        Figure size in inches (width, height). Ignored if `ax` is provided.
     label_kwargs_dict : `dict` or `None`, default `None`
         Optional keyword arguments passed to `adjust_text`.
     scatter_sig_kwargs_dict : `dict` or `None`, default `None`
@@ -155,7 +155,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     ### getting figure
     # should we create a figure and axis
     if ax is None:
-        f, ax = plt.subplots(figsize=fsize)
+        f, ax = plt.subplots(figsize=figsize)
     else:
         f = ax.figure
     ### significance level
