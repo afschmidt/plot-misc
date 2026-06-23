@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.2.2 - 2026-06-23
+
 ### Added
 
 * `plot_misc.heatmap.masked_heatmap`, a two-layer heatmap that draws a
