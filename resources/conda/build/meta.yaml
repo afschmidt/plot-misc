@@ -28,6 +28,9 @@ requirements:
     - scipy >=1.5
     - scikit-learn >=1.4
     - adjusttext >=1.3
+    # `typing.Self` is 3.11+; this backfills it on 3.10. Added unconditionally
+    # because noarch packages cannot use install-time python selectors.
+    - typing_extensions >=4
 
 test:
   source_files:

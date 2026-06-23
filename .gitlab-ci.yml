@@ -22,20 +22,38 @@ cache:
   paths:
     - .cache/pip
 
+# Only run pipelines for merge requests and the default branch. This gives test
+# feedback on MRs while avoiding duplicate branch+MR pipelines.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 stages:
-  - check
   - test
   - deploy
 
 
-# https://stackoverflow.com/questions/54074433/gitlab-ci-specifying-stages-in-before-script
-.before_script_template: &build_test-integration
-  before_script:
-    - resources/ci_cd/before_script.sh
+# Unit tests on stock slim images (fast binary wheels), across all supported
+# Python versions via a matrix. Runs on every MR and on the default branch,
+# independently of the docs deploy. Blocks on failure. GitLab matrix legs are
+# independent jobs, so every version runs even if one fails. Each version keeps
+# its own pip cache so wheel downloads are reused across runs.
+unit-tests:
+  stage: test
+  image: python:${PY_VERSION}-slim
+  parallel:
+    matrix:
+      - PY_VERSION: ["3.10", "3.11", "3.12"]
+  cache:
+    key: "pip-py${PY_VERSION}"
+    paths:
+      - .cache/pip
+  script:
+    - sh resources/ci_cd/test.sh
 
 pages:
   stage: deploy
-  <<: *build_test-integration
   script:
     - resources/ci_cd/pages.sh
   artifacts:
@@ -44,17 +62,9 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+# GitLab-managed SAST. The template auto-detects the language, runs analyzer
+# jobs in the `test` stage, and is advisory (allow_failure) by default. We do
+# NOT override the `sast` job — the previous custom override ran a non-standard
+# command on docker:stable and never worked.
 include:
   - template: SAST.gitlab-ci.yml
-
-sast:
-  stage: test
-  image: docker:stable
-  # image: $CI_REGISTRY_IMAGE/codequality:latest 
-  script:
-    # - analyze
-    - gitlab-sast-analyze
-  allow_failure: true
-  artifacts:
-    reports:
-      sast: gl-sast-report.json

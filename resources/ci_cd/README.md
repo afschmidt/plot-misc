@@ -1,40 +1,32 @@
 # Continuous integration scripts
-This allows the testing of various continuous integration scripts before 
-committing to GitLab.
-It is a major pain in the backside to debug against that so it is easier to do 
-a test run before setting it up.
 
-The various `run_<pipeline>.sh` scripts represent different scripts that can 
-be run on different pipelines. 
-The other scripts represent small sections that can be run in a pipeline.
+Run and debug the GitLab pipeline locally in Docker before committing.
+The pipeline is defined in `.gitlab-ci.yml`; these are its per-job commands plus
+helpers to drive them locally. 
+The scripts contain no Python version or image names, those live in 
+`.gitlab-ci.yml`.
 
-Specifically:
+## Files
 
-- **run_docker**: mimics the `.gitlab_ci.yaml` functionality and runs the 
- docker locally. 
- This can be used to debug CI/CD gitlab builds without repeated commits.  
- This will create a container called and do the build before closing and 
- removing the container.  
- The container will also be removed on error.
-- **run_pages**:  A script to initialise the dock building within the docker 
- container.
- This is designed to for local tests of gitlab CI/CD scripts inside the docker 
- container. 
- The script will source before_script.sh and pages.sh
-- **before_script**: The before script is used by gitlab CI/CD and used to set 
- any commands necessary before running the script commands.
- Here it mostly installs the required python packages, as well as the package 
- being evaluated. 
- It also runs all the pytests for evaluated package.
- Essentially after this scripts completes, the package install has been verified.
-- **pages**: Run the sphinx documentation and ensures these are published as 
- static webpages within gitlab.
+| File | What it does |
+|------|--------------|
+| `pages.sh` | The `pages` job: installs the package (`pip install ".[dev]"` — deps are baked into the image) then builds the Sphinx docs into `public/` (GitLab Pages). |
+| `test.sh` | `pip install ".[dev]"` + `pytest tests`. Image-agnostic; the `unit-tests` job runs it once per Python version. |
+| `run_pages.sh` / `run_tests.sh` | In-container wrappers that run `pages`/`test` for local mirroring. |
+| `run_docker.sh` | Low-level: start a container from an image, copy the repo in, run one wrapper by `mode` (`pages`\|`tests`). |
+| `debug_run_docker.sh` | Full local mirror: reads versions/images from `.gitlab-ci.yml` and runs the whole pipeline (`unit-tests` ×N → `pages`) in order. |
 
-To run a test build prior to committing:
+SAST is not mirrored locally (managed by GitLab; advisory anyway).
 
-```
-# ./run_docker.sh <docker image> <repo root> <doc build dir>
-./run_docker.sh floriaan1/plot-misc:master ~/google_drive/Research/plot-misc /path/to/doc/build/directory
+## Usage
+
+```sh
+# Whole pipeline — repo root + docs dir auto-detected, so no args needed
+bash resources/ci_cd/debug_run_docker.sh
+
+# A single job — run_docker.sh <image> <repo_root> <doc_build_dir> <mode>
+bash run_docker.sh floriaan1/plot-misc:master ~/.../plot-misc /path/to/docs pages
+bash run_docker.sh python:3.11-slim ~/.../plot-misc /tmp/ignore tests   # one version
 ```
 
-**debug_run_docker.sh** wraps the above code in a executable shell script. 
+Requires Docker, plus `python` + `pyyaml` on the host (to parse `.gitlab-ci.yml`).
