@@ -1,7 +1,7 @@
 FROM pandoc/minimal:latest-static AS init
 FROM python:3.12.2-alpine3.18 AS build
 
-ENV BUILD_DEPS \
+ENV BUILD_DEPS="\
     build-base \
     bzip2-dev \
     zlib-dev \
@@ -11,23 +11,17 @@ ENV BUILD_DEPS \
     gfortran \
     openblas-dev \
     linux-headers \
-    openssh \
-    # llvm11-dev \
     libffi-dev \
-    # For cyvcf
-    libdeflate-dev \
     cmake \
     pkgconf \
     gcc \
     musl-dev \
-    git
+    git"
 
 WORKDIR /data
 COPY requirements.txt ./
 COPY sphinx.txt ./
 
-# Used for llvmlist and numba install
-# ENV LLVM_CONFIG=/usr/bin/llvm11-config
 RUN apk upgrade --update && \
     apk add --no-cache --virtual .build-deps $BUILD_DEPS && \
     pip install --upgrade pip && \
@@ -48,15 +42,12 @@ RUN apk upgrade --update && \
     apk del .build-deps
 
 FROM python:3.12.2-alpine3.18 AS final
-ENV PERSISTENT_DEPS \
-    libdeflate \
+ENV PERSISTENT_DEPS="\
+    make \
     openblas \
-    # llvm11 \
     curl \
     git \
-    sed
-# Used for llvmlist and numba install
-# ENV LLVM_CONFIG=/usr/bin/llvm11-config
+    sed"
 
 WORKDIR /data
 COPY --from=build /usr/local/bin /usr/local/bin
@@ -65,5 +56,4 @@ COPY --from=build /usr/local/share/jupyter /usr/local/share/jupyter
 # COPY --from=init /pandoc /usr/local/bin/
 COPY --from=init /usr/local/bin/pandoc /usr/local/bin/
 
-RUN apk upgrade --update && \
-    apk add --virtual .persistent-deps $PERSISTENT_DEPS
+RUN apk add --no-cache --virtual .persistent-deps $PERSISTENT_DEPS

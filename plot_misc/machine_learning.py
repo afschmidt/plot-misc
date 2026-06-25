@@ -55,8 +55,13 @@ from typing import (
     Any,
     Callable,
     Union,
-    Self,
 )
+# `typing.Self` was added in Python 3.11; fall back to typing_extensions on 3.10
+# (the minimum supported version per pyproject `requires-python`).
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 from statsmodels.nonparametric.smoothers_lowess import lowess
 # from packaging import version
 # if version.parse('3.4.0') < version.parse(mpl._version.version):

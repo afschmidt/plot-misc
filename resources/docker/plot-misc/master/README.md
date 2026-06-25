@@ -1,25 +1,29 @@
 # `docker` directory
-This contains build files to build a docker image that can be used for 
-gitlab CI/CD for this repo.
-These images are not docker images containing the actual python package.
 
-If needed a new docker file can be build from scratch running 
+Build files for the `floriaan1/plot-misc:master` image used in GitLab CI/CD.
+
+The image is used **only** by the `pages` job to build the Sphinx
+documentation: it bakes in the scientific stack plus Sphinx/pandoc so the docs
+build is fast on Alpine/musl. 
+Unit tests run on stock `python:*-slim` images, not this one.
+This is **not** a distributable image of the package itself.
+
+Build a fresh image:
 
 ```sh
 ./build.sh
 ```
 
-Where the image can be pushed to docker hub as follows
+Push to Docker Hub:
 
 ```sh
 docker image list
 sudo docker push docker.io/<USERNAME>/plot-misc:master
 ```
 
-Docker can be removed using `please docker image prune -a`, 
-where an existing docker can be pulled from docker hub by 
-running
+Remove the local image, or pull it from Docker Hub:
 
 ```sh
-sudo docker pull floriaan1/merit:master
+docker image prune -a
+sudo docker pull floriaan1/plot-misc:master
 ```

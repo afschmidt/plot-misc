@@ -35,8 +35,7 @@ CI_DEFAULT_BRANCH=dev
 # Make sure git likes our mounted tests dir
 git config --global --add safe.directory "$PWD"
 
-# Now run the CI/CD scripts
-. "$ci_cd"/before_script.sh
+# Now run the docs build (pages.sh installs the package, then builds the docs)
 . "$ci_cd"/pages.sh
 
 echo "[info] current dir (end)"
