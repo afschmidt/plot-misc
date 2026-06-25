@@ -33,7 +33,6 @@ stages:
   - test
   - deploy
 
-
 # Unit tests on stock slim images (fast binary wheels), across all supported
 # Python versions via a matrix. Runs on every MR and on the default branch,
 # independently of the docs deploy. Blocks on failure. GitLab matrix legs are
@@ -63,8 +62,6 @@ pages:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # GitLab-managed SAST. The template auto-detects the language, runs analyzer
-# jobs in the `test` stage, and is advisory (allow_failure) by default. We do
-# NOT override the `sast` job — the previous custom override ran a non-standard
-# command on docker:stable and never worked.
+# jobs in the `test` stage, and is advisory (allow_failure) by default. 
 include:
   - template: SAST.gitlab-ci.yml
