@@ -47,7 +47,9 @@ ENV PERSISTENT_DEPS="\
     openblas \
     curl \
     git \
-    sed"
+    sed \
+    libgomp \
+    libstdc++"
 
 WORKDIR /data
 COPY --from=build /usr/local/bin /usr/local/bin

@@ -292,6 +292,7 @@ def extract_follow_up(data: pd.DataFrame,
     -------
     pd.DataFrame
         DataFrame with the following columns:
+    
         - 'time': Requested time points (as integers)
         - '{output_col}_at_risk': Number at risk at each time point
         - '{output_col}_at_risk_format': Formatted at-risk numbers with

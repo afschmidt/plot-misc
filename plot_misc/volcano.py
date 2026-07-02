@@ -131,7 +131,7 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     points are labelled in a crowded region. Additional options can be passed
     to `adjustText` via `label_kwargs_dict`.
     
-    Please see the module documentation `here <https://pypi.org/project/adjustText/>`_.
+    Please see the `adjustText documentation <https://pypi.org/project/adjustText/>`_.
     """
     FT_FAM = 'font.family'
     # ###### Check input

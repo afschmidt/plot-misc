@@ -982,20 +982,6 @@ class EmpiricalSupport(object):
     results_ : `EmpiricalSupportResults`
         An EmpiricalSupportResults instance.
     
-    Methods
-    -------
-    calc_empirical_support(estimate, standard_error, alpha)
-        Computes the range of confidence intervals and compatibility metrics
-        over the supplied alpha values.
-    
-    plot_tree(...)
-        Creates a 'tree plot' summarising the parameter space supported by
-        the data, with options for CI and estimate annotations.
-    
-    _plot_empirical_support(...)
-        Generates a visualisation of confidence intervals and their overlap
-        across varying alpha values.
-    
     Notes
     -----
     This implementation is based on the concept of compatibility (or

@@ -26,9 +26,8 @@ from the example published in the official matplotlib gallery [1]_.
 
 References
 ----------
-.. [1] Matplotlib contributors. "Creating annotated heatmaps."
-Matplotlib Gallery.
-https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
+.. [1] Matplotlib contributors. "Creating annotated heatmaps." Matplotlib
+   Gallery. https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
 """
 
 # modules

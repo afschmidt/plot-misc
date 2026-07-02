@@ -54,3 +54,8 @@ utils.utils module
 .. automodule:: plot_misc.utils.utils
    :members:
 
+errors module
+-------------------------------------------
+.. automodule:: plot_misc.errors
+   :members:
+

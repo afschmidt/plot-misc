@@ -38,7 +38,7 @@ change_ticks(ax, ticks, labels=None, axis='x', log=False)
 adjust_labels(annotations, axis, min_distance=0.1)
     Adjusts overlapping annotation text to improve legibility.
     
-plot_span(start_span, stop_span, ax, horizontal=True, **kwargs)
+plot_span(start_span, stop_span, ax, horizontal=True, ...)
     Adds a vertical or horizontal span to a matplotlib axis.
     
 segment_labelled(x, y, ax, label=None, ...)
@@ -261,12 +261,6 @@ class MidpointNormalize(mpl.colors.Normalize):
         Central value that maps to 0.5 on the colour scale.
     clip : `bool`, default False
         If True, data outside vmin/vmax is clipped to the endpoints.
-    
-    Methods
-    -------
-    inverse(value)
-        Inverts a normalised value from the [0, 1] scale back to the original
-        data scale.
     """
     def __init__(self, vmin:float | None = None, vmax:float | None = None,
                  vcenter:float | None = None, clip:bool=False):
@@ -716,6 +710,7 @@ def calc_matrices(data:pd.DataFrame,
         than `ptrun` are floored to `ptrun` before the -log10 transform.
     annotate : `str`, default 'symbol'
         Annotation style to return. Options:
+        
         - 'symbol': significance markers using `symbol`.
         - 'star': **Deprecated** alias for 'symbol' — use 'symbol' instead.
         - 'pvalues': signed -log10(p-values). **Deprecated** — use
@@ -725,6 +720,7 @@ def calc_matrices(data:pd.DataFrame,
         - 'pvalues_raw': the untransformed p-values (in [0, 1]).
         - 'point_estimates': formatted effect estimates
         - None: returns only numeric matrix without annotations
+        
         The numeric value matrix is always signed -log10(p-values); only the
         annotation representation changes with the 'pvalues*' options.
     symbol : `str`, default `★`

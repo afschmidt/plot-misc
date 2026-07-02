@@ -670,15 +670,6 @@ class DecisionCurve(object):
         include at least one predicted risk score (between 0 and 1) and a
         binary outcome variable.
     
-    Methods
-    -------
-    calc_net_benefit(...)
-        Computes the net benefit across a range of thresholds for one or more
-        models.
-    plot(...)
-        Visualises the decision curves, with optional smoothing and style
-        customisation.
-    
     Notes
     -----
     This implementation is adapted from the `dcurves` Python package
@@ -768,8 +759,8 @@ class DecisionCurve(object):
         These rates are scaled by the assumed prevalence to allow valid
         comparisons across populations with different case/control ratios.
         
-        Code adapted from
-        `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_.
+        Code adapted from the
+        `dcurves true/false rate calculation <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_.
         
         Hash: 007c64b
         """
@@ -866,8 +857,8 @@ class DecisionCurve(object):
         
         The resulting table can be visualised using the `plot()` method.
         
-        Code adapted from:
-        `here <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_
+        Code adapted from the
+        `dcurves net benefit calculation <https://github.com/MSKCC-Epi-Bio/dcurves/blob/main/dcurves/dca.py>`_
         
         Hash: 007c64b
         """

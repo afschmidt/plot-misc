@@ -16,7 +16,7 @@ format_estimates(point, se=None, lower=None, upper=None, alpha=0.05, ...)
 sci_notation(number, sig_fig=2, ...)
     Converts a float into scientific notation with superscript exponents.
 
-format_roc(observed, predicted, **kwargs)
+format_roc(observed, predicted, ...)
     Computes ROC curve data and returns it as a tidy DataFrame.
 
 string_interval(limits, int_notation, middle, lower_lim, inq_space, sep)
