@@ -326,6 +326,7 @@ def _update_kwargs(update_dict:dict[Any, Any], **kwargs:Any,
     return new_dict
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE this is not used anymore can be removed
 def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
                           context:dict[Any,Any],
                           ) -> dict[Any,Any]:
@@ -364,7 +365,11 @@ def _dict_string_argument(partial_match:str, dict_string:dict[Any, str],
     # evaluating object
     for key, value in dict_string.items():
         if isinstance(value, str) and re.match(partial_match, value):
-            dict_string[key] = eval(value, context)
+            dict_string[key] = eval(
+                value,
+                {"__builtins__": {}},
+                context,
+            )
     # return stuff
     return dict_string
 
