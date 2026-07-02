@@ -6,11 +6,7 @@
 # Official language image. Look for the different tagged releases at:
 # https://hub.docker.com/r/library/python/tags/
 image:
-    # TEMP: pinned to a digest instead of the :master tag to force a fresh
-    # pull past GitLab's shared-runner Docker Hub cache, which was still
-    # serving a pre-fix image after the tag was updated on Docker Hub.
-    # Safe to revert to `floriaan1/plot-misc:master` once confirmed fixed.
-    name: floriaan1/plot-misc@sha256:2b3ee5ee99904666e829261aaf14364bf5e1f315725c98fce5b85058d95289d6
+    name: floriaan1/plot-misc:master
     entrypoint: ["/bin/sh", "-c"]
     # entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0' ]
 # Change pip's cache directory to be inside the project directory since we can
