@@ -41,8 +41,10 @@ from typing import Any
 def plot_volcano(data:DataFrame, y_column:str, x_column:str,
                  point_label:str | None = None, adjust:bool=False,
                  lim:int=1000, vline:Real=0, alpha:float=1e-5,
-                 col_sgnd: str = 'orangered', col_nsgnd: str = 'dimgrey',
+                 col_sgnd: str | None = 'orangered',
+                 col_nsgnd: str | None = 'dimgrey',
                  col_vline: str = 'lightcoral',
+                 c_col: str | None = None,
                  xlab:str='Point estimate', ylab:str=r'$-log_{10}(pvalue)$',
                  ylim:tuple[float, float] | None = None, msize:Real=10,
                  lsize:Real=5, transparency_ns:Real=0.6,
@@ -79,12 +81,16 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
         The x-position of the vertical line
     alpha : `float`, default 1e-5
         P-value threshold for significance (used on –log10 scale).
-    col_sgnd : `str`, default `orangered`
+    col_sgnd : `str` or `None`, default `orangered`
         The colour for the dots above the significance threshold.
-    col_nsgnd : `str`, default `dimgrey`
+    col_nsgnd : `str` or `None`, default `dimgrey`
         The colour for the dots below the significance threshold.
     col_vline ; `str`, default `lightcoral`
         The colour of the vertical line.
+    c_col : `str` or `None`, default `None`
+        The column name of the colour indicator. Allows for per-point
+        colouring based on a data column. Will internally overrule
+        `col_sgnd` and `col_nsgnd`.
     xlab : `str`, default 'Point estimate'
         x-axis label.
     ylab : `str`, default '-log10(pvalue)'
@@ -140,9 +146,12 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     is_type(x_column, str)
     is_type(point_label, (str, type(None)))
     is_type(font_label, (type(None), str))
-    is_type(col_sgnd, str)
-    is_type(col_nsgnd, str)
+    is_type(col_sgnd, (type(None), str))
+    is_type(col_nsgnd,(type(None), str))
+    is_type(c_col,(type(None), str))
     is_type(col_vline, str)
+    if c_col is not None and c_col not in data.columns:
+        raise IndexError('`c_col` is not present in data.columns.')
     # map None to dict
     label_kwargs_dict = label_kwargs_dict or {}
     scatter_sig_kwargs_dict = scatter_sig_kwargs_dict or {}
@@ -151,7 +160,11 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     # raise warning
     if adjust and point_label is None:
         warnings.warn('`adjust` is ignored if `point_label` is None',
-                      SyntaxWarning)
+                      UserWarning, stacklevel=2,)
+    if (col_sgnd is not None or col_nsgnd is not None) and (c_col is not None):
+        warnings.warn('`c_col` overrules `col_sgnd` and `col_nsgnd`. Set these '
+                      'to None to silence this warning.',
+                      UserWarning, stacklevel=2,)
     ### getting figure
     # should we create a figure and axis
     if ax is None:
@@ -170,6 +183,9 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     above = data[data[y_column] >= threshold]
     xs = above[x_column]
     ys = above[y_column]
+    # update col if needed
+    if c_col is not None:
+        col_sgnd = above[c_col]
     # kwargs
     new_sig_kwargs = _update_kwargs(
         update_dict=scatter_sig_kwargs_dict,
@@ -180,6 +196,9 @@ def plot_volcano(data:DataFrame, y_column:str, x_column:str,
     below = data[data[y_column] < threshold]
     xns = below[x_column]
     yns = below[y_column]
+    # update col if needed
+    if c_col is not None:
+        col_nsgnd = below[c_col]
     # kwargs
     new_nonsig_kwargs = _update_kwargs(
         update_dict=scatter_nonsig_kwargs_dict,

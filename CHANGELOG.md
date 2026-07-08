@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+* `c_col` in `plot_misc.volcano` allows the user to overrule `col_nsgnd` and
+  `col_sgnd`
+
 ### Changed
 
 * Reworked the GitLab CI/CD pipeline: unit tests now run on every merge request
@@ -9,15 +14,10 @@
   the tests run across Python 3.10/3.11/3.12 on stock slim images via a matrix;
   hardened the CI shell scripts (`set -eu`) and replaced the broken custom SAST
   job with the GitLab-managed template.
-* `resources/ci_cd/debug_run_docker.sh` now mirrors the **entire** pipeline
-  locally in Docker — the unit-test matrix on every Python version and the docs
-  build, in GitLab stage order — reading the version list and images from
-  `.gitlab-ci.yml` so it stays in sync with CI. It is portable: the repo root
-  and docs build dir are auto-detected and Docker availability is pre-checked,
-  so it runs on any machine (not just the maintainer's). The host-side scripts
-  (`debug_run_docker.sh`, `run_docker.sh`) are macOS-compatible — GNU-only
-  `readlink -f` and `head -n -1` were replaced with `cd … && pwd -P` and
-  `sed '$d'`.
+* `resources/ci_cd/debug_run_docker.sh` now reads the version list and images 
+  from `.gitlab-ci.yml` so it stays in sync with CI. It is portable: the repo 
+  root and docs build dir are auto-detected and Docker availability is 
+  pre-checked, so it runs on any machine (not just the maintainer's). 
 * Simplified the `pages` docs job: the package install moved into `pages.sh`
   and the separate `before_script.sh` + its `.before_script_template` anchor
   were removed. `make` is now baked into the docs image (`PERSISTENT_DEPS`)
@@ -28,21 +28,16 @@
 * `resources/ci_cd/before_script.sh` and the `.before_script_template` anchor
   in `.gitlab-ci.yml`; the docs job now runs `pages.sh` directly (which installs
   the package then builds the docs).
-
 * Dead bioinformatics-template leftovers from the docs Docker image
   (`resources/docker/plot-misc/master/Dockerfile`): the `libdeflate`/
   `libdeflate-dev` (cyvcf), `openssh` (only used by the removed ssh-agent), and
-  commented `llvm11`/numba build dependencies. The image now requires a rebuild
-  and push to take effect in CI.
+  commented `llvm11`/numba build dependencies. 
 
 ### Fixed
 
 * `plot_misc.machine_learning` imported `Self` from `typing`, which only exists
   on Python 3.11+, breaking imports on the declared-supported Python 3.10. It
-  now falls back to `typing_extensions.Self` on 3.10, and `typing_extensions` is
-  declared as a runtime dependency in `requirements.txt` (marker
-  `python_version < "3.11"`) and in the conda recipe / env files (unconditional,
-  as conda noarch packages have no install-time python selector).
+  now falls back to `typing_extensions.Self` on 3.10.
 
 ## 2.2.2 - 2026-06-23
 
