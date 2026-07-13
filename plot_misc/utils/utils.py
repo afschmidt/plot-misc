@@ -566,9 +566,11 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
         Matrix of p-values as floats (in [0, 1]).
     sig : `float`
         Significance cut-off expressed as a `-log10` threshold (a cell is
-        significant when `-log10(p) >= sig`).
+        significant when `-log10(p) >= sig`). Use `-inf` to disable the
+        significance filter (every non-missing cell is significant).
     ptrun : `float` or `int`, default 16
-        P-values smaller than `10^(-ptrun)` are truncated.
+        P-values smaller than `10^(-ptrun)` are truncated. Use `+inf` to
+        disable truncation (a p-value of exactly 0 maps to `+inf`).
     digits : `str`, default `3`
         Number of decimals the numeric tables and effect strings are rounded
         to (a single integer character).
@@ -662,9 +664,9 @@ def calc_matrices(data:pd.DataFrame,
                   outcome_col:str,
                   point_col:str='point',
                   pvalue_col:str='pvalue',
-                  alpha:Real=0.05,
+                  alpha:Real | None =0.05,
                   sig_numbers:int=2,
-                  ptrun:Real=1e-16,
+                  ptrun:Real | None = None,
                   annotate:Literal['symbol',
                                    'star',
                                    'pvalues',
@@ -699,15 +701,20 @@ def calc_matrices(data:pd.DataFrame,
     pvalue_col : `str`, default 'pvalue'
         Column name with p-values. Note p-values are expected to range between
         0 and 1.
-    alpha : `float`, default `0.05`
+    alpha : `float` or `None`, default `0.05`
         The significance cut-off as a raw p-value in (0, 1] (consistent with
         `volcano`). Converted internally to a -log10 threshold. Values outside
-        (0, 1] raise `InputValidationError`.
+        (0, 1] raise `InputValidationError`. Set to `None` to disable the
+        significance filter: every non-missing cell is treated as significant
+        and annotated.
     sig_numbers : `int`, default 2
         The number of significant numbers the cell annotations should have.
-    ptrun : `float` or `int`, default 1e-16
+    ptrun : `float`, `int` or `None`, default `None`
         The truncation threshold as a raw p-value in (0, 1]: p-values smaller
-        than `ptrun` are floored to `ptrun` before the -log10 transform.
+        than `ptrun` are floored to `ptrun` before the -log10 transform. When
+        `None` (the default) no truncation is applied and a p-value of exactly
+        0 maps to `+inf` in the -log10 value tables, which can affect heatmap
+        colour scaling.
     annotate : `str`, default 'symbol'
         Annotation style to return. Options:
         
@@ -752,20 +759,20 @@ def calc_matrices(data:pd.DataFrame,
     is_type(outcome_col, str)
     is_type(point_col, str)
     is_type(pvalue_col, str)
-    is_type(alpha, (int, float))
-    is_type(ptrun, (int, float))
+    is_type(alpha, (type(None), int, float))
+    is_type(ptrun, (type(None), int, float))
     is_type(sig_numbers, int)
     is_type(symbol, str)
     is_type(without_log, bool)
     is_type(mask_na, bool)
     ### `alpha` is a raw p-value threshold in (0, 1]
-    if not (0 < alpha <= 1):
+    if (alpha is not None) and not (0 < alpha <= 1):
         raise InputValidationError(
             "`alpha` must be a raw p-value in (0, 1] (e.g. 0.05); got: "
             f"{alpha}. The -log10 convention was removed in v2.3."
         )
     ### `ptrun` is a raw p-value truncation threshold in (0, 1]
-    if not (0 < ptrun <= 1):
+    if (ptrun is not None) and not (0 < ptrun <= 1):
         raise InputValidationError(
             "`ptrun` must be a raw p-value in (0, 1] (e.g. 1e-16); got: "
             f"{ptrun}. The exponent convention was removed in v2.3."
@@ -806,13 +813,16 @@ def calc_matrices(data:pd.DataFrame,
                                      pvalue_col=pvalue_col,
                                      **kwargs,
                                      )
-    ### formatting data (convert the raw-p `alpha` to a -log10 threshold)
-    sig = -1 * np.log10(alpha)
+    ### formatting data (convert the raw-p `alpha` to a -log10 threshold;
+    ### `alpha=None` disables the significance filter entirely)
+    sig = -np.inf if alpha is None else -1 * np.log10(alpha)
+    ### `ptrun=None` disables truncation (p == 0 maps to +inf)
+    trun = np.inf if ptrun is None else -1 * np.log10(ptrun)
     (values, values_unsigned, values_raw, annot_effect, annot_star,
      annot_pval, values_point) =\
         _format_matrices(
             point_mat, pvalue_mat, sig=sig,
-            ptrun=-np.log10(ptrun), digits=str(sig_numbers),
+            ptrun=trun, digits=str(sig_numbers),
             symbol=symbol, pval_mode=pval_mode,
         )
     ### selecting the annotation to use

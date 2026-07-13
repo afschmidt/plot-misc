@@ -268,6 +268,68 @@ class TestCalcMatrices(object):
                           exposure_col=UNames.mat_exposure,
                           outcome_col=UNames.mat_outcome,
                           )
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Testing `ptrun=None` (the default): no truncation of -log10(p-values)
+    def test_ptrun_none(self):
+        # inline long-format data with a p-value of exactly 0 and a tiny one
+        data = pd.DataFrame({
+            'exposure': ['e1', 'e1', 'e2', 'e2'],
+            'outcome': ['o1', 'o2', 'o1', 'o2'],
+            'point': [0.5, -0.5, 0.25, -0.25],
+            'pvalue': [0.0, 1e-300, 0.04, 0.5],
+        })
+        # `ptrun=None` is the default: -log10(p) is uncapped, p == 0 -> +inf
+        res = calc_matrices(data, exposure_col='exposure',
+                            outcome_col='outcome',
+                            )
+        unsigned = res.curated_matrix_value_unsigned_log
+        signed = res.curated_matrix_value
+        assert np.isinf(unsigned.loc['o1', 'e1'])
+        assert unsigned.loc['o2', 'e1'] == 300.0
+        assert unsigned.loc['o1', 'e2'] == 1.40
+        # the signed table carries the effect direction (point < 0 for o2/e1)
+        assert np.isposinf(signed.loc['o1', 'e1'])
+        assert signed.loc['o2', 'e1'] == -300.0
+        # an explicit `ptrun` still truncates: both extreme cells cap at 16
+        res_trun = calc_matrices(data, exposure_col='exposure',
+                                 outcome_col='outcome', ptrun=1e-16,
+                                 )
+        unsigned_trun = res_trun.curated_matrix_value_unsigned_log
+        assert unsigned_trun.loc['o1', 'e1'] == 16.0
+        assert unsigned_trun.loc['o2', 'e1'] == 16.0
+        assert unsigned_trun.loc['o1', 'e2'] == 1.40
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Testing `alpha=None`: the significance filter is disabled
+    def test_alpha_none(self):
+        # inline long-format data without missing values
+        data = pd.DataFrame({
+            'exposure': ['e1', 'e1', 'e2', 'e2'],
+            'outcome': ['o1', 'o2', 'o1', 'o2'],
+            'point': [0.5, -0.5, 0.25, -0.25],
+            'pvalue': [0.5, 0.04, 0.9, 0.001],
+        })
+        # with the default `alpha=0.05` the non-significant cells are masked
+        res_default = calc_matrices(data, exposure_col='exposure',
+                                    outcome_col='outcome',
+                                    )
+        annot_default = res_default.curated_matrix_annotation
+        assert annot_default.loc['o1'].to_list() == ['.', '.']
+        assert annot_default.loc['o2'].to_list() == ['★', '★']
+        # with `alpha=None` every cell is annotated
+        res_none = calc_matrices(data, alpha=None, exposure_col='exposure',
+                                 outcome_col='outcome',
+                                 )
+        annot_none = res_none.curated_matrix_annotation
+        assert annot_none.loc['o1'].to_list() == ['★', '★']
+        assert annot_none.loc['o2'].to_list() == ['★', '★']
+        # `alpha=None` combined with a p-value annotation shows every p-value
+        res_raw = calc_matrices(data, alpha=None, annotate='pvalues_raw',
+                                sig_numbers=3, exposure_col='exposure',
+                                outcome_col='outcome',
+                                )
+        annot_raw = res_raw.curated_matrix_annotation
+        assert annot_raw.loc['o1'].to_list() == ['0.5', '0.9']
+        assert annot_raw.loc['o2'].to_list() == ['0.04', '0.001']
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~----
 class TestAjustLabels(object):
