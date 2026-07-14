@@ -509,6 +509,12 @@ def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
     ------
     ValueError
         If the point and p-value matrices have mismatched shapes.
+    
+    Notes
+    -----
+    Both matrices are sorted alphabetically on the index and on the columns.
+    To retain input order instead, pass ``sort=False``, which is forwarded
+    through `**kwargs` to `pd.DataFrame.pivot_table`
     """
     ### subsetting
     # making sure we do not change the original `data`
@@ -752,6 +758,11 @@ def calc_matrices(data:pd.DataFrame,
         If `annotate` is not one of the supported values.
     InputValidationError
         If `alpha` is not a raw p-value in (0, 1].
+    
+    Notes
+    -----
+    The rows and columns of the returned matrices retain the order in which
+    they first appear in `data`. Pass ``sort=True`` to sort alphabetically.
     """
     #### check input
     is_type(data, pd.DataFrame)
@@ -806,12 +817,15 @@ def calc_matrices(data:pd.DataFrame,
     else:
         pval_mode = 'signed_log'
     ### subsetting data
+    new_kwargs = _update_kwargs(update_dict=kwargs,
+                                sort=False,
+                                )
     point_mat, pvalue_mat = _extract(data,
                                      exposure_col=exposure_col,
                                      outcome_col=outcome_col,
                                      point_col=point_col,
                                      pvalue_col=pvalue_col,
-                                     **kwargs,
+                                     **new_kwargs,
                                      )
     ### formatting data (convert the raw-p `alpha` to a -log10 threshold;
     ### `alpha=None` disables the significance filter entirely)

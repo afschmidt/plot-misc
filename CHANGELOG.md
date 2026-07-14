@@ -9,6 +9,9 @@
 
 ### Changed
 
+* `plot_misc.utils.calc_matrices` now retains the order in which the outcomes
+  and exposures first appear in the input data, instead of sorting both axes
+  alphabetically. Pass `sort=True` to restore the previous behaviour.
 * Reworked the GitLab CI/CD pipeline: unit tests now run on every merge request
   and the default branch (decoupled from the docs deploy) and block on failure;
   the tests run across Python 3.10/3.11/3.12 on stock slim images via a matrix;
