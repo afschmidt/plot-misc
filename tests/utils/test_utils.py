@@ -72,8 +72,8 @@ class TestCalcMatrices(object):
         # running extract
         point_mat, pvalue_mat = _extract(
             data,
-            exposure_col=UNames.mat_exposure,
-            outcome_col=UNames.mat_outcome,
+            columns=UNames.mat_exposure,
+            rows=UNames.mat_outcome,
             point_col=UNames.mat_point,
             pvalue_col=UNames.mat_pvalue,
             dropna=True,
@@ -94,8 +94,8 @@ class TestCalcMatrices(object):
         # running extract
         point_mat, pvalue_mat = _extract(
             data,
-            exposure_col=UNames.mat_exposure,
-            outcome_col=UNames.mat_outcome,
+            columns=UNames.mat_exposure,
+            rows=UNames.mat_outcome,
             point_col=UNames.mat_point,
             pvalue_col=UNames.mat_pvalue,
         )
@@ -161,8 +161,8 @@ class TestCalcMatrices(object):
         # `calc_matrices` retains the input order of `heatmap_data`, so the
         # rows are [LDL-C, HDL-C] and the columns [SCF, TRAIL, IP10, IL2ra].
         # res 1
-        res1 = calc_matrices(data, exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+        res1 = calc_matrices(data, columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              )
         assert res1.curated_matrix_value.sum(axis=0).round(r).to_list() == \
             [3.27, -0.69, 3.98, -1.68]
@@ -175,8 +175,8 @@ class TestCalcMatrices(object):
             .to_list() == [1.0, 1.0, 0.0, 0.01]
         # res 2 - `ptrun` is now a raw p-value (0.01 == old exponent 2)
         res2 = calc_matrices(data,
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+                             columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              ptrun=0.01)
         assert res2.curated_matrix_value.sum(axis=0).round(r).to_list() == \
             [2.0, -0.69, 1.98, -1.4]
@@ -184,8 +184,8 @@ class TestCalcMatrices(object):
             ['.', '.', '★', '★']
         # res 3
         res3 = calc_matrices(data, alpha=0.5,
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+                             columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              )
         assert res3.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.', '★', '★']
@@ -193,8 +193,8 @@ class TestCalcMatrices(object):
         # changes the (always signed -log10) value matrix.
         with pytest.warns(DeprecationWarning):
             res4 = calc_matrices(data, alpha=0.001, without_log=True,
-                                 exposure_col=UNames.mat_exposure,
-                                 outcome_col=UNames.mat_outcome,
+                                 columns=UNames.mat_exposure,
+                                 rows=UNames.mat_outcome,
                                  )
         assert res4.curated_matrix_value.sum(axis=0).round(r).to_list() == \
             [3.27, -0.69, 3.98, -1.68]
@@ -202,37 +202,37 @@ class TestCalcMatrices(object):
             ['★', '.', '.', '.']
         # res 5
         res5 = calc_matrices(data, sig_numbers=3, annotate='pvalues',
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+                             columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              )
         assert res5.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.', '4.0', '-2.281']
         # res 6 - `mask_na=False` drops the all-missing rows and columns, so
         # only the HDL-C row and the [IP10, IL2ra] columns remain.
         res6 = calc_matrices(data, sig_numbers=3, mask_na=False,
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+                             columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              )
         assert res6.curated_matrix_value.iloc[0].to_list() == \
             [-0.02, 0.596]
         # res 7 - explicit `annotate='symbol'`
         res7b = calc_matrices(data, annotate='symbol', symbol='◆',
-                              exposure_col=UNames.mat_exposure,
-                              outcome_col=UNames.mat_outcome,
+                              columns=UNames.mat_exposure,
+                              rows=UNames.mat_outcome,
                               )
         assert res7b.curated_matrix_annotation.iloc[1].to_list() == \
             ['◆', '.', '.', '.']
         # res 8 - 'pvalues_signed' reproduces the legacy 'pvalues' output
         res8 = calc_matrices(data, sig_numbers=3, annotate='pvalues_signed',
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+                             columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              )
         assert res8.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.', '4.0', '-2.281']
         # res 9 - unsigned -log10 annotation; value matrix stays signed -log10
         res9 = calc_matrices(data, sig_numbers=3, annotate='pvalues_unsigned',
-                             exposure_col=UNames.mat_exposure,
-                             outcome_col=UNames.mat_outcome,
+                             columns=UNames.mat_exposure,
+                             rows=UNames.mat_outcome,
                              )
         assert res9.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.', '4.0', '2.281']
@@ -240,8 +240,8 @@ class TestCalcMatrices(object):
             [0.0, 0.0, 4.0, -2.281]
         # res 10 - raw p-value annotation; value matrix stays signed -log10
         res10 = calc_matrices(data, sig_numbers=3, annotate='pvalues_raw',
-                              exposure_col=UNames.mat_exposure,
-                              outcome_col=UNames.mat_outcome,
+                              columns=UNames.mat_exposure,
+                              rows=UNames.mat_outcome,
                               )
         assert res10.curated_matrix_annotation.iloc[0].to_list() == \
             ['.', '.', '0.0', '0.005']
@@ -250,26 +250,26 @@ class TestCalcMatrices(object):
         # res 11 - an unknown annotation still raises
         with pytest.raises(ValueError):
             calc_matrices(data, annotate='not_a_mode',  # type: ignore[arg-type]
-                          exposure_col=UNames.mat_exposure,
-                          outcome_col=UNames.mat_outcome,
+                          columns=UNames.mat_exposure,
+                          rows=UNames.mat_outcome,
                           )
         # res 12 - `alpha` is now a raw p-value in (0, 1]; values > 1 raise
         with pytest.raises(InputValidationError):
             calc_matrices(data, alpha=1.3,
-                          exposure_col=UNames.mat_exposure,
-                          outcome_col=UNames.mat_outcome,
+                          columns=UNames.mat_exposure,
+                          rows=UNames.mat_outcome,
                           )
         # res 13 - `ptrun` is now a raw p-value in (0, 1]; the old exponent
         # convention (e.g. 2) and 0 are out of range and raise.
         with pytest.raises(InputValidationError):
             calc_matrices(data, ptrun=2,
-                          exposure_col=UNames.mat_exposure,
-                          outcome_col=UNames.mat_outcome,
+                          columns=UNames.mat_exposure,
+                          rows=UNames.mat_outcome,
                           )
         with pytest.raises(InputValidationError):
             calc_matrices(data, ptrun=0,
-                          exposure_col=UNames.mat_exposure,
-                          outcome_col=UNames.mat_outcome,
+                          columns=UNames.mat_exposure,
+                          rows=UNames.mat_outcome,
                           )
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Testing the `sort` keyword forwarded through to `pivot_table`
@@ -283,16 +283,16 @@ class TestCalcMatrices(object):
             'pvalue': [0.01, 0.02, 0.03, 0.04],
         })
         # by default the input order is retained on both axes
-        res_default = calc_matrices(data, exposure_col='exposure',
-                                    outcome_col='outcome',
+        res_default = calc_matrices(data, columns='exposure',
+                                    rows='outcome',
                                     )
         value_default = res_default.curated_matrix_value
         assert value_default.index.to_list() == ['z_out', 'a_out']
         assert value_default.columns.to_list() == ['z_exp', 'a_exp']
         # `sort=True` overrides the default and restores the alphabetical
         # ordering of `pd.DataFrame.pivot_table` on both axes
-        res_sorted = calc_matrices(data, exposure_col='exposure',
-                                   outcome_col='outcome', sort=True,
+        res_sorted = calc_matrices(data, columns='exposure',
+                                   rows='outcome', sort=True,
                                    )
         value_sorted = res_sorted.curated_matrix_value
         assert value_sorted.index.to_list() == ['a_out', 'z_out']
@@ -314,8 +314,8 @@ class TestCalcMatrices(object):
             'pvalue': [0.0, 1e-300, 0.04, 0.5],
         })
         # `ptrun=None` is the default: -log10(p) is uncapped, p == 0 -> +inf
-        res = calc_matrices(data, exposure_col='exposure',
-                            outcome_col='outcome',
+        res = calc_matrices(data, columns='exposure',
+                            rows='outcome',
                             )
         unsigned = res.curated_matrix_value_unsigned_log
         signed = res.curated_matrix_value
@@ -326,8 +326,8 @@ class TestCalcMatrices(object):
         assert np.isposinf(signed.loc['o1', 'e1'])
         assert signed.loc['o2', 'e1'] == -300.0
         # an explicit `ptrun` still truncates: both extreme cells cap at 16
-        res_trun = calc_matrices(data, exposure_col='exposure',
-                                 outcome_col='outcome', ptrun=1e-16,
+        res_trun = calc_matrices(data, columns='exposure',
+                                 rows='outcome', ptrun=1e-16,
                                  )
         unsigned_trun = res_trun.curated_matrix_value_unsigned_log
         assert unsigned_trun.loc['o1', 'e1'] == 16.0
@@ -344,23 +344,23 @@ class TestCalcMatrices(object):
             'pvalue': [0.5, 0.04, 0.9, 0.001],
         })
         # with the default `alpha=0.05` the non-significant cells are masked
-        res_default = calc_matrices(data, exposure_col='exposure',
-                                    outcome_col='outcome',
+        res_default = calc_matrices(data, columns='exposure',
+                                    rows='outcome',
                                     )
         annot_default = res_default.curated_matrix_annotation
         assert annot_default.loc['o1'].to_list() == ['.', '.']
         assert annot_default.loc['o2'].to_list() == ['★', '★']
         # with `alpha=None` every cell is annotated
-        res_none = calc_matrices(data, alpha=None, exposure_col='exposure',
-                                 outcome_col='outcome',
+        res_none = calc_matrices(data, alpha=None, columns='exposure',
+                                 rows='outcome',
                                  )
         annot_none = res_none.curated_matrix_annotation
         assert annot_none.loc['o1'].to_list() == ['★', '★']
         assert annot_none.loc['o2'].to_list() == ['★', '★']
         # `alpha=None` combined with a p-value annotation shows every p-value
         res_raw = calc_matrices(data, alpha=None, annotate='pvalues_raw',
-                                sig_numbers=3, exposure_col='exposure',
-                                outcome_col='outcome',
+                                sig_numbers=3, columns='exposure',
+                                rows='outcome',
                                 )
         annot_raw = res_raw.curated_matrix_annotation
         assert annot_raw.loc['o1'].to_list() == ['0.5', '0.9']

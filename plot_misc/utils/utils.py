@@ -24,7 +24,7 @@ annotate_axis_midpoints(ax, labels, axis='y', gap=6, offset=None, ...)
 calc_angle_points(x, y, radians=False)
     Calculates the angle between two points in degrees or radians.
     
-calc_matrices(data, exposure_col, outcome_col, point_col='point',
+calc_matrices(data, columns, rows, point_col='point',
     pvalue_col='pvalue', ...)
     Creates effect and p-value matrices for heatmap plotting, including
     optional annotation styles and NA masking.
@@ -472,7 +472,7 @@ def change_ticks(ax:plt.Axes, ticks:list[str], labels:list[str] | None = None,
     # done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
+def _extract(data:pd.DataFrame, columns:str, rows:str,
             point_col:str, pvalue_col:str, dropna:bool=False,
             **kwargs:Any,
             ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -480,17 +480,16 @@ def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
     Extract point estimate and p-value matrices from long-format data.
     
     This function takes a long-format DataFrame and returns two pivot tables:
-    one for point estimates and one for p-values. These are indexed by
-    outcome and columned by exposure.
+    one for point estimates and one for p-values.
     
     Parameters
     ----------
     data : `pd.DataFrame`
         Input data in long format with the required columns.
-    exposure_col : `str`
-        Name of the column representing exposure variables.
-    outcome_col : `str`
-        Name of the column representing outcome variables.
+    columns : `str`
+        Name of the column representing column lables.
+    rows : `str`
+        Name of the column representing row labels.
     point_col : `str`
         Name of the column containing point estimates.
     pvalue_col : `str`
@@ -520,17 +519,17 @@ def _extract(data:pd.DataFrame, exposure_col:str, outcome_col:str,
     # making sure we do not change the original `data`
     data = data.copy()
     ### getting estimates
-    point = data[[point_col, exposure_col, outcome_col]].copy()
-    pvalue = data[[pvalue_col, exposure_col, outcome_col]].copy()
+    point = data[[point_col, columns, rows]].copy()
+    pvalue = data[[pvalue_col, columns, rows]].copy()
     ### matrix
-    point_mat = point.pivot_table(index=[outcome_col],
-                      columns = exposure_col,
+    point_mat = point.pivot_table(index=[rows],
+                      columns = columns,
                       values = point_col,
                       dropna=dropna,
                       **kwargs,
                       )
-    pvalue_mat = pvalue.pivot_table(index=[outcome_col],
-                      columns = exposure_col,
+    pvalue_mat = pvalue.pivot_table(index=[rows],
+                      columns = columns,
                       values = pvalue_col,
                       dropna=dropna,
                       **kwargs,
@@ -666,8 +665,8 @@ def _format_matrices(effect:pd.DataFrame, pval:pd.DataFrame, sig:float,
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def calc_matrices(data:pd.DataFrame,
-                  exposure_col:str,
-                  outcome_col:str,
+                  columns:str,
+                  rows:str,
                   point_col:str='point',
                   pvalue_col:str='pvalue',
                   alpha:Real | None =0.05,
@@ -688,20 +687,21 @@ def calc_matrices(data:pd.DataFrame,
     """
     Generate value and annotation matrices for clustered heatmap visualisation.
     
-    This function transforms a long-format DataFrame into heatmap-ready matrices
-    based on statistical results. The output includes both numeric matrices
+    This function transforms a long-format DataFrame into heatmap-ready
+    matrices. The output includes both numeric matrices
     (e.g. signed -log10(p-values)) and string annotations (e.g. significance
     stars, p-values, or effect sizes).
     
     Arguments
     ---------
     data : `pd.DataFrame`
-        Long-format dataframe containing exposure, outcome, point estimate,
-        and p-value columns.
-    exposure_col : `str`
-        Column name indicating the exposure variable.
-    outcome_col : `str`
-        Column name indicating the outcome variable.
+        Long-format dataframe containing the column and row groups, as
+        well as point estimate and p-value columns (representing the matrix
+        values).
+    columns : `str`
+        Column name indicating the column lables.
+    rows : `str`
+        Column name indicating the row labels.
     point_col : `str`, default `point`
         Column name with point estimates.
     pvalue_col : `str`, default 'pvalue'
@@ -766,8 +766,8 @@ def calc_matrices(data:pd.DataFrame,
     """
     #### check input
     is_type(data, pd.DataFrame)
-    is_type(exposure_col, str)
-    is_type(outcome_col, str)
+    is_type(columns, str)
+    is_type(rows, str)
     is_type(point_col, str)
     is_type(pvalue_col, str)
     is_type(alpha, (type(None), int, float))
@@ -821,8 +821,8 @@ def calc_matrices(data:pd.DataFrame,
                                 sort=False,
                                 )
     point_mat, pvalue_mat = _extract(data,
-                                     exposure_col=exposure_col,
-                                     outcome_col=outcome_col,
+                                     columns=columns,
+                                     rows=rows,
                                      point_col=point_col,
                                      pvalue_col=pvalue_col,
                                      **new_kwargs,
