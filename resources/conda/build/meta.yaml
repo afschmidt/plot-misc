@@ -50,12 +50,12 @@ about:
     - name: "A Floriaan Schmidt"
       email: "amand.schmidt@ucl.ac.uk"
   summary: >
-    A collection of Python-based plotting templates for medical, epidemiological,
+    A collection of Python-based plotting archetypes for medical, epidemiological,
     genetic, and machine learning visualisations.
   description: |
-    plot-misc provides a suite of reusable plotting templates designed to
+    plot-misc provides a suite of reusable plotting archetypes designed to
     streamline the creation of common visualisations in medical, epidemiological,
-    genetic, and machine learning contexts. These templates facilitate consistent
+    genetic, and machine learning contexts. These archetypes facilitate consistent
     and efficient generation of plots, aiding researchers and analysts in
     presenting their data effectively.  These functions are intentionally minimal 
     and return axes and figure handles, allowing full post-hoc customisation using 

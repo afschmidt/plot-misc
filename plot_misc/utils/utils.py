@@ -487,7 +487,7 @@ def _extract(data:pd.DataFrame, columns:str, rows:str,
     data : `pd.DataFrame`
         Input data in long format with the required columns.
     columns : `str`
-        Name of the column representing column lables.
+        Name of the column representing column labels.
     rows : `str`
         Name of the column representing row labels.
     point_col : `str`
@@ -699,7 +699,7 @@ def calc_matrices(data:pd.DataFrame,
         well as point estimate and p-value columns (representing the matrix
         values).
     columns : `str`
-        Column name indicating the column lables.
+        Column name indicating the column labels.
     rows : `str`
         Column name indicating the row labels.
     point_col : `str`, default `point`
