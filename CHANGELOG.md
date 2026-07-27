@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.3.0 - 2026-07-27
+
 ### Added
 
 * `c_col` in `plot_misc.volcano` allows the user to overrule `col_nsgnd` and
