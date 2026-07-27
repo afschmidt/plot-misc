@@ -26,6 +26,7 @@ from plot_misc.utils.utils import (
     _extract,
     _format_matrices,
     _update_kwargs,
+    MidpointNormalize,
 )
 
 
@@ -38,6 +39,25 @@ class TestUpdate_Kwargs(object):
     def test_update_kwargs(self):
         res = _update_kwargs(update_dict={'c': 'black'}, c='red', alpha = 0.5,)
         assert res == {'c': 'black', 'alpha': 0.5}
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class TestMidpointNormalize(object):
+    '''
+    Testing the `MidpointNormalize` class
+    '''
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_interpolates_correctly(self):
+        norm = MidpointNormalize(vmin=-280, vmax=280, vcenter=0)
+        result = norm(np.array([-280, -140, 0, 140, 280]))
+        np.testing.assert_allclose(result, [0, 0.25, 0.5, 0.75, 1.0])
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def test_preserves_input_mask(self):
+        # a masked entry must stay masked after normalisation, or a fully
+        # transparent.
+        norm = MidpointNormalize(vmin=-280, vmax=280, vcenter=0)
+        data = np.ma.masked_array([-280, 0, 280], mask=[False, True, False])
+        result = norm(data)
+        assert list(np.ma.getmaskarray(result)) == [False, True, False]
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Testing _dict_string_argument

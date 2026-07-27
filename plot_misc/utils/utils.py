@@ -278,8 +278,12 @@ class MidpointNormalize(mpl.colors.Normalize):
         else:
             value = np.clip(value, self.vmin, self.vmax)
         x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.]
-        return np.ma.masked_array(np.interp(value, x, y,
-                                            left=-np.inf, right=np.inf))
+        # capturing potential mask, and applying to interp
+        value = np.ma.asarray(value, dtype=float)
+        mask = np.ma.getmaskarray(value)
+        result = np.interp(value.filled(np.nan), x, y,
+                           left=-np.inf, right=np.inf)
+        return np.ma.masked_array(result, mask=mask)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def inverse(self, value):
         y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]

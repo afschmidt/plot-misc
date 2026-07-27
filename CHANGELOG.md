@@ -6,41 +6,48 @@
 
 * `c_col` in `plot_misc.volcano` allows the user to overrule `col_nsgnd` and
   `col_sgnd`
+* Module-level docstring.
+* Python 3.13 support, the CI unit-test matrix, and the conda recipe now 
+ include 3.13.
 
 ### Changed
 
-* `plot_misc.utils.calc_matrices` now retains the order in which the outcomes
-  and exposures first appear in the input data, instead of sorting both axes
+* `plot_misc.utils.calc_matrices` parameters `exposure_col`/`outcome_col`
+  renamed to `columns`/`rows`.
+* `plot_misc.utils.calc_matrices` now retains the order in which values
+  first appear in the `columns`/`rows` axes, instead of sorting both axes
   alphabetically. Pass `sort=True` to restore the previous behaviour.
+* `calc_matrices` `alpha` accepts `None` to disable the significance filter
+  (every non-missing cell is treated as significant). `ptrun` accepts `None`
+  to disable p-value truncation, and `None` is now its default (was
+  `1e-16`); a p-value of exactly 0 now maps to `+inf` unless truncation is
+  re-enabled.
 * Reworked the GitLab CI/CD pipeline: unit tests now run on every merge request
   and the default branch (decoupled from the docs deploy) and block on failure;
-  the tests run across Python 3.10/3.11/3.12 on stock slim images via a matrix;
-  hardened the CI shell scripts (`set -eu`) and replaced the broken custom SAST
-  job with the GitLab-managed template.
+  the tests run across Python 3.10/3.11/3.12/3.13 on stock slim images via a 
+  matrix;
 * `resources/ci_cd/debug_run_docker.sh` now reads the version list and images 
   from `.gitlab-ci.yml` so it stays in sync with CI. It is portable: the repo 
   root and docs build dir are auto-detected and Docker availability is 
-  pre-checked, so it runs on any machine (not just the maintainer's). 
+  pre-checked, so it runs on any machine. 
 * Simplified the `pages` docs job: the package install moved into `pages.sh`
   and the separate `before_script.sh` + its `.before_script_template` anchor
-  were removed. `make` is now baked into the docs image (`PERSISTENT_DEPS`)
-  instead of being re-installed via `apk add` on every run.
+  were removed. 
 
 ### Removed
 
 * `resources/ci_cd/before_script.sh` and the `.before_script_template` anchor
   in `.gitlab-ci.yml`; the docs job now runs `pages.sh` directly (which installs
   the package then builds the docs).
-* Dead bioinformatics-template leftovers from the docs Docker image
-  (`resources/docker/plot-misc/master/Dockerfile`): the `libdeflate`/
-  `libdeflate-dev` (cyvcf), `openssh` (only used by the removed ssh-agent), and
-  commented `llvm11`/numba build dependencies. 
 
 ### Fixed
 
 * `plot_misc.machine_learning` imported `Self` from `typing`, which only exists
   on Python 3.11+, breaking imports on the declared-supported Python 3.10. It
   now falls back to `typing_extensions.Self` on 3.10.
+* `MidpointNormalize.__call__` did not preserve the mask on a
+  `numpy.ma.masked_array` input, silently unmasking previously-masked values
+  during colour normalisation. Masked entries now stay masked.
 
 ## 2.2.2 - 2026-06-23
 
