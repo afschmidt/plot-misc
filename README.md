@@ -30,7 +30,7 @@ for plot-misc.
 
 ## Citation
 
-If you use this package in your research, please cite the
+If you use this package in your research please cite the
 **[paper](https://academic.oup.com/bioinformaticsadvances/article/6/1/vbag184/8721292)**:
 
 ```bibtex
