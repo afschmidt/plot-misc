@@ -28,6 +28,27 @@ research:
 Please consult the **[documentation](https://SchmidtAF.gitlab.io/plot-misc/)** 
 for plot-misc.
 
+## Citation
+
+If you use `plot-misc` in your research, please cite the
+[paper](https://academic.oup.com/bioinformaticsadvances/article/6/1/vbag184/8721292):
+
+```bibtex
+@article{schmidt2026plotmisc,
+  title   = {Effective visualization of biomedical data using plot-misc},
+  author  = {Schmidt, Amand Floriaan and
+             Hukerikar, Nikita and
+             Finan, Chris and
+             van Vugt, Marion},
+  journal = {Bioinformatics Advances},
+  volume  = {6},
+  number  = {1},
+  pages   = {vbag184},
+  year    = {2026},
+  doi     = {10.1093/bioadv/vbag184}
+}
+```
+
 ## Installation 
 The package is available on PyPI, and conda, with the latest source code 
 available on gitlab. 
