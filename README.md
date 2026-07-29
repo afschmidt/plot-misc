@@ -30,22 +30,20 @@ for plot-misc.
 
 ## Citation
 
-If you use `plot-misc` in your research, please cite the
-[paper](https://academic.oup.com/bioinformaticsadvances/article/6/1/vbag184/8721292):
+If you use this package in your research, please cite the
+**[paper](https://academic.oup.com/bioinformaticsadvances/article/6/1/vbag184/8721292)**:
 
 ```bibtex
-@article{schmidt2026plotmisc,
+@article{Schmidt:2026,
+  author  = {Schmidt, Amand Floriaan and Hukerikar, Nikita and
+             Finan, Chris and van Vugt, Marion},
   title   = {Effective visualization of biomedical data using plot-misc},
-  author  = {Schmidt, Amand Floriaan and
-             Hukerikar, Nikita and
-             Finan, Chris and
-             van Vugt, Marion},
   journal = {Bioinformatics Advances},
   volume  = {6},
   number  = {1},
   pages   = {vbag184},
-  year    = {2026},
   doi     = {10.1093/bioadv/vbag184}
+  year    = {2026},
 }
 ```
 
