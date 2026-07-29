@@ -42,8 +42,8 @@ If you use this package in your research, please cite the
   volume  = {6},
   number  = {1},
   pages   = {vbag184},
-  doi     = {10.1093/bioadv/vbag184}
-  year    = {2026},
+  doi     = {10.1093/bioadv/vbag184},
+  year    = {2026}
 }
 ```
 
