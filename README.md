@@ -1,4 +1,4 @@
-<img src="https://schmidtaf.gitlab.io/plot-misc/_images/fish.jpg" alt="plot-misc icon" width="250"/>
+<img src="https://schmidtaf.gitlab.io/plot-misc/_images/fish.png" alt="plot-misc icon" width="250"/>
 
 # A collection of plotting functions
 __version__: `2.3.0`
