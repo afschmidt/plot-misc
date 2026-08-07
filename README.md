@@ -172,4 +172,8 @@ Please have a look at the examples in
 [resources](https://gitlab.com/SchmidtAF/plot-misc/-/tree/master/resources/examples)
 for some possible recipes. 
 
+## Icon
+
+The icon at the top of this README is a _mandarinfish_, widely regarded as one of
+the most colourful animals on the planet. 
 
