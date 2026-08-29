@@ -41,6 +41,10 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 "plot_misc" = ["*.md", "*.txt", "*.rst"]
+"plot_misc.example_data" = [
+    "example_datasets/*.tsv.gz",
+    "example_datasets/*.txt",
+]
 
 [tool.setuptools.exclude-package-data]
 "*" = ["tests/*"]

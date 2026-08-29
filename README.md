@@ -116,7 +116,7 @@ branches without reinstalling.
 Alternatively, you can install manually:
 ```bash
 python -m pip install -e .
-python .setup_git_hooks.py
+python .githooks/.setup_git_hooks.py
 ```
 
 #### Git Hooks Configuration
