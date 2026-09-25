@@ -229,12 +229,12 @@ def help(name):
 @dataset
 def dummy_data():
     """A dummy dataset function that returns a small list.
-
+    
     Returns
     -------
     data : `list`
         A list of length 3 with ``['A', 'B', 'C']``
-
+    
     Notes
     -----
     This function is called ``dummy_data`` and has been decorated with a
@@ -253,7 +253,7 @@ def dummy_load_data():
     -------
     str_data : `str`
         A string of data loaded from an example data file.
-
+    
     Notes
     -----
     This function is called ``dummy_data`` and has been decorated with a
