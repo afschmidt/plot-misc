@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### Added
+
+* A citation for the Bioinformatics Advances paper, in the README and as
+  `plot_misc.__citation__`.
+
+### Changed
+
+* The README and the documentation front page use a mandarinfish
+  (`docs/source/_static/fish.png`) as the project icon.
+* The pip requirement for `statsmodels` is now `>=0.12`, the same floor as
+  the conda recipe.
+* The conda environment file allows Python 3.13 (`python>=3.10,<3.14`),
+  matching `requires-python`.
+* The README installs the git hooks with
+  `python .githooks/.setup_git_hooks.py`.
+
+### Fixed
+
+* `dummy_load_data` can read its example file. `string_data.txt` is in
+  `plot_misc/example_data/example_datasets`, and that directory's
+  `*.tsv.gz` and `*.txt` files are declared as package data.
+
 ## 2.3.0 - 2026-07-27
 
 ### Added
