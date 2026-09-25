@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.3.1 - 2026-09-25
+
 ### Added
 
 * A citation for the Bioinformatics Advances paper, in the README and as
